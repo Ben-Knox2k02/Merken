@@ -51,7 +51,7 @@ MainFrame::MainFrame(const wxString& title) : wxFrame(nullptr, wxID_ANY, title, 
 	this->deckPanel = new DeckPanel(this);
 
 	this->activePanel = new wxPanel(this, wxID_ANY);
-	this->activePanel->SetBackgroundColour(*wxWHITE);
+	this->activePanel->SetBackgroundColour(*wxBLUE);
 	this->SwapCurrentPanel(new CardListPanel(this->activePanel, 0));
 	
 	this->rootSizer->Add(deckPanel, 0, wxEXPAND | wxALL, 0);
@@ -92,18 +92,6 @@ void MainFrame::SwapCurrentPanel(wxPanel* newPanel) {
 	
 	this->activePanel->SetSizer(sizer);
 	this->activePanel->Layout();
-	
-	this->currentPanel->Bind(wxEVT_KEY_DOWN, &MainFrame::OnKeyEvent, this);
-	
-	for(wxWindow* child : this->currentPanel->GetChildren()) {
-		child->Bind(wxEVT_LEFT_DOWN, &MainFrame::OnMouseEvent, this);
-        child->Bind(wxEVT_LEFT_UP, &MainFrame::OnMouseEvent, this);
-        child->Bind(wxEVT_RIGHT_DOWN, &MainFrame::OnMouseEvent, this);
-        child->Bind(wxEVT_RIGHT_UP, &MainFrame::OnMouseEvent, this);
-        child->Bind(wxEVT_MOTION, &MainFrame::OnMouseEvent, this);
-        child->Bind(wxEVT_MOUSEWHEEL, &MainFrame::OnMouseEvent, this);
-        child->Bind(wxEVT_KEY_DOWN, &MainFrame::OnKeyEvent, this);
-	}
 	
 	this->currentPanel->SetFocus();
 }
