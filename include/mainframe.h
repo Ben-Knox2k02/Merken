@@ -4,13 +4,21 @@ class MainFrame : public wxFrame {
 	public:
 		MainFrame(const wxString& title);
 		
-		wxPanel* panel;
+		wxBoxSizer* rootSizer;
+		
+		wxPanel* deckPanel;
+		wxPanel* currentPanel; 						// A HUSK TO HOLD activePanel
+		wxPanel* activePanel;
+		
 		wxMenuBar* menuBar;
 		wxMenu* fileMenu;
+		wxMenu* editMenu;
+		wxMenu* studyMenu;
+		wxMenu* calendarMenu;
+		wxMenu* AIMenu;
 		wxMenu* helpMenu;
 		
-		void InitWidgets();
-		void BindEventHandlers();
+		void SwapCurrentPanel(wxPanel* newPanel);
 		
 		void OnNew(wxCommandEvent& event);
 		void OnOpen(wxCommandEvent& event);
