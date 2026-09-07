@@ -7,8 +7,8 @@ class MainFrame : public wxFrame {
 		wxBoxSizer* rootSizer;
 		
 		wxPanel* deckPanel;
-		wxPanel* currentPanel; 						// A HUSK TO HOLD activePanel
-		wxPanel* activePanel;
+		wxPanel* currentPanel; 						// ATTACHES ON TOP OF activePanel
+		wxPanel* activePanel;						// A HUSK TO HOLD currentPanel
 		
 		wxMenuBar* menuBar;
 		wxMenu* fileMenu;
