@@ -6,15 +6,15 @@ DeckPanel::DeckPanel(wxWindow* parent) : wxPanel(parent) {
 	this->rootSizer = new wxBoxSizer(wxVERTICAL);
 
 	this->SetBackgroundStyle(wxBG_STYLE_PAINT);
-	this->SetBackgroundColour(wxColour(240, 240, 240));
+	this->SetBackgroundColour(*wxWHITE);
 	this->SetMinSize(wxSize(240, -1));
 	
 	this->header = new wxStaticText(this, wxID_ANY, "Decks");
 	this->header->SetFont(this->header->GetFont().Bold());
-	this->rootSizer->Add(this->header, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 10);
+	this->rootSizer->Add(this->header, 0, wxALL, 10);
 	
 	this->deckList = new wxDataViewCtrl(this, wxID_ANY);
-	this->deckList->AppendTextColumn("Name", 0, wxDATAVIEW_CELL_INERT, 200, wxALIGN_CENTER);
+	this->deckList->AppendTextColumn("Name", 0, wxDATAVIEW_CELL_INERT, 200);
 	
 	auto* model = new wxDataViewListStore();
 	this->deckList->AssociateModel(model);
