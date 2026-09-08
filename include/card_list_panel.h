@@ -4,6 +4,7 @@
 #include "card_dialog.h"
 #include <wx/wx.h>
 #include <wx/dataview.h>
+#include <wx/dcbuffer.h>
 
 class CardListPanel : public wxPanel {
 	public:
@@ -18,7 +19,6 @@ class CardListPanel : public wxPanel {
 		wxButton* addButton;
 		wxButton* editButton;
 		wxButton* deleteButton;
-		
 		
 		void LoadCards();
 		int GetSelectedRow() const;
