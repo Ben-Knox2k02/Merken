@@ -1,14 +1,13 @@
 #include "card_list_panel.h"
-#include <wx/dataview.h>
 
 CardListPanel::CardListPanel(wxWindow* parent, int deckID) : wxPanel(parent), deckID(deckID) {
     this->rootSizer = new wxBoxSizer(wxVERTICAL);
 
 	this->SetBackgroundStyle(wxBG_STYLE_PAINT);
 	this->SetBackgroundColour(wxColour(*wxWHITE));
-
+	
     this->header = new wxStaticText(this, wxID_ANY, "Cards in Deck");				 // HEADER
-	this->header->SetBackgroundColour(wxColour(*wxWHITE));
+	this->header->SetBackgroundColour(wxColour(240, 240, 240));
 	this->header->SetForegroundColour(wxColour(*wxBLACK));
     this->header->SetFont(this->header->GetFont().Bold());
     this->rootSizer->Add(this->header, 0, wxALL, 10);
@@ -18,7 +17,7 @@ CardListPanel::CardListPanel(wxWindow* parent, int deckID) : wxPanel(parent), de
 	this->cardList->SetForegroundColour(wxColour(*wxWHITE));
     this->cardList->AppendTextColumn("Front", 0, wxDATAVIEW_CELL_INERT, 200);
     this->cardList->AppendTextColumn("Back", 1,  wxDATAVIEW_CELL_INERT, 200);
-    this->cardList->AppendTextColumn("Tags", 2,  wxDATAVIEW_CELL_INERT, 150);
+    this->cardList->AppendTextColumn("Tags", 2,  wxDATAVIEW_CELL_INERT, 200);
 	
 	this->cardViewModel = new wxDataViewListStore();
 	this->cardList->AssociateModel(cardViewModel);
@@ -61,7 +60,10 @@ CardListPanel::CardListPanel(wxWindow* parent, int deckID) : wxPanel(parent), de
 }
 
 void CardListPanel::OnPaint(wxPaintEvent& event) {
-	
+	wxAutoBufferedPaintDC dc(this);
+	dc.SetBrush(wxBrush(this->GetBackgroundColour()));
+	dc.SetPen(*wxTRANSPARENT_PEN);
+	dc.DrawRectangle(this->GetClientRect());
 }
 
 void CardListPanel::LoadCards() {
