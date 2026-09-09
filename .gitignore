@@ -1,0 +1,13 @@
+obj/
+*.o
+*.exe
+CourseTracker
+src/manifest.rc
+UI/src/manifest.rc
+
+.vscode/ipch/
+.vscode/c_cpp_properties.json
+*.ilk
+*.pdb
+
+.DS_Store

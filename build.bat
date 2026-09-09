@@ -12,7 +12,7 @@ set WX=C:\wxWidgets
 set PATH=%MINGW%\bin;%PATH%
 
 rem --- INCLUDE / LIB PATHS -------------------------------------------
-set INC=-I include -I %WX%\lib\gcc_lib\mswu -I %WX%\include
+set INC=-I UI\include -I %WX%\lib\gcc_lib\mswu -I %WX%\include
 set LIB=-L %WX%\lib\gcc_lib
 
 rem --- WXWIDGETS LIBS -------------------------------------------------
@@ -41,17 +41,17 @@ set WINLIBS= ^
     -lwinspool
 
 rem --- MANIFEST -------------------------------------------------------
-echo 1 24 src\app.manifest > src\manifest.rc
-%MINGW%\bin\windres.exe src\manifest.rc -O coff -o obj\manifest.o
+echo 1 24 UI\src\app.manifest > UI\src\manifest.rc
+%MINGW%\bin\windres.exe UI\src\manifest.rc -O coff -o obj\manifest.o
 
 rem --- ENSURE OBJ FOLDER ----------------------------------------------
 if not exist obj mkdir obj
 
 rem --- COMPILE --------------------------------------------------------
 echo Compiling sources...
-for %%f in (src\*.cpp) do (
+for %%f in (UI\src\*.cpp) do (
     echo %%f
-    %MINGW%\bin\g++.exe -c %%f %INC% -o obj\%%~nf.o
+    %MINGW%\bin\g++.exe -std=c++17 -c %%f %INC% -o obj\%%~nf.o
 )
 
 rem --- LINK -----------------------------------------------------------
