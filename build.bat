@@ -12,7 +12,7 @@ set WX=C:\wxWidgets
 set PATH=%MINGW%\bin;%PATH%
 
 rem --- INCLUDE / LIB PATHS -------------------------------------------
-set INC=-I UI\include -I %WX%\lib\gcc_lib\mswu -I %WX%\include
+set INC=-I UI\include -I ThirdParty\boost-di -I %WX%\lib\gcc_lib\mswu -I %WX%\include
 set LIB=-L %WX%\lib\gcc_lib
 
 rem --- WXWIDGETS LIBS -------------------------------------------------
