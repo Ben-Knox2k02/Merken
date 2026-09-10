@@ -31,4 +31,20 @@ class MainFrame : public wxFrame {
 		void OnWindowClosed(wxCloseEvent& event);
 		void OnMouseEvent(wxMouseEvent& event);
 		void OnKeyEvent(wxKeyEvent& event);
+
+		CREATE TABLE Deck(
+		deck_id INTEGER PRIMARY KEY AUTOINCREMENT,
+		name TEXT NOT NULL,
+		description TEXT,
+		createtion_date TEXT NOT NULL);
+
+		CREATE TABLE Card(
+		card_id INTERGER PRIMARY KEY AUTOINCREMENT,
+		deck_id INTERGER NOT NULL,
+		front TEXT NOT NULL,
+		tags TEXT,
+
+		FOREIGN KEY (deck_id)
+			REFERENCES Deck(deck_id)
+			ON DELETE CASCADE);
 };
