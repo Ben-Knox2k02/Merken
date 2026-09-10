@@ -42,6 +42,7 @@ class MainFrame : public wxFrame {
 		card_id INTERGER PRIMARY KEY AUTOINCREMENT,
 		deck_id INTERGER NOT NULL,
 		front TEXT NOT NULL,
+		back TEXT NOT NULL,
 		tags TEXT,
 
 		FOREIGN KEY (deck_id)
