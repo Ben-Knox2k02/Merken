@@ -1,17 +1,6 @@
 #include "deck_db_service.h"
 #include <wx/wxsqlite3.h>
 
-void DeckDbService::EnsureSchema() {
-	this->db.GetConnection()->ExecuteUpdate(
-		"CREATE TABLE IF NOT EXISTS decks ("
-		"deck_id INTEGER PRIMARY KEY AUTOINCREMENT,"
-		"name TEXT NOT NULL,"
-		"description TEXT NOT NULL DEFAULT '',"
-		"created_at TEXT NOT NULL DEFAULT ''"
-		");"
-	);
-}
-
 std::vector<Deck> DeckDbService::GetDecks() {
 	std::vector<Deck> decks;
 	wxSQLite3::ResultSet result = this->db.GetConnection()->ExecuteQuery(

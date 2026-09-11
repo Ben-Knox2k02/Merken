@@ -1,12 +1,12 @@
 # Working on Merken
 
-wxWidgets desktop app. Layers do not call across each other except through the interfaces and use cases below.
+Layers do not call across each other except through the interfaces and use cases below.
 
 | You | Own | Do not touch |
 |---|---|---|
 | UI | `UI/` | `Infrastructure/`, `Application/ServiceInterfaces/` |
-| Application | `Application/`, `DomainModels/` | `UI/`, SQL, HTTP |
-| Database | `Infrastructure/Persistence/` | `UI/`, Gemini, Calendar |
+| Application | `Application/`, `DomainModels/`, `Infrastructure/Persistence/` (db services) | `UI/`, `db_scripts.cpp`, Gemini, Calendar, HTTP |
+| Database | `Infrastructure/Persistence/DatabaseContext/db_scripts.cpp` | `UI/`, db services, Gemini, Calendar |
 | APIs | `Infrastructure/GeminiApi/`, `Infrastructure/GoogleCalendar/` | `UI/`, SQL |
 
 New `.cpp` files under `Application/`, `Infrastructure/`, and `UI/src/` are picked up by `build.bat` and CI. New services must also be bound in `DiComposition/composition_root.h`.
@@ -59,37 +59,17 @@ CreateDeckResponse Execute(const CreateDeckRequest& request);
 ```
 
 - Do **not** bind use cases in DI. UI does `injector.create<CreateDeckUseCase>()`.
-- Need a new capability (e.g. list decks)? Add a method to the interface in `Application/ServiceInterfaces/`. Database or API then implements it.
+- Need a new capability (e.g. list decks)? Add a method to the interface in `Application/ServiceInterfaces/`, then implement it in the db service (or ask APIs if it is Gemini/Calendar).
 - IDs are `int` (`cardId`, `deckId`, `calendarEventId`). Pass `0` for a new row; SQLite assigns the auto-increment value.
 
----
+**Add a db service**
 
-## Database
+Db services live in `Infrastructure/Persistence/<Entity>/`. They query and write rows. They do not create tables.
 
-One shared SQLite file: `merken.db`. `DatabaseContext` opens it on first use and creates the file if it is missing. Do not open your own connection.
-
-**New table / entity**
-
-1. Domain type in `DomainModels/` (coordinate with Application).
+1. Domain type in `DomainModels/`.
 2. Interface in `Application/ServiceInterfaces/` (e.g. `IDeckDBService`).
-3. Implementation in `Infrastructure/Persistence/<Entity>/`.
-4. Inject `DatabaseContext&`. Create the table in the ctor with `IF NOT EXISTS`:
-
-```cpp
-DeckDbService(DatabaseContext& dbContext) : db(dbContext) {
-    this->EnsureSchema();
-}
-
-void DeckDbService::EnsureSchema() {
-    this->db.GetConnection()->ExecuteUpdate(
-        "CREATE TABLE IF NOT EXISTS decks ("
-        "deck_id INTEGER PRIMARY KEY AUTOINCREMENT,"
-        "name TEXT NOT NULL"
-        ");"
-    );
-}
-```
-
+3. Implementation in `Infrastructure/Persistence/<Entity>/`. Inject `DatabaseContext&`.
+4. Ask Database to append a SQL string in `db_scripts.cpp` for any new table or column.
 5. Register in `DiComposition/composition_root.h`:
 
 ```cpp
@@ -98,7 +78,21 @@ void DeckDbService::EnsureSchema() {
 di::bind<IDeckDBService>().to<DeckDbService>().in(di::singleton),
 ```
 
-`GetConnection()` creates `merken.db` if needed. Schema is created when that db service is first constructed (first use case that needs it).
+---
+
+## Database
+
+One shared SQLite file: `merken.db`. `DatabaseContext` opens it when constructed, creates the file if missing, and applies scripts. Do not open your own connection.
+
+**Your job is only to add scripts.** Append a SQL string in `Infrastructure/Persistence/DatabaseContext/db_scripts.cpp`. Do not edit or reorder scripts that already shipped. Do not touch db services, use cases, or how migrations run.
+
+```cpp
+R"(
+ALTER TABLE decks ADD COLUMN color TEXT NOT NULL DEFAULT '';
+)",
+```
+
+`DatabaseContext` applies new scripts on init and skips ones that already ran. Application owns the db services that read and write those tables.
 
 ---
 

@@ -40,26 +40,6 @@ Card MapCardRow(wxSQLite3::ResultSet& result) {
 }
 }
 
-void CardDbService::EnsureSchema() {
-	this->db.GetConnection()->ExecuteUpdate(
-		"CREATE TABLE IF NOT EXISTS cards ("
-		"card_id INTEGER PRIMARY KEY AUTOINCREMENT,"
-		"deck_id INTEGER NOT NULL,"
-		"front TEXT NOT NULL,"
-		"back TEXT NOT NULL,"
-		"tags TEXT NOT NULL DEFAULT '',"
-		"card_type INTEGER NOT NULL DEFAULT 0,"
-		"choices TEXT NOT NULL DEFAULT '',"
-		"interval_days INTEGER NOT NULL DEFAULT 0,"
-		"ease_factor REAL NOT NULL DEFAULT 2.5,"
-		"repetition_count INTEGER NOT NULL DEFAULT 0,"
-		"next_review_date TEXT NOT NULL DEFAULT '',"
-		"last_reviewed_date TEXT NOT NULL DEFAULT '',"
-		"FOREIGN KEY (deck_id) REFERENCES decks(deck_id)"
-		");"
-	);
-}
-
 std::vector<Card> CardDbService::GetCards(int deckId) {
 	std::vector<Card> cards;
 	wxSQLite3::Statement stmt = this->db.GetConnection()->PrepareStatement(

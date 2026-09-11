@@ -18,6 +18,8 @@ class DatabaseContext {
 
 	private:
 		void EnsureOpen();
+		void ApplyMigrations();
+		void RunMigration(int version, const std::string& sql);
 
 		std::string dbPath;
 		std::unique_ptr<wxSQLite3::Database> db;

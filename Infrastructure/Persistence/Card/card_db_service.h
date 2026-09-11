@@ -6,9 +6,7 @@
 
 class CardDbService : public ICardDBService {
 	public:
-		CardDbService(DatabaseContext& dbContext) : db(dbContext) {
-			this->EnsureSchema();
-		}
+		CardDbService(DatabaseContext& dbContext) : db(dbContext) {}
 
 		std::vector<Card> GetCards(int deckId) override;
 		std::optional<Card> GetCard(int cardId) override;
@@ -17,7 +15,6 @@ class CardDbService : public ICardDBService {
 
 	private:
 		DatabaseContext& db;
-		void EnsureSchema();
 };
 
 #endif
