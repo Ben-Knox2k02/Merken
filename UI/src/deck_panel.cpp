@@ -15,10 +15,11 @@ DeckPanel::DeckPanel(wxWindow* parent) : wxPanel(parent) {
 
 	this->header = new wxStaticText(this, wxID_ANY, "Decks");
 	this->header->SetFont(this->header->GetFont().Bold());
-	this->rootSizer->Add(this->header, 0, wxALL, 10);
+	this->rootSizer->Add(this->header, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 10);
 
 	this->deckList = new wxDataViewCtrl(this, wxID_ANY);
-	this->deckList->AppendTextColumn("Name", 0, wxDATAVIEW_CELL_INERT, 200);
+	this->deckList->AppendTextColumn("Name", 0, wxDATAVIEW_CELL_INERT, 200, wxALIGN_CENTER);
+	this->deckList->AppendTextColumn("Description", 1, wxDATAVIEW_CELL_INERT, 200, wxALIGN_CENTER);
 
 	this->deckViewModel = new wxDataViewListStore();
 	this->deckList->AssociateModel(this->deckViewModel);
@@ -57,6 +58,7 @@ void DeckPanel::LoadDecks() {
 	for (const DeckResponse& deck : response.decks) {
 		wxVector<wxVariant> row;
 		row.push_back(wxVariant(wxString(deck.name)));
+		row.push_back(wxVariant(wxString(deck.description)));
 		this->deckViewModel->AppendItem(row, static_cast<wxUIntPtr>(deck.deckId));
 		if (firstDeckId == 0) { firstDeckId = deck.deckId; }
 	}

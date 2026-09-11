@@ -12,12 +12,12 @@ CardListPanel::CardListPanel(wxWindow* parent, int deckID) : wxPanel(parent), de
 
 	this->header = new wxStaticText(this, wxID_ANY, "Cards in Deck");
 	this->header->SetFont(this->header->GetFont().Bold());
-	this->rootSizer->Add(this->header, 0, wxALL, 10);
+	this->rootSizer->Add(this->header, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 10);
 
 	this->cardList = new wxDataViewCtrl(this, wxID_ANY);
-	this->cardList->AppendTextColumn("Front", 0, wxDATAVIEW_CELL_INERT, 200);
-	this->cardList->AppendTextColumn("Back", 1, wxDATAVIEW_CELL_INERT, 200);
-	this->cardList->AppendTextColumn("Tags", 2, wxDATAVIEW_CELL_INERT, 200);
+	this->cardList->AppendTextColumn("Front", 0, wxDATAVIEW_CELL_INERT, 300, wxALIGN_CENTER);
+	this->cardList->AppendTextColumn("Back", 1, wxDATAVIEW_CELL_INERT, 300, wxALIGN_CENTER);
+	this->cardList->AppendTextColumn("Tags", 2, wxDATAVIEW_CELL_INERT, 300, wxALIGN_CENTER);
 
 	this->cardViewModel = new wxDataViewListStore();
 	this->cardList->AssociateModel(this->cardViewModel);
@@ -34,7 +34,7 @@ CardListPanel::CardListPanel(wxWindow* parent, int deckID) : wxPanel(parent), de
 	this->buttonSizer->Add(this->editButton, 0, wxRIGHT, 5);
 	this->buttonSizer->Add(this->deleteButton, 0);
 
-	this->rootSizer->Add(this->buttonSizer, 0, wxEXPAND | wxALL, 10);
+	this->rootSizer->Add(this->buttonSizer, 0, wxALIGN_CENTER | wxALL, 10);
 	this->SetSizer(this->rootSizer);
 	this->LoadCards();
 

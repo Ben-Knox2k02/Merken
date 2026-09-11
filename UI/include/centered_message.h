@@ -38,7 +38,12 @@ inline int ShowCenteredMessage(
 	content->Add(text, 1, wxALIGN_CENTER_VERTICAL);
 
 	wxStdDialogButtonSizer* buttons = new wxStdDialogButtonSizer();
-	buttons->AddButton(new wxButton(&dialog, wxID_OK));
+	if (style & wxYES_NO) {
+		buttons->AddButton(new wxButton(&dialog, wxID_YES));
+		buttons->AddButton(new wxButton(&dialog, wxID_NO));
+	} else {
+		buttons->AddButton(new wxButton(&dialog, wxID_OK));
+	}
 	buttons->Realize();
 
 	wxBoxSizer* root = new wxBoxSizer(wxVERTICAL);
