@@ -1,5 +1,6 @@
 #include "deck_panel.h"
 #include "deck_dialog.h"
+#include "centered_message.h"
 #include "mainframe.h"
 #include "app.h"
 #include "../../Application/UseCases/Deck/GetDecks/get_decks_usecase.h"
@@ -93,13 +94,12 @@ void DeckPanel::NotifyDeckSelected(int deckId) {
 }
 
 void DeckPanel::OnAddDeck(wxCommandEvent&) {
-	DeckDialog dialog(this);
-	dialog.CentreOnParent();
+	DeckDialog dialog(this, "Add Deck");
 	if (dialog.ShowModal() != wxID_OK) { return; }
 
 	const std::string name = dialog.nameCtrl->GetValue().ToStdString();
 	if (name.empty()) {
-		wxMessageBox("Deck name is required.", "Add Deck", wxOK | wxICON_WARNING);
+		ShowCenteredMessage(this, "Deck name is required.", "Add Deck", wxOK | wxICON_WARNING);
 		return;
 	}
 
@@ -110,7 +110,7 @@ void DeckPanel::OnAddDeck(wxCommandEvent&) {
 	auto useCase = wxGetApp().GetInjector().create<CreateDeckUseCase>();
 	CreateDeckResponse response = useCase.Execute(request);
 	if (response.deckId == 0) {
-		wxMessageBox("Could not save deck.", "Add Deck", wxOK | wxICON_ERROR);
+		ShowCenteredMessage(this, "Could not save deck.", "Add Deck", wxOK | wxICON_ERROR);
 		return;
 	}
 
@@ -122,7 +122,7 @@ void DeckPanel::OnAddDeck(wxCommandEvent&) {
 void DeckPanel::OnEditDeck(wxCommandEvent&) {
 	const int deckId = this->GetSelectedDeckId();
 	if (deckId == 0) {
-		wxMessageBox("No deck selected.", "Edit Deck", wxOK | wxICON_WARNING);
+		ShowCenteredMessage(this, "No deck selected.", "Edit Deck", wxOK | wxICON_WARNING);
 		return;
 	}
 
@@ -137,15 +137,14 @@ void DeckPanel::OnEditDeck(wxCommandEvent&) {
 	}
 	if (selected == nullptr) { return; }
 
-	DeckDialog dialog(this);
+	DeckDialog dialog(this, "Edit Deck");
 	dialog.nameCtrl->SetValue(wxString(selected->name));
 	dialog.descriptionCtrl->SetValue(wxString(selected->description));
-	dialog.CentreOnParent();
 	if (dialog.ShowModal() != wxID_OK) { return; }
 
 	const std::string name = dialog.nameCtrl->GetValue().ToStdString();
 	if (name.empty()) {
-		wxMessageBox("Deck name is required.", "Edit Deck", wxOK | wxICON_WARNING);
+		ShowCenteredMessage(this, "Deck name is required.", "Edit Deck", wxOK | wxICON_WARNING);
 		return;
 	}
 
@@ -156,7 +155,7 @@ void DeckPanel::OnEditDeck(wxCommandEvent&) {
 
 	auto useCase = wxGetApp().GetInjector().create<UpdateDeckUseCase>();
 	if (!useCase.Execute(request)) {
-		wxMessageBox("Could not update deck.", "Edit Deck", wxOK | wxICON_ERROR);
+		ShowCenteredMessage(this, "Could not update deck.", "Edit Deck", wxOK | wxICON_ERROR);
 		return;
 	}
 
@@ -165,7 +164,7 @@ void DeckPanel::OnEditDeck(wxCommandEvent&) {
 }
 
 void DeckPanel::OnDeleteDeck(wxCommandEvent&) {
-	wxMessageBox("Delete is not implemented yet.", "Delete Deck", wxOK | wxICON_INFORMATION);
+	ShowCenteredMessage(this, "Delete is not implemented yet.", "Delete Deck", wxOK | wxICON_INFORMATION);
 }
 
 void DeckPanel::OnDeckActivated(wxDataViewEvent& event) {

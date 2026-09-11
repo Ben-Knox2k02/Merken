@@ -1,4 +1,5 @@
 #include "card_list_panel.h"
+#include "centered_message.h"
 #include "app.h"
 #include "../../Application/UseCases/Card/GetCards/get_cards_usecase.h"
 #include "../../Application/UseCases/Card/CreateCard/create_card_usecase.h"
@@ -77,18 +78,17 @@ int CardListPanel::GetSelectedCardId() const {
 
 void CardListPanel::OnAdd(wxCommandEvent&) {
 	if (this->deckID == 0) {
-		wxMessageBox("Select a deck first.", "Add Card", wxOK | wxICON_WARNING);
+		ShowCenteredMessage(this, "Select a deck first.", "Add Card", wxOK | wxICON_WARNING);
 		return;
 	}
 
-	CardDialog dialog(this);
-	dialog.CentreOnParent();
+	CardDialog dialog(this, "Add Card");
 	if (dialog.ShowModal() != wxID_OK) { return; }
 
 	const std::string front = dialog.frontCtrl->GetValue().ToStdString();
 	const std::string back = dialog.backCtrl->GetValue().ToStdString();
 	if (front.empty() || back.empty()) {
-		wxMessageBox("Front and back are required.", "Add Card", wxOK | wxICON_WARNING);
+		ShowCenteredMessage(this, "Front and back are required.", "Add Card", wxOK | wxICON_WARNING);
 		return;
 	}
 
@@ -101,7 +101,7 @@ void CardListPanel::OnAdd(wxCommandEvent&) {
 	auto useCase = wxGetApp().GetInjector().create<CreateCardUseCase>();
 	CreateCardResponse response = useCase.Execute(request);
 	if (response.cardId == 0) {
-		wxMessageBox("Could not save card.", "Add Card", wxOK | wxICON_ERROR);
+		ShowCenteredMessage(this, "Could not save card.", "Add Card", wxOK | wxICON_ERROR);
 		return;
 	}
 
@@ -111,7 +111,7 @@ void CardListPanel::OnAdd(wxCommandEvent&) {
 void CardListPanel::OnEdit(wxCommandEvent&) {
 	const int cardId = this->GetSelectedCardId();
 	if (cardId == 0) {
-		wxMessageBox("No card selected.", "Edit Card", wxOK | wxICON_WARNING);
+		ShowCenteredMessage(this, "No card selected.", "Edit Card", wxOK | wxICON_WARNING);
 		return;
 	}
 
@@ -122,17 +122,16 @@ void CardListPanel::OnEdit(wxCommandEvent&) {
 	this->cardViewModel->GetValue(back, item, 1);
 	this->cardViewModel->GetValue(tag, item, 2);
 
-	CardDialog dialog(this);
+	CardDialog dialog(this, "Edit Card");
 	dialog.frontCtrl->SetValue(front.GetString());
 	dialog.backCtrl->SetValue(back.GetString());
 	dialog.tagCtrl->SetValue(tag.GetString());
-	dialog.CentreOnParent();
 	if (dialog.ShowModal() != wxID_OK) { return; }
 
 	const std::string newFront = dialog.frontCtrl->GetValue().ToStdString();
 	const std::string newBack = dialog.backCtrl->GetValue().ToStdString();
 	if (newFront.empty() || newBack.empty()) {
-		wxMessageBox("Front and back are required.", "Edit Card", wxOK | wxICON_WARNING);
+		ShowCenteredMessage(this, "Front and back are required.", "Edit Card", wxOK | wxICON_WARNING);
 		return;
 	}
 
@@ -144,7 +143,7 @@ void CardListPanel::OnEdit(wxCommandEvent&) {
 
 	auto useCase = wxGetApp().GetInjector().create<UpdateCardUseCase>();
 	if (!useCase.Execute(request)) {
-		wxMessageBox("Could not update card.", "Edit Card", wxOK | wxICON_ERROR);
+		ShowCenteredMessage(this, "Could not update card.", "Edit Card", wxOK | wxICON_ERROR);
 		return;
 	}
 
@@ -152,5 +151,5 @@ void CardListPanel::OnEdit(wxCommandEvent&) {
 }
 
 void CardListPanel::OnDelete(wxCommandEvent&) {
-	wxMessageBox("Delete is not implemented yet.", "Delete Card", wxOK | wxICON_INFORMATION);
+	ShowCenteredMessage(this, "Delete is not implemented yet.", "Delete Card", wxOK | wxICON_INFORMATION);
 }

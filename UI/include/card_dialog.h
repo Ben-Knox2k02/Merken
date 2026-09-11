@@ -5,7 +5,7 @@
 
 class CardDialog : public wxDialog {
 	public:
-		CardDialog(wxWindow* parent);
+		explicit CardDialog(wxWindow* parent, const wxString& title = "Card");
 		
 		wxBoxSizer* rootSizer;
 	

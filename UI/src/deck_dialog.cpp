@@ -1,17 +1,25 @@
 #include "deck_dialog.h"
 
-DeckDialog::DeckDialog(wxWindow* parent)
-	: wxDialog(parent, wxID_ANY, "Deck") {
-	wxFlexGridSizer* fields = new wxFlexGridSizer(2, 8, 8);
+DeckDialog::DeckDialog(wxWindow* parent, const wxString& title)
+	: wxDialog(
+		wxGetTopLevelParent(parent),
+		wxID_ANY,
+		title,
+		wxDefaultPosition,
+		wxDefaultSize,
+		wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER
+	) {
+	wxFlexGridSizer* fields = new wxFlexGridSizer(2, 10, 12);
 	fields->AddGrowableCol(1, 1);
+	fields->AddGrowableRow(1, 1);
 
 	fields->Add(new wxStaticText(this, wxID_ANY, "Name:"), 0, wxALIGN_CENTER_VERTICAL);
 	this->nameCtrl = new wxTextCtrl(this, wxID_ANY);
 	fields->Add(this->nameCtrl, 1, wxEXPAND);
 
-	fields->Add(new wxStaticText(this, wxID_ANY, "Description:"), 0, wxALIGN_CENTER_VERTICAL);
+	fields->Add(new wxStaticText(this, wxID_ANY, "Description:"), 0, wxALIGN_TOP | wxTOP, 4);
 	this->descriptionCtrl = new wxTextCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE);
-	this->descriptionCtrl->SetMinSize(wxSize(-1, 60));
+	this->descriptionCtrl->SetMinSize(wxSize(-1, 80));
 	fields->Add(this->descriptionCtrl, 1, wxEXPAND);
 
 	wxStdDialogButtonSizer* buttons = new wxStdDialogButtonSizer();
@@ -20,9 +28,12 @@ DeckDialog::DeckDialog(wxWindow* parent)
 	buttons->Realize();
 
 	this->rootSizer = new wxBoxSizer(wxVERTICAL);
-	this->rootSizer->Add(fields, 1, wxEXPAND | wxALL, 12);
-	this->rootSizer->Add(buttons, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 12);
+	this->rootSizer->Add(fields, 1, wxEXPAND | wxALL, 16);
+	this->rootSizer->Add(buttons, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 16);
 
-	this->SetSizerAndFit(this->rootSizer);
-	this->SetMinSize(wxSize(360, this->GetSize().GetHeight()));
+	this->SetSizer(this->rootSizer);
+	this->SetMinSize(wxSize(480, 320));
+	this->SetSize(wxSize(520, 360));
+	this->Layout();
+	this->CentreOnParent();
 }

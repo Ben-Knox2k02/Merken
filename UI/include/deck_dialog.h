@@ -5,7 +5,7 @@
 
 class DeckDialog : public wxDialog {
 	public:
-		DeckDialog(wxWindow* parent);
+		explicit DeckDialog(wxWindow* parent, const wxString& title = "Deck");
 
 		wxBoxSizer* rootSizer;
 		wxTextCtrl* nameCtrl;
