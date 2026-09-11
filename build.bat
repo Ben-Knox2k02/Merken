@@ -12,7 +12,7 @@ set WX=C:\wxWidgets
 set PATH=%MINGW%\bin;%PATH%
 
 rem --- INCLUDE / LIB PATHS -------------------------------------------
-set INC=-I include -I %WX%\lib\gcc_lib\mswu -I %WX%\include
+set INC=-I UI\include -I ThirdParty\boost-di -I ThirdParty\wxSQLite3\include -I ThirdParty\wxSQLite3\src -I %WX%\lib\gcc_lib\mswu -I %WX%\include
 set LIB=-L %WX%\lib\gcc_lib
 
 rem --- WXWIDGETS LIBS -------------------------------------------------
@@ -32,6 +32,7 @@ set WINLIBS= ^
     -lole32 ^
     -lshell32 ^
     -luuid ^
+    -lrpcrt4 ^
     -luxtheme ^
     -lgdi32 ^
     -loleaut32 ^
@@ -41,17 +42,35 @@ set WINLIBS= ^
     -lwinspool
 
 rem --- MANIFEST -------------------------------------------------------
-echo 1 24 src\app.manifest > src\manifest.rc
-%MINGW%\bin\windres.exe src\manifest.rc -O coff -o obj\manifest.o
+echo 1 24 UI\src\app.manifest > UI\src\manifest.rc
+%MINGW%\bin\windres.exe UI\src\manifest.rc -O coff -o obj\manifest.o
 
 rem --- ENSURE OBJ FOLDER ----------------------------------------------
 if not exist obj mkdir obj
 
 rem --- COMPILE --------------------------------------------------------
 echo Compiling sources...
-for %%f in (src\*.cpp) do (
+for /r Infrastructure %%f in (*.cpp) do (
     echo %%f
-    %MINGW%\bin\g++.exe -c %%f %INC% -o obj\%%~nf.o
+    %MINGW%\bin\g++.exe -std=c++17 -c "%%f" %INC% -o obj\%%~nf.o
+)
+
+for /r Application %%f in (*.cpp) do (
+    echo %%f
+    %MINGW%\bin\g++.exe -std=c++17 -c "%%f" %INC% -o obj\%%~nf.o
+)
+
+for /r ThirdParty\wxSQLite3\src %%f in (*.cpp) do (
+    echo %%f
+    %MINGW%\bin\g++.exe -std=c++17 -c "%%f" %INC% -o obj\%%~nf.o
+)
+
+echo ThirdParty\wxSQLite3\src\sqlite3mc_amalgamation.c
+%MINGW%\bin\gcc.exe -c ThirdParty\wxSQLite3\src\sqlite3mc_amalgamation.c -I ThirdParty\wxSQLite3\src -o obj\sqlite3mc_amalgamation.o
+
+for %%f in (UI\src\*.cpp) do (
+    echo %%f
+    %MINGW%\bin\g++.exe -std=c++17 -c %%f %INC% -o obj\%%~nf.o
 )
 
 rem --- LINK -----------------------------------------------------------

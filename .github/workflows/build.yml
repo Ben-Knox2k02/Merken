@@ -1,0 +1,87 @@
+name: Build
+
+on:
+  push:
+    branches: [main, ProjectRestructuring]
+  pull_request:
+    branches: [main, ProjectRestructuring]
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install wxWidgets (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config libwxgtk3.2-dev
+
+      - name: Install wxWidgets (macOS)
+        if: runner.os == 'macOS'
+        run: brew install wxwidgets
+
+      - name: Setup MSYS2 (Windows)
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-wxwidgets3.2-msw
+
+      - name: Compile and link (Linux/macOS)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          mkdir -p obj
+          INC="-IUI/include -IThirdParty/boost-di -IThirdParty/wxSQLite3/include -IThirdParty/wxSQLite3/src $(wx-config --cxxflags)"
+          find Infrastructure Application -name '*.cpp' | while read -r file; do
+            echo "Compiling $file"
+            g++ -std=c++17 -c "$file" $INC -o "obj/$(basename "${file%.cpp}").o"
+          done
+
+          for file in UI/src/*.cpp; do
+            echo "Compiling $file"
+            g++ -std=c++17 -c "$file" $INC -o "obj/$(basename "${file%.cpp}").o"
+          done
+
+          echo "Compiling ThirdParty/wxSQLite3/src/wxsqlite3.cpp"
+          g++ -std=c++17 -c ThirdParty/wxSQLite3/src/wxsqlite3.cpp $INC -o obj/wxsqlite3.o
+
+          echo "Compiling ThirdParty/wxSQLite3/src/sqlite3mc_amalgamation.c"
+          cc -c ThirdParty/wxSQLite3/src/sqlite3mc_amalgamation.c -IThirdParty/wxSQLite3/src -o obj/sqlite3mc_amalgamation.o
+
+          EXTRALIBS="-lpthread"
+          if [ "$RUNNER_OS" = "Linux" ]; then EXTRALIBS="$EXTRALIBS -ldl"; fi
+          g++ obj/*.o $(wx-config --libs) $EXTRALIBS -o CourseTracker
+
+      - name: Compile and link (Windows / MSYS2)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: |
+          mkdir -p obj
+          INC="-IUI/include -IThirdParty/boost-di -IThirdParty/wxSQLite3/include -IThirdParty/wxSQLite3/src $(wx-config --cxxflags)"
+          find Infrastructure Application -name '*.cpp' | while read -r file; do
+            echo "Compiling $file"
+            g++ -std=c++17 -c "$file" $INC -o "obj/$(basename "${file%.cpp}").o"
+          done
+
+          for file in UI/src/*.cpp; do
+            echo "Compiling $file"
+            g++ -std=c++17 -c "$file" $INC -o "obj/$(basename "${file%.cpp}").o"
+          done
+
+          echo "Compiling ThirdParty/wxSQLite3/src/wxsqlite3.cpp"
+          g++ -std=c++17 -c ThirdParty/wxSQLite3/src/wxsqlite3.cpp $INC -o obj/wxsqlite3.o
+
+          echo "Compiling ThirdParty/wxSQLite3/src/sqlite3mc_amalgamation.c"
+          cc -c ThirdParty/wxSQLite3/src/sqlite3mc_amalgamation.c -IThirdParty/wxSQLite3/src -o obj/sqlite3mc_amalgamation.o
+
+          g++ obj/*.o $(wx-config --libs) -o CourseTracker.exe
