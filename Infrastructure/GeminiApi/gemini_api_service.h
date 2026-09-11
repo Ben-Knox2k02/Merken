@@ -1,7 +1,7 @@
-#ifndef GEMINI_API_SERVICE_H
-#define GEMINI_API_SERVICE_H
+#ifndef GEMINI_API_SERVICE_REAL_H
+#define GEMINI_API_SERVICE_REAL_H
 
-#include "../../UseCases/Services/ai_api_service.h"
+#include "../../Application/ServiceInterfaces/ai_api_service.h"
 
 // dummy placeholder, does not call the real Gemini API yet
 class GeminiApiService : public IAIAPIService {

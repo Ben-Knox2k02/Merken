@@ -1,19 +1,25 @@
-#ifndef COURSE_DB_SERVICE_DUMMY_H
-#define COURSE_DB_SERVICE_DUMMY_H
+#ifndef COURSE_DB_SERVICE_REAL_H
+#define COURSE_DB_SERVICE_REAL_H
 
-#include "../../../UseCases/Services/course_db_service.h"
+#include "../../../Application/ServiceInterfaces/course_db_service.h"
+#include <wx/wxsqlite3.h>
+#include <database_context.h>
 
-// dummy in-memory placeholder, does not persist to a real database yet
 class CourseDbService : public ICourseDBService {
 	public:
+		CourseDbService(DatabaseContext& dbContext): db(dbContext) {
+			this->EnsureSchema();
+		};
+
 		std::vector<Course> GetCourses() override;
-		std::optional<Course> GetCourse(int courseID) override;
+		std::optional<Course> GetCourse(std::string courseID) override;
 		bool AddCourse(const Course& course) override;
 		bool UpdateCourse(const Course& course) override;
-		bool DeleteCourse(int courseID) override;
+		bool DeleteCourse(std::string courseID) override;
 
 	private:
-		std::vector<Course> courses;
+		DatabaseContext& db;
+		void EnsureSchema();
 };
 
 #endif

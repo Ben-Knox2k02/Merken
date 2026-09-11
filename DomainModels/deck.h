@@ -8,8 +8,13 @@
 
 class Deck {
 	public:
-		Deck(const std::string& name, const std::string& description, const wxDateTime& creationDate)
-			: name(name), description(description), creationDate(creationDate) {}
+		Deck(
+			const std::string& name,
+			const std::string& description,
+			const wxDateTime& creationDate
+		) : name(name),
+			description(description),
+			creationDate(creationDate) {}
 
 		const std::string& GetName() const { return this->name; }
 		const std::string& GetDescription() const { return this->description; }

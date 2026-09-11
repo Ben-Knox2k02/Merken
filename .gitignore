@@ -2,6 +2,7 @@ obj/
 *.o
 *.exe
 CourseTracker
+*.db
 src/manifest.rc
 UI/src/manifest.rc
 

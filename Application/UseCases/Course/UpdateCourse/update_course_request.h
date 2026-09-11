@@ -4,7 +4,7 @@
 #include <string>
 
 struct UpdateCourseRequest {
-	int courseID;
+	std::string courseID;
 	std::string name;
 };
 

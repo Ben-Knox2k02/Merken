@@ -2,7 +2,7 @@
 #define UPDATE_COURSE_USE_CASE_H
 
 #include "update_course_request.h"
-#include "../../Services/course_db_service.h"
+#include "../../../ServiceInterfaces/course_db_service.h"
 
 class UpdateCourseUseCase {
 	public:

@@ -7,8 +7,8 @@
 class CalendarEvent {
 	public:
 		CalendarEvent(
-			int id,
-			int courseID,
+			std::string id,
+			std::string courseID,
 			const std::string& title,
 			const std::string& description,
 			const wxDateTime& startTime,
@@ -20,8 +20,8 @@ class CalendarEvent {
 			startTime(startTime),
 			endTime(endTime) {}
 
-		int GetId() const { return this->id; }
-		int GetCourseID() const { return this->courseID; }
+		const std::string& GetId() const { return this->id; }
+		const std::string& GetCourseID() const { return this->courseID; }
 		const std::string& GetTitle() const { return this->title; }
 		const std::string& GetDescription() const { return this->description; }
 		const wxDateTime& GetStartTime() const { return this->startTime; }
@@ -41,8 +41,8 @@ class CalendarEvent {
 		}
 
 	private:
-		int id;
-		int courseID;
+		std::string id;
+		std::string courseID;
 		std::string title;
 		std::string description;
 		wxDateTime startTime;

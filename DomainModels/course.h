@@ -5,9 +5,9 @@
 
 class Course {
 	public:
-		Course(int id, const std::string& name) : id(id), name(name) {}
+		Course(std::string id, const std::string& name) : id(id), name(name) {}
 
-		int GetId() const { return this->id; }
+		const std::string& GetId() const { return this->id; }
 		const std::string& GetName() const { return this->name; }
 
 		void UpdateName(const std::string& newName) {
@@ -15,7 +15,7 @@ class Course {
 		}
 
 	private:
-		int id;
+		std::string id;
 		std::string name;
 };
 

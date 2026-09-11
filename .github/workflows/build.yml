@@ -20,7 +20,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential pkg-config libwxgtk3.2-dev
+          sudo apt-get install -y build-essential pkg-config libwxgtk3.2-dev uuid-dev
 
       - name: Install wxWidgets (macOS)
         if: runner.os == 'macOS'
@@ -41,7 +41,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p obj
-          find UseCases Infrastructure -name '*.cpp' | while read -r file; do
+          find UseCases Infrastructure Application -name '*.cpp' | while read -r file; do
             echo "Compiling $file"
             g++ -std=c++17 -c "$file" $(wx-config --cxxflags) -o "obj/$(basename "${file%.cpp}").o"
           done
@@ -50,14 +50,16 @@ jobs:
             echo "Compiling $file"
             g++ -std=c++17 -c "$file" -IUI/include $(wx-config --cxxflags) -o "obj/$(basename "${file%.cpp}").o"
           done
-          g++ obj/app.o obj/mainframe.o obj/card_dialog.o obj/card_list_panel.o obj/deck_panel.o $(wx-config --libs) -o CourseTracker
+          UUIDLIBS=""
+          if [ "$RUNNER_OS" = "Linux" ]; then UUIDLIBS="-luuid"; fi
+          g++ obj/app.o obj/mainframe.o obj/card_dialog.o obj/card_list_panel.o obj/deck_panel.o $(wx-config --libs) $UUIDLIBS -o CourseTracker
 
       - name: Compile and link (Windows / MSYS2)
         if: runner.os == 'Windows'
         shell: msys2 {0}
         run: |
           mkdir -p obj
-          find UseCases Infrastructure -name '*.cpp' | while read -r file; do
+          find UseCases Infrastructure Application -name '*.cpp' | while read -r file; do
             echo "Compiling $file"
             g++ -std=c++17 -c "$file" $(wx-config --cxxflags) -o "obj/$(basename "${file%.cpp}").o"
           done

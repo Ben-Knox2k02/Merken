@@ -5,7 +5,7 @@
 #include <wx/datetime.h>
 
 struct CreateEventRequest {
-	int courseID;
+	std::string courseID;
 	std::string title;
 	std::string description;
 	wxDateTime startTime;

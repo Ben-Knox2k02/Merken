@@ -5,9 +5,9 @@
 
 class Card {
 	public:
-		Card(int id, const std::string& description) : id(id), description(description) {}
+		Card(std::string id, const std::string& description) : id(id), description(description) {}
 
-		int GetId() const { return this->id; }
+		const std::string& GetId() const { return this->id; }
 		const std::string& GetDescription() const { return this->description; }
 
 		void UpdateDescription(const std::string& newDescription) {
@@ -15,7 +15,7 @@ class Card {
 		}
 
 	private:
-		int id;
+		std::string id;
 		std::string description;
 };
 

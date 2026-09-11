@@ -1,4 +1,4 @@
-#include "update_course_use_case.h"
+#include "update_course_usecase.h"
 
 bool UpdateCourseUseCase::Execute(const UpdateCourseRequest& request) {
 	std::optional<Course> existingCourse = this->courseDBService.GetCourse(request.courseID);

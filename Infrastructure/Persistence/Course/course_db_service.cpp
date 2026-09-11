@@ -1,39 +1,70 @@
 #include "course_db_service.h"
-#include <algorithm>
 
-std::vector<Course> CourseDbService::GetCourses() {
-	return this->courses;
+// Ensures the database schema for the courses table exists.
+void CourseDbService::EnsureSchema() {
+	this->db.GetConnection()->ExecuteUpdate(
+		"CREATE TABLE IF NOT EXISTS courses ("
+		"id TEXT PRIMARY KEY,"
+		"name TEXT NOT NULL"
+		");"
+	);
 }
 
-std::optional<Course> CourseDbService::GetCourse(int courseID) {
-	for(const auto& course : this->courses) {
-		if(course.GetId() == courseID) { return course; }
+std::vector<Course> CourseDbService::GetCourses() {
+	std::vector<Course> courses;
+
+	wxSQLite3::ResultSet result = this
+		->db.GetConnection()
+		->ExecuteQuery("SELECT id, name FROM courses ORDER BY id;");
+
+	while(result.NextRow()) {
+		courses.emplace_back(result.GetString(0).ToStdString(), result.GetString(1).ToStdString());
 	}
-	return std::nullopt;
+
+	return courses;
+}
+
+std::optional<Course> CourseDbService::GetCourse(std::string courseID) {
+	wxSQLite3::Statement stmt = this
+		->db.GetConnection()
+		->PrepareStatement("SELECT id, name FROM courses WHERE id = ?;");
+
+	stmt.Bind(1, courseID);
+
+	wxSQLite3::ResultSet result = stmt.ExecuteQuery();
+	if(!result.NextRow()) { return std::nullopt; }
+
+	return Course(result.GetString(0).ToStdString(), result.GetString(1).ToStdString());
 }
 
 bool CourseDbService::AddCourse(const Course& course) {
-	this->courses.push_back(course);
-	return true;
+	try {
+		wxSQLite3::Statement stmt = this
+			->db.GetConnection()
+			->PrepareStatement("INSERT INTO courses (id, name) VALUES (?, ?);");
+		stmt.Bind(1, course.GetId());
+		stmt.Bind(2, wxString(course.GetName()));
+		return stmt.ExecuteUpdate() > 0;
+	} catch(const wxSQLite3::Exception&) {
+		return false;
+	}
 }
 
 bool CourseDbService::UpdateCourse(const Course& course) {
-	for(auto& existing : this->courses) {
-		if(existing.GetId() == course.GetId()) {
-			existing.UpdateName(course.GetName());
-			return true;
-		}
-	}
-	return false;
+	wxSQLite3::Statement stmt = this
+		->db.GetConnection()
+		->PrepareStatement("UPDATE courses SET name = ? WHERE id = ?;");
+
+	stmt.Bind(1, wxString(course.GetName()));
+	stmt.Bind(2, course.GetId());
+	return stmt.ExecuteUpdate() > 0;
 }
 
-bool CourseDbService::DeleteCourse(int courseID) {
-	auto it = std::remove_if(this->courses.begin(), this->courses.end(), [courseID](const Course& course) {
-		return course.GetId() == courseID;
-	});
+bool CourseDbService::DeleteCourse(std::string courseID) {
+	wxSQLite3::Statement stmt = this
+		->db.GetConnection()
+		->PrepareStatement("DELETE FROM courses WHERE id = ?;");
 
-	if(it == this->courses.end()) { return false; }
-
-	this->courses.erase(it, this->courses.end());
-	return true;
+	stmt.Bind(1, courseID);
+	return stmt.ExecuteUpdate() > 0;
 }
