@@ -5,24 +5,20 @@
 #include "create_event_response.h"
 #include "../../../ServiceInterfaces/calendar_api_service.h"
 #include "../../../ServiceInterfaces/app_settings_service.h"
-#include "../../../ServiceInterfaces/uuid_generator_service.h"
 
 class CreateEventUseCase {
 	public:
 		CreateEventUseCase(
 			ICalendarAPIService& calendarAPIService,
-			IAppSettingsService& appSettingsService,
-			IUuidGeneratorService& uuidGeneratorService
+			IAppSettingsService& appSettingsService
 		) : calendarAPIService(calendarAPIService),
-			appSettingsService(appSettingsService),
-			uuidGeneratorService(uuidGeneratorService) {}
+			appSettingsService(appSettingsService) {}
 
 		CreateEventResponse Execute(const CreateEventRequest& request);
 
 	private:
 		ICalendarAPIService& calendarAPIService;
 		IAppSettingsService& appSettingsService;
-		IUuidGeneratorService& uuidGeneratorService;
 };
 
 #endif

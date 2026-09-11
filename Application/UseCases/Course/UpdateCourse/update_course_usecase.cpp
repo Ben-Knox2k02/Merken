@@ -1,7 +1,7 @@
 #include "update_course_usecase.h"
 
 bool UpdateCourseUseCase::Execute(const UpdateCourseRequest& request) {
-	std::optional<Course> existingCourse = this->courseDBService.GetCourse(request.courseID);
+	std::optional<Course> existingCourse = this->courseDBService.GetCourse(request.courseId);
 	if(!existingCourse.has_value()) { return false; }
 
 	existingCourse->UpdateName(request.name);

@@ -3,22 +3,24 @@
 
 #include <string>
 #include <vector>
-#include <wx/datetime.h>
 #include "card.h"
 
 class Deck {
 	public:
 		Deck(
+			int deckId,
 			const std::string& name,
-			const std::string& description,
-			const wxDateTime& creationDate
-		) : name(name),
+			const std::string& description = "",
+			const std::string& createdAt = ""
+		) : deckId(deckId),
+			name(name),
 			description(description),
-			creationDate(creationDate) {}
+			createdAt(createdAt) {}
 
+		int GetDeckId() const { return this->deckId; }
 		const std::string& GetName() const { return this->name; }
 		const std::string& GetDescription() const { return this->description; }
-		const wxDateTime& GetCreationDate() const { return this->creationDate; }
+		const std::string& GetCreatedAt() const { return this->createdAt; }
 		const std::vector<Card>& GetCards() const { return this->cards; }
 
 		void UpdateName(const std::string& newName) {
@@ -33,10 +35,20 @@ class Deck {
 			this->cards.push_back(card);
 		}
 
+		void RemoveCard(int cardId) {
+			for (auto it = this->cards.begin(); it != this->cards.end(); ++it) {
+				if (it->GetCardId() == cardId) {
+					this->cards.erase(it);
+					return;
+				}
+			}
+		}
+
 	private:
+		int deckId;
 		std::string name;
 		std::string description;
-		wxDateTime creationDate;
+		std::string createdAt;
 		std::vector<Card> cards;
 };
 

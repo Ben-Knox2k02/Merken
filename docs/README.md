@@ -53,17 +53,14 @@ A user action = one use case. Use cases depend on **interfaces**, never on Infra
 4. `Execute` uses domain types (`Course`, `CalendarEvent`, …) and returns a response
 
 ```cpp
-CreateCourseUseCase(
-    ICourseDBService& courseDBService,
-    IUuidGeneratorService& uuidGeneratorService
-);
+CreateCourseUseCase(ICourseDBService& courseDBService);
 
 CreateCourseResponse Execute(const CreateCourseRequest& request);
 ```
 
 - Do **not** bind use cases in DI. UI does `injector.create<CreateCourseUseCase>()`.
 - Need a new capability (e.g. list decks)? Add a method to the interface in `Application/ServiceInterfaces/`. Database or API then implements it.
-- IDs come from `IUuidGeneratorService`, not from the UI.
+- IDs are `int` (`cardId`, `deckId`, `calendarEventId`, `courseId`). Pass `0` for a new row; SQLite assigns the auto-increment value.
 
 ---
 
@@ -86,7 +83,7 @@ DeckDbService(DatabaseContext& dbContext) : db(dbContext) {
 void DeckDbService::EnsureSchema() {
     this->db.GetConnection()->ExecuteUpdate(
         "CREATE TABLE IF NOT EXISTS decks ("
-        "id TEXT PRIMARY KEY,"
+        "deck_id INTEGER PRIMARY KEY AUTOINCREMENT,"
         "name TEXT NOT NULL"
         ");"
     );

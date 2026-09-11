@@ -2,15 +2,15 @@
 #define CREATE_EVENT_RESPONSE_H
 
 #include <string>
-#include <wx/datetime.h>
 
 struct CreateEventResponse {
-	std::string id;
-    std::string courseID;
-    std::string title;
-    std::string description;
-    wxDateTime startTime;
-    wxDateTime endTime;
+	int calendarEventId;
+	std::string title;
+	std::string description;
+	std::string startTime;
+	std::string endTime;
+	int reminderMinutes;
+	std::string googleEventId;
 };
 
 #endif

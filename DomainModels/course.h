@@ -3,11 +3,12 @@
 
 #include <string>
 
+// Leftover from the CourseTracker naming. SRS entity is Deck, not Course.
 class Course {
 	public:
-		Course(std::string id, const std::string& name) : id(id), name(name) {}
+		Course(int courseId, const std::string& name) : courseId(courseId), name(name) {}
 
-		const std::string& GetId() const { return this->id; }
+		int GetCourseId() const { return this->courseId; }
 		const std::string& GetName() const { return this->name; }
 
 		void UpdateName(const std::string& newName) {
@@ -15,7 +16,7 @@ class Course {
 		}
 
 	private:
-		std::string id;
+		int courseId;
 		std::string name;
 };
 

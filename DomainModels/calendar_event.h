@@ -2,35 +2,27 @@
 #define CALENDAR_EVENT_H
 
 #include <string>
-#include <wx/datetime.h>
 
 class CalendarEvent {
 	public:
 		CalendarEvent(
-			std::string id,
-			std::string courseID,
+			int calendarEventId,
 			const std::string& title,
-			const std::string& description,
-			const wxDateTime& startTime,
-			const wxDateTime& endTime
-		) : id(id),
-			courseID(courseID),
+			const std::string& startTime,
+			const std::string& endTime
+		) : calendarEventId(calendarEventId),
 			title(title),
-			description(description),
 			startTime(startTime),
-			endTime(endTime) {}
+			endTime(endTime),
+			reminderMinutes(60) {}
 
-		const std::string& GetId() const { return this->id; }
-		const std::string& GetCourseID() const { return this->courseID; }
+		int GetCalendarEventId() const { return this->calendarEventId; }
 		const std::string& GetTitle() const { return this->title; }
 		const std::string& GetDescription() const { return this->description; }
-		const wxDateTime& GetStartTime() const { return this->startTime; }
-		const wxDateTime& GetEndTime() const { return this->endTime; }
-
-		void UpdateTimeRange(const wxDateTime& newStartTime, const wxDateTime& newEndTime) {
-			this->startTime = newStartTime;
-			this->endTime = newEndTime;
-		}
+		const std::string& GetStartTime() const { return this->startTime; }
+		const std::string& GetEndTime() const { return this->endTime; }
+		int GetReminderMinutes() const { return this->reminderMinutes; }
+		const std::string& GetGoogleEventId() const { return this->googleEventId; }
 
 		void UpdateTitle(const std::string& newTitle) {
 			this->title = newTitle;
@@ -40,13 +32,27 @@ class CalendarEvent {
 			this->description = newDescription;
 		}
 
+		void UpdateTimeRange(const std::string& newStartTime, const std::string& newEndTime) {
+			this->startTime = newStartTime;
+			this->endTime = newEndTime;
+		}
+
+		void UpdateReminderMinutes(int minutes) {
+			this->reminderMinutes = minutes;
+		}
+
+		void SetGoogleEventId(const std::string& eventId) {
+			this->googleEventId = eventId;
+		}
+
 	private:
-		std::string id;
-		std::string courseID;
+		int calendarEventId;
 		std::string title;
 		std::string description;
-		wxDateTime startTime;
-		wxDateTime endTime;
+		std::string startTime;
+		std::string endTime;
+		int reminderMinutes;
+		std::string googleEventId;
 };
 
 #endif

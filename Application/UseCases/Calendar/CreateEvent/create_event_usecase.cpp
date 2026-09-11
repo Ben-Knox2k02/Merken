@@ -1,24 +1,20 @@
 #include "create_event_usecase.h"
 
 CreateEventResponse CreateEventUseCase::Execute(const CreateEventRequest& request) {
-	std::string newEventId = this->uuidGeneratorService.GenerateUuid();
-	CalendarEvent event(
-		newEventId,
-		request.courseID,
-		request.title,
-		request.description,
-		request.startTime,
-		request.endTime);
-		
+	CalendarEvent event(0, request.title, request.startTime, request.endTime);
+	event.UpdateDescription(request.description);
+	event.UpdateReminderMinutes(request.reminderMinutes);
+
 	AppSettings settings = this->appSettingsService.GetSettings();
 	CalendarEvent createdEvent = this->calendarAPIService.CreateEvent(event, settings);
 
 	return CreateEventResponse{
-		createdEvent.GetId(),
-		createdEvent.GetCourseID(),
+		createdEvent.GetCalendarEventId(),
 		createdEvent.GetTitle(),
 		createdEvent.GetDescription(),
 		createdEvent.GetStartTime(),
-		createdEvent.GetEndTime()
+		createdEvent.GetEndTime(),
+		createdEvent.GetReminderMinutes(),
+		createdEvent.GetGoogleEventId()
 	};
 }

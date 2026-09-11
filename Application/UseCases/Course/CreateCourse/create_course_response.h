@@ -4,7 +4,7 @@
 #include <string>
 
 struct CreateCourseResponse {
-	std::string id;
+	int courseId;
 	std::string name;
 };
 

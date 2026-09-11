@@ -11,10 +11,10 @@ class CourseDbService : public ICourseDBService {
 		};
 
 		std::vector<Course> GetCourses() override;
-		std::optional<Course> GetCourse(std::string courseID) override;
-		bool AddCourse(const Course& course) override;
+		std::optional<Course> GetCourse(int courseId) override;
+		int AddCourse(const Course& course) override;
 		bool UpdateCourse(const Course& course) override;
-		bool DeleteCourse(std::string courseID) override;
+		bool DeleteCourse(int courseId) override;
 
 	private:
 		DatabaseContext& db;
