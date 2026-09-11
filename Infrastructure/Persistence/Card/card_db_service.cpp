@@ -3,18 +3,18 @@
 #include <sstream>
 
 namespace {
-std::string JoinTags(const std::vector<std::string>& tags) {
+std::string JoinCsv(const std::vector<std::string>& values) {
 	std::string joined;
-	for (size_t i = 0; i < tags.size(); ++i) {
+	for (size_t i = 0; i < values.size(); ++i) {
 		if (i > 0) { joined += ", "; }
-		joined += tags[i];
+		joined += values[i];
 	}
 	return joined;
 }
 
-std::vector<std::string> SplitTags(const std::string& tags) {
+std::vector<std::string> SplitCsv(const std::string& values) {
 	std::vector<std::string> result;
-	std::stringstream stream(tags);
+	std::stringstream stream(values);
 	std::string item;
 	while (std::getline(stream, item, ',')) {
 		const auto start = item.find_first_not_of(" \t");
@@ -32,9 +32,9 @@ Card MapCardRow(wxSQLite3::ResultSet& result) {
 		result.GetString(2).ToStdString(),
 		result.GetString(3).ToStdString()
 	);
-	card.UpdateTags(SplitTags(result.GetString(4).ToStdString()));
+	card.UpdateTags(Tag::Split(result.GetString(4).ToStdString()));
 	if (result.GetInt(5) == static_cast<int>(CardType::MultipleChoice)) {
-		card.SetMultipleChoice(SplitTags(result.GetString(6).ToStdString()));
+		card.SetMultipleChoice(SplitCsv(result.GetString(6).ToStdString()));
 	}
 	return card;
 }
@@ -76,9 +76,9 @@ int CardDbService::AddCard(const Card& card) {
 		stmt.Bind(1, card.GetDeckId());
 		stmt.Bind(2, wxString(card.GetFront()));
 		stmt.Bind(3, wxString(card.GetBack()));
-		stmt.Bind(4, wxString(JoinTags(card.GetTags())));
+		stmt.Bind(4, wxString(Tag::Join(card.GetTags())));
 		stmt.Bind(5, static_cast<int>(card.GetCardType()));
-		stmt.Bind(6, wxString(JoinTags(card.GetChoices())));
+		stmt.Bind(6, wxString(JoinCsv(card.GetChoices())));
 		if (stmt.ExecuteUpdate() <= 0) { return 0; }
 		return static_cast<int>(this->db.GetConnection()->GetLastRowId().GetValue());
 	} catch (const wxSQLite3::Exception&) {
@@ -93,9 +93,9 @@ bool CardDbService::UpdateCard(const Card& card) {
 	);
 	stmt.Bind(1, wxString(card.GetFront()));
 	stmt.Bind(2, wxString(card.GetBack()));
-	stmt.Bind(3, wxString(JoinTags(card.GetTags())));
+	stmt.Bind(3, wxString(Tag::Join(card.GetTags())));
 	stmt.Bind(4, static_cast<int>(card.GetCardType()));
-	stmt.Bind(5, wxString(JoinTags(card.GetChoices())));
+	stmt.Bind(5, wxString(JoinCsv(card.GetChoices())));
 	stmt.Bind(6, card.GetCardId());
 	return stmt.ExecuteUpdate() > 0;
 }

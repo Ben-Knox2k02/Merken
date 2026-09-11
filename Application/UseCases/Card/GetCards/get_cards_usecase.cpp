@@ -1,5 +1,4 @@
 #include "get_cards_usecase.h"
-#include "../tag_utils.h"
 
 GetCardsResponse GetCardsUseCase::Execute(const GetCardsRequest& request) {
 	GetCardsResponse response;
@@ -9,7 +8,7 @@ GetCardsResponse GetCardsUseCase::Execute(const GetCardsRequest& request) {
 			card.GetDeckId(),
 			card.GetFront(),
 			card.GetBack(),
-			JoinTags(card.GetTags())
+			Tag::Join(card.GetTags())
 		});
 	}
 	return response;

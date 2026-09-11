@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include "tag.h"
 
 enum class CardType {
 	Recall,
@@ -29,7 +30,7 @@ class Card {
 		int GetDeckId() const { return this->deckId; }
 		const std::string& GetFront() const { return this->front; }
 		const std::string& GetBack() const { return this->back; }
-		const std::vector<std::string>& GetTags() const { return this->tags; }
+		const std::vector<Tag>& GetTags() const { return this->tags; }
 		CardType GetCardType() const { return this->cardType; }
 		const std::vector<std::string>& GetChoices() const { return this->choices; }
 		int GetIntervalDays() const { return this->intervalDays; }
@@ -43,7 +44,7 @@ class Card {
 			this->back = newBack;
 		}
 
-		void UpdateTags(const std::vector<std::string>& newTags) {
+		void UpdateTags(const std::vector<Tag>& newTags) {
 			this->tags = newTags;
 		}
 
@@ -88,7 +89,7 @@ class Card {
 		int deckId;
 		std::string front;
 		std::string back;
-		std::vector<std::string> tags;
+		std::vector<Tag> tags;
 		CardType cardType;
 		std::vector<std::string> choices;
 		int intervalDays;

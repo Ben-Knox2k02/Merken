@@ -1,5 +1,4 @@
 #include "update_card_usecase.h"
-#include "../tag_utils.h"
 #include <optional>
 
 bool UpdateCardUseCase::Execute(const UpdateCardRequest& request) {
@@ -7,6 +6,6 @@ bool UpdateCardUseCase::Execute(const UpdateCardRequest& request) {
 	if (!existing.has_value()) { return false; }
 
 	existing->UpdateContent(request.front, request.back);
-	existing->UpdateTags(SplitTags(request.tags));
+	existing->UpdateTags(Tag::Split(request.tags));
 	return this->cardDBService.UpdateCard(*existing);
 }
