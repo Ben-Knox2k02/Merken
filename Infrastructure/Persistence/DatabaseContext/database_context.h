@@ -1,6 +1,7 @@
 #ifndef DATABASE_CONTEXT_REAL_H
 #define DATABASE_CONTEXT_REAL_H
 
+#include <stdexcept>
 #include <wx/wxsqlite3.h>
 #include <string>
 #include <memory>
