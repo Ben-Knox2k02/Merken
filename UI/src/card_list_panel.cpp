@@ -1,118 +1,156 @@
 #include "card_list_panel.h"
+#include "app.h"
+#include "../../Application/UseCases/Card/GetCards/get_cards_usecase.h"
+#include "../../Application/UseCases/Card/CreateCard/create_card_usecase.h"
+#include "../../Application/UseCases/Card/UpdateCard/update_card_usecase.h"
+
+wxDECLARE_APP(App);
 
 CardListPanel::CardListPanel(wxWindow* parent, int deckID) : wxPanel(parent), deckID(deckID) {
-    this->rootSizer = new wxBoxSizer(wxVERTICAL);
+	this->rootSizer = new wxBoxSizer(wxVERTICAL);
 
-    this->header = new wxStaticText(this, wxID_ANY, "Cards in Deck");				 // HEADER
-    this->header->SetFont(this->header->GetFont().Bold());
-    this->rootSizer->Add(this->header, 0, wxALL, 10);
+	this->header = new wxStaticText(this, wxID_ANY, "Cards in Deck");
+	this->header->SetFont(this->header->GetFont().Bold());
+	this->rootSizer->Add(this->header, 0, wxALL, 10);
 
-    this->cardList = new wxDataViewCtrl(this, wxID_ANY);							 // CARD LIST
-    this->cardList->AppendTextColumn("Front", 0, wxDATAVIEW_CELL_INERT, 200);
-    this->cardList->AppendTextColumn("Back", 1,  wxDATAVIEW_CELL_INERT, 200);
-    this->cardList->AppendTextColumn("Tags", 2,  wxDATAVIEW_CELL_INERT, 200);
-	
+	this->cardList = new wxDataViewCtrl(this, wxID_ANY);
+	this->cardList->AppendTextColumn("Front", 0, wxDATAVIEW_CELL_INERT, 200);
+	this->cardList->AppendTextColumn("Back", 1, wxDATAVIEW_CELL_INERT, 200);
+	this->cardList->AppendTextColumn("Tags", 2, wxDATAVIEW_CELL_INERT, 200);
+
 	this->cardViewModel = new wxDataViewListStore();
-	this->cardList->AssociateModel(cardViewModel);
+	this->cardList->AssociateModel(this->cardViewModel);
 	this->cardViewModel->DecRef();
-	
-	wxVector<wxVariant> row;
-	row.push_back(wxVariant("Hola"));
-	row.push_back(wxVariant("Hello"));
-	row.push_back(wxVariant("Greeting"));
-	this->cardViewModel->AppendItem(row);
-	
-    this->rootSizer->Add(this->cardList, 1, wxEXPAND | wxALL, 10);
 
-    this->buttonSizer = new wxBoxSizer(wxHORIZONTAL);								 // BUTTONS
-	
-    this->addButton = new wxButton(this, wxID_ANY, "Add");
-    this->editButton = new wxButton(this, wxID_ANY, "Edit");
-    this->deleteButton = new wxButton(this, wxID_ANY, "Delete");
+	this->rootSizer->Add(this->cardList, 1, wxEXPAND | wxALL, 10);
 
-    this->buttonSizer->Add(this->addButton, 0, wxRIGHT, 5);
-    this->buttonSizer->Add(this->editButton, 0, wxRIGHT, 5);
-    this->buttonSizer->Add(this->deleteButton, 0);
+	this->buttonSizer = new wxBoxSizer(wxHORIZONTAL);
+	this->addButton = new wxButton(this, wxID_ANY, "Add");
+	this->editButton = new wxButton(this, wxID_ANY, "Edit");
+	this->deleteButton = new wxButton(this, wxID_ANY, "Delete");
 
-    this->rootSizer->Add(this->buttonSizer, 0, wxEXPAND | wxALL, 10);
-    this->SetSizer(this->rootSizer);
-    this->LoadCards();
+	this->buttonSizer->Add(this->addButton, 0, wxRIGHT, 5);
+	this->buttonSizer->Add(this->editButton, 0, wxRIGHT, 5);
+	this->buttonSizer->Add(this->deleteButton, 0);
 
-    this->addButton->Bind(wxEVT_BUTTON, &CardListPanel::OnAdd, this);				// BIND EVENTS
-    this->editButton->Bind(wxEVT_BUTTON, &CardListPanel::OnEdit, this);
-    this->deleteButton->Bind(wxEVT_BUTTON, &CardListPanel::OnDelete, this);
+	this->rootSizer->Add(this->buttonSizer, 0, wxEXPAND | wxALL, 10);
+	this->SetSizer(this->rootSizer);
+	this->LoadCards();
+
+	this->addButton->Bind(wxEVT_BUTTON, &CardListPanel::OnAdd, this);
+	this->editButton->Bind(wxEVT_BUTTON, &CardListPanel::OnEdit, this);
+	this->deleteButton->Bind(wxEVT_BUTTON, &CardListPanel::OnDelete, this);
+}
+
+void CardListPanel::SetDeck(int deckId) {
+	this->deckID = deckId;
+	this->LoadCards();
 }
 
 void CardListPanel::LoadCards() {
-    // TODO: Load cards from SQLite
+	this->cardViewModel->DeleteAllItems();
+	if (this->deckID == 0) { return; }
+
+	auto useCase = wxGetApp().GetInjector().create<GetCardsUseCase>();
+	GetCardsResponse response = useCase.Execute(GetCardsRequest{this->deckID});
+
+	for (const CardResponse& card : response.cards) {
+		wxVector<wxVariant> row;
+		row.push_back(wxVariant(wxString(card.front)));
+		row.push_back(wxVariant(wxString(card.back)));
+		row.push_back(wxVariant(wxString(card.tags)));
+		this->cardViewModel->AppendItem(row, static_cast<wxUIntPtr>(card.cardId));
+	}
 }
 
 int CardListPanel::GetSelectedRow() const {
 	wxDataViewItem item = this->cardList->GetSelection();
-	if(!item.IsOk()) { return -1; }
-	else { return this->cardViewModel->GetRow(item);}
+	if (!item.IsOk()) { return -1; }
+	return static_cast<int>(this->cardViewModel->GetRow(item));
 }
 
-void CardListPanel::OnAdd(wxCommandEvent& event) {								// ADD CARD
-	wxFrame* frame = wxDynamicCast(wxGetTopLevelParent(this), wxFrame);
-	if(frame) { frame->SetStatusText("Add Card"); }
-	
-	CardDialog dialog(this);
-	dialog.CentreOnParent();
-	if(dialog.ShowModal() == wxID_OK) {
-		wxVector<wxVariant> row;
-		row.push_back(wxVariant(dialog.frontCtrl->GetValue()));
-		row.push_back(wxVariant(dialog.backCtrl->GetValue()));
-		row.push_back(wxVariant(dialog.tagCtrl->GetValue()));
-		this->cardViewModel->AppendItem(row);
-	}
-	
+int CardListPanel::GetSelectedCardId() const {
+	wxDataViewItem item = this->cardList->GetSelection();
+	if (!item.IsOk()) { return 0; }
+	return static_cast<int>(this->cardViewModel->GetItemData(item));
 }
 
-void CardListPanel::OnEdit(wxCommandEvent& event) {								// EDIT CARD
-    wxFrame* frame = wxDynamicCast(wxGetTopLevelParent(this), wxFrame);
-	if(frame) { frame->SetStatusText("Edit Card"); }
-	
-	int row = this->GetSelectedRow();
-	if(row == -1) {
-		wxMessageBox("No Card Selected", "Edit Card", wxOK | wxICON_WARNING);
+void CardListPanel::OnAdd(wxCommandEvent&) {
+	if (this->deckID == 0) {
+		wxMessageBox("Select a deck first.", "Add Card", wxOK | wxICON_WARNING);
 		return;
 	}
-	
-	wxVariant front, back, tag;
+
+	CardDialog dialog(this);
+	dialog.CentreOnParent();
+	if (dialog.ShowModal() != wxID_OK) { return; }
+
+	const std::string front = dialog.frontCtrl->GetValue().ToStdString();
+	const std::string back = dialog.backCtrl->GetValue().ToStdString();
+	if (front.empty() || back.empty()) {
+		wxMessageBox("Front and back are required.", "Add Card", wxOK | wxICON_WARNING);
+		return;
+	}
+
+	CreateCardRequest request;
+	request.deckId = this->deckID;
+	request.front = front;
+	request.back = back;
+	request.tags = dialog.tagCtrl->GetValue().ToStdString();
+
+	auto useCase = wxGetApp().GetInjector().create<CreateCardUseCase>();
+	CreateCardResponse response = useCase.Execute(request);
+	if (response.cardId == 0) {
+		wxMessageBox("Could not save card.", "Add Card", wxOK | wxICON_ERROR);
+		return;
+	}
+
+	this->LoadCards();
+}
+
+void CardListPanel::OnEdit(wxCommandEvent&) {
+	const int cardId = this->GetSelectedCardId();
+	if (cardId == 0) {
+		wxMessageBox("No card selected.", "Edit Card", wxOK | wxICON_WARNING);
+		return;
+	}
+
+	int row = this->GetSelectedRow();
 	wxDataViewItem item = this->cardViewModel->GetItem(row);
+	wxVariant front, back, tag;
 	this->cardViewModel->GetValue(front, item, 0);
 	this->cardViewModel->GetValue(back, item, 1);
 	this->cardViewModel->GetValue(tag, item, 2);
-	
+
 	CardDialog dialog(this);
-	dialog.CentreOnParent();
 	dialog.frontCtrl->SetValue(front.GetString());
 	dialog.backCtrl->SetValue(back.GetString());
 	dialog.tagCtrl->SetValue(tag.GetString());
-	
-	if(dialog.ShowModal() == wxID_OK) {
-		this->cardViewModel->SetValue(wxVariant(dialog.frontCtrl->GetValue()), item, 0);
-		this->cardViewModel->SetValue(wxVariant(dialog.backCtrl->GetValue()), item, 1);
-		this->cardViewModel->SetValue(wxVariant(dialog.tagCtrl->GetValue()), item, 2);
-	}
-	
-}
+	dialog.CentreOnParent();
+	if (dialog.ShowModal() != wxID_OK) { return; }
 
-void CardListPanel::OnDelete(wxCommandEvent& event) {							// DELETE CARD
-	wxFrame* frame = wxDynamicCast(wxGetTopLevelParent(this), wxFrame);
-	if(frame) { frame->SetStatusText("Delete Card"); }
-	
-	int row = this->GetSelectedRow();
-	if(row == -1) {
-		wxMessageBox("No card selected", "Delete Card", wxOK | wxICON_WARNING);
+	const std::string newFront = dialog.frontCtrl->GetValue().ToStdString();
+	const std::string newBack = dialog.backCtrl->GetValue().ToStdString();
+	if (newFront.empty() || newBack.empty()) {
+		wxMessageBox("Front and back are required.", "Edit Card", wxOK | wxICON_WARNING);
 		return;
 	}
-	else {
-		int answer = wxMessageBox("Delete this card?", "Confirm Delete", wxYES_NO | wxICON_QUESTION);
-		if(answer == wxYES) {
-			wxDataViewItem item = this->cardViewModel->GetItem(row);
-			this->cardViewModel->DeleteItem(row);
-		}
+
+	UpdateCardRequest request;
+	request.cardId = cardId;
+	request.front = newFront;
+	request.back = newBack;
+	request.tags = dialog.tagCtrl->GetValue().ToStdString();
+
+	auto useCase = wxGetApp().GetInjector().create<UpdateCardUseCase>();
+	if (!useCase.Execute(request)) {
+		wxMessageBox("Could not update card.", "Edit Card", wxOK | wxICON_ERROR);
+		return;
 	}
+
+	this->LoadCards();
+}
+
+void CardListPanel::OnDelete(wxCommandEvent&) {
+	wxMessageBox("Delete is not implemented yet.", "Delete Card", wxOK | wxICON_INFORMATION);
 }

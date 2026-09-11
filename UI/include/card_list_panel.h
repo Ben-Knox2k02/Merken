@@ -8,7 +8,7 @@
 class CardListPanel : public wxPanel {
 	public:
 		CardListPanel(wxWindow* parent, int deckID);
-		
+
 		int deckID;
 		wxBoxSizer* rootSizer;
 		wxBoxSizer* buttonSizer;
@@ -18,10 +18,12 @@ class CardListPanel : public wxPanel {
 		wxButton* addButton;
 		wxButton* editButton;
 		wxButton* deleteButton;
-		
+
+		void SetDeck(int deckId);
 		void LoadCards();
 		int GetSelectedRow() const;
-		
+		int GetSelectedCardId() const;
+
 		void OnAdd(wxCommandEvent& event);
 		void OnEdit(wxCommandEvent& event);
 		void OnDelete(wxCommandEvent& event);

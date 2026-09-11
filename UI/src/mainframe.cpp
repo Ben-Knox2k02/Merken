@@ -49,11 +49,14 @@ MainFrame::MainFrame(const wxString& title) : wxFrame(nullptr, wxID_ANY, title, 
 	
 	this->rootSizer = new wxBoxSizer(wxHORIZONTAL);
 	this->currentPanel = nullptr;
+	this->cardListPanel = nullptr;
 	
 	this->deckPanel = new DeckPanel(this);
 
 	this->activePanel = new wxPanel(this, wxID_ANY);
-	this->SwapCurrentPanel(new CardListPanel(this->activePanel, 0));
+	this->cardListPanel = new CardListPanel(this->activePanel, 0);
+	this->SwapCurrentPanel(this->cardListPanel);
+	this->OnDeckSelected(this->deckPanel->GetSelectedDeckId());
 	
 	this->rootSizer->Add(deckPanel, 0, wxEXPAND | wxALL, 0);
 	this->rootSizer->Add(activePanel, 1, wxEXPAND | wxALL, 0);
@@ -73,6 +76,12 @@ MainFrame::MainFrame(const wxString& title) : wxFrame(nullptr, wxID_ANY, title, 
 	this->Bind(wxEVT_ENTER_WINDOW, &MainFrame::OnMouseEvent, this);
 	this->Bind(wxEVT_LEAVE_WINDOW, &MainFrame::OnMouseEvent, this);
 	this->Bind(wxEVT_CLOSE_WINDOW, &MainFrame::OnWindowClosed, this);
+}
+
+void MainFrame::OnDeckSelected(int deckId) {
+	if (this->cardListPanel != nullptr) {
+		this->cardListPanel->SetDeck(deckId);
+	}
 }
 
 void MainFrame::SwapCurrentPanel(wxPanel* newPanel) {
