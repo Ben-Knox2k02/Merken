@@ -20,7 +20,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential pkg-config libwxgtk3.2-dev uuid-dev
+          sudo apt-get install -y build-essential pkg-config libwxgtk3.2-dev
 
       - name: Install wxWidgets (macOS)
         if: runner.os == 'macOS'
@@ -59,7 +59,7 @@ jobs:
           cc -c ThirdParty/wxSQLite3/src/sqlite3mc_amalgamation.c -IThirdParty/wxSQLite3/src -o obj/sqlite3mc_amalgamation.o
 
           EXTRALIBS="-lpthread"
-          if [ "$RUNNER_OS" = "Linux" ]; then EXTRALIBS="$EXTRALIBS -ldl -luuid"; fi
+          if [ "$RUNNER_OS" = "Linux" ]; then EXTRALIBS="$EXTRALIBS -ldl"; fi
           g++ obj/*.o $(wx-config --libs) $EXTRALIBS -o CourseTracker
 
       - name: Compile and link (Windows / MSYS2)
@@ -84,4 +84,4 @@ jobs:
           echo "Compiling ThirdParty/wxSQLite3/src/sqlite3mc_amalgamation.c"
           cc -c ThirdParty/wxSQLite3/src/sqlite3mc_amalgamation.c -IThirdParty/wxSQLite3/src -o obj/sqlite3mc_amalgamation.o
 
-          g++ obj/*.o $(wx-config --libs) -lrpcrt4 -o CourseTracker.exe
+          g++ obj/*.o $(wx-config --libs) -o CourseTracker.exe

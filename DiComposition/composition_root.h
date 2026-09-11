@@ -19,14 +19,12 @@
 #include "../Application/ServiceInterfaces/calendar_api_service.h"
 #include "../Application/ServiceInterfaces/ai_api_service.h"
 #include "../Application/ServiceInterfaces/app_settings_service.h"
-#include "../Application/ServiceInterfaces/uuid_generator_service.h"
 
 #include "../Infrastructure/Persistence/DatabaseContext/database_context.h"
 #include "../Infrastructure/Persistence/Course/course_db_service.h"
 #include "../Infrastructure/GoogleCalendar/google_calendar_service.h"
 #include "../Infrastructure/GeminiApi/gemini_api_service.h"
 #include "../Infrastructure/AppSettings/app_settings_service.h"
-#include "../Infrastructure/Uuid/uuid_generator_service.h"
 
 namespace di = boost::di;
 
@@ -39,8 +37,7 @@ inline auto MakeInjector() {
 		di::bind<ICourseDBService>().to<CourseDbService>().in(di::singleton),
 		di::bind<ICalendarAPIService>().to<GoogleCalendarService>().in(di::singleton),
 		di::bind<IAIAPIService>().to<GeminiApiService>().in(di::singleton),
-		di::bind<IAppSettingsService>().to<AppSettingsService>().in(di::singleton),
-		di::bind<IUuidGeneratorService>().to<UuidGeneratorService>().in(di::singleton)
+		di::bind<IAppSettingsService>().to<AppSettingsService>().in(di::singleton)
 	);
 }
 
