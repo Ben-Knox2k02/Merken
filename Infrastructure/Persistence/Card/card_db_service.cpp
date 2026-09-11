@@ -36,6 +36,10 @@ Card MapCardRow(wxSQLite3::ResultSet& result) {
 	if (result.GetInt(5) == static_cast<int>(CardType::MultipleChoice)) {
 		card.SetMultipleChoice(SplitCsv(result.GetString(6).ToStdString()));
 	}
+	std::optional<Date> nextReviewDate = Date::Parse(result.GetString(7).ToStdString());
+	if (nextReviewDate.has_value()) {
+		card.SetNextReviewDate(*nextReviewDate);
+	}
 	return card;
 }
 }
@@ -43,7 +47,7 @@ Card MapCardRow(wxSQLite3::ResultSet& result) {
 std::vector<Card> CardDbService::GetCards(int deckId) {
 	std::vector<Card> cards;
 	wxSQLite3::Statement stmt = this->db.GetConnection()->PrepareStatement(
-		"SELECT card_id, deck_id, front, back, tags, card_type, choices "
+		"SELECT card_id, deck_id, front, back, tags, card_type, choices, next_review_date "
 		"FROM cards WHERE deck_id = ? ORDER BY card_id;"
 	);
 	stmt.Bind(1, deckId);
@@ -57,7 +61,7 @@ std::vector<Card> CardDbService::GetCards(int deckId) {
 
 std::optional<Card> CardDbService::GetCard(int cardId) {
 	wxSQLite3::Statement stmt = this->db.GetConnection()->PrepareStatement(
-		"SELECT card_id, deck_id, front, back, tags, card_type, choices "
+		"SELECT card_id, deck_id, front, back, tags, card_type, choices, next_review_date "
 		"FROM cards WHERE card_id = ?;"
 	);
 	stmt.Bind(1, cardId);

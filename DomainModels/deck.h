@@ -23,6 +23,16 @@ class Deck {
 		const std::string& GetCreatedAt() const { return this->createdAt; }
 		const std::vector<Card>& GetCards() const { return this->cards; }
 
+		std::vector<Card> GetDueCards(const Date& onDate) const {
+			std::vector<Card> dueCards;
+			for (const Card& card : this->cards) {
+				if (card.IsDue(onDate)) {
+					dueCards.push_back(card);
+				}
+			}
+			return dueCards;
+		}
+
 		void UpdateName(const std::string& newName) {
 			this->name = newName;
 		}

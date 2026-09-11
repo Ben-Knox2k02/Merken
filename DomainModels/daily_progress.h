@@ -1,14 +1,14 @@
 #ifndef DAILY_PROGRESS_H
 #define DAILY_PROGRESS_H
 
-#include <string>
+#include "date.h"
 
 class DailyProgress {
 	public:
-		explicit DailyProgress(const std::string& date)
-			: date(date), cardsReviewed(0), cardsCorrect(0) {}
+		explicit DailyProgress(const Date& date, int cardsReviewed = 0, int cardsCorrect = 0)
+			: date(date), cardsReviewed(cardsReviewed), cardsCorrect(cardsCorrect) {}
 
-		const std::string& GetDate() const { return this->date; }
+		const Date& GetDate() const { return this->date; }
 		int GetCardsReviewed() const { return this->cardsReviewed; }
 		int GetCardsCorrect() const { return this->cardsCorrect; }
 
@@ -27,7 +27,7 @@ class DailyProgress {
 		}
 
 	private:
-		std::string date;
+		Date date;
 		int cardsReviewed;
 		int cardsCorrect;
 };

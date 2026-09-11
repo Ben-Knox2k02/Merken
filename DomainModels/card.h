@@ -3,7 +3,9 @@
 
 #include <string>
 #include <vector>
+#include <optional>
 #include "tag.h"
+#include "date.h"
 
 enum class CardType {
 	Recall,
@@ -36,8 +38,15 @@ class Card {
 		int GetIntervalDays() const { return this->intervalDays; }
 		double GetEaseFactor() const { return this->easeFactor; }
 		int GetRepetitionCount() const { return this->repetitionCount; }
-		const std::string& GetNextReviewDate() const { return this->nextReviewDate; }
-		const std::string& GetLastReviewedDate() const { return this->lastReviewedDate; }
+		const std::optional<Date>& GetNextReviewDate() const { return this->nextReviewDate; }
+		const std::optional<Date>& GetLastReviewedDate() const { return this->lastReviewedDate; }
+
+		bool IsDue(const Date& onDate) const {
+			if (!this->nextReviewDate.has_value()) {
+				return true;
+			}
+			return *this->nextReviewDate <= onDate;
+		}
 
 		void UpdateContent(const std::string& newFront, const std::string& newBack) {
 			this->front = newFront;
@@ -58,7 +67,7 @@ class Card {
 			this->choices.clear();
 		}
 
-		void RecordReview(bool remembered, const std::string& reviewedOnDate) {
+		void RecordReview(bool remembered, const Date& reviewedOnDate) {
 			this->lastReviewedDate = reviewedOnDate;
 
 			if (!remembered) {
@@ -80,7 +89,7 @@ class Card {
 			}
 		}
 
-		void SetNextReviewDate(const std::string& date) {
+		void SetNextReviewDate(const Date& date) {
 			this->nextReviewDate = date;
 		}
 
@@ -95,8 +104,8 @@ class Card {
 		int intervalDays;
 		double easeFactor;
 		int repetitionCount;
-		std::string nextReviewDate;
-		std::string lastReviewedDate;
+		std::optional<Date> nextReviewDate;
+		std::optional<Date> lastReviewedDate;
 };
 
 #endif
