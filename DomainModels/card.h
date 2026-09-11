@@ -93,6 +93,16 @@ class Card {
 			this->nextReviewDate = date;
 		}
 
+		void SetLastReviewedDate(const Date& date) {
+			this->lastReviewedDate = date;
+		}
+
+		void SetReviewState(int intervalDays, double easeFactor, int repetitionCount) {
+			this->intervalDays = intervalDays;
+			this->easeFactor = easeFactor;
+			this->repetitionCount = repetitionCount;
+		}
+
 	private:
 		int cardId;
 		int deckId;

@@ -4,16 +4,18 @@
 #include "create_deck_request.h"
 #include "create_deck_response.h"
 #include "../../../ServiceInterfaces/deck_db_service.h"
+#include "../../../ServiceInterfaces/date_provider_service.h"
 
 class CreateDeckUseCase {
 	public:
-		explicit CreateDeckUseCase(IDeckDBService& deckDBService)
-			: deckDBService(deckDBService) {}
+		CreateDeckUseCase(IDeckDBService& deckDBService, IDateProviderService& dateProviderService)
+			: deckDBService(deckDBService), dateProviderService(dateProviderService) {}
 
 		CreateDeckResponse Execute(const CreateDeckRequest& request);
 
 	private:
 		IDeckDBService& deckDBService;
+		IDateProviderService& dateProviderService;
 };
 
 #endif

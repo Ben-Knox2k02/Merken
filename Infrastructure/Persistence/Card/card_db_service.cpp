@@ -36,9 +36,14 @@ Card MapCardRow(wxSQLite3::ResultSet& result) {
 	if (result.GetInt(5) == static_cast<int>(CardType::MultipleChoice)) {
 		card.SetMultipleChoice(SplitCsv(result.GetString(6).ToStdString()));
 	}
+	card.SetReviewState(result.GetInt(9), result.GetDouble(10), result.GetInt(11));
 	std::optional<Date> nextReviewDate = Date::Parse(result.GetString(7).ToStdString());
 	if (nextReviewDate.has_value()) {
 		card.SetNextReviewDate(*nextReviewDate);
+	}
+	std::optional<Date> lastReviewedDate = Date::Parse(result.GetString(8).ToStdString());
+	if (lastReviewedDate.has_value()) {
+		card.SetLastReviewedDate(*lastReviewedDate);
 	}
 	return card;
 }
@@ -47,7 +52,8 @@ Card MapCardRow(wxSQLite3::ResultSet& result) {
 std::vector<Card> CardDbService::GetCards(int deckId) {
 	std::vector<Card> cards;
 	wxSQLite3::Statement stmt = this->db.GetConnection()->PrepareStatement(
-		"SELECT card_id, deck_id, front, back, tags, card_type, choices, next_review_date "
+		"SELECT card_id, deck_id, front, back, tags, card_type, choices, "
+		"next_review_date, last_reviewed_date, interval_days, ease_factor, repetition_count "
 		"FROM cards WHERE deck_id = ? ORDER BY card_id;"
 	);
 	stmt.Bind(1, deckId);
@@ -61,7 +67,8 @@ std::vector<Card> CardDbService::GetCards(int deckId) {
 
 std::optional<Card> CardDbService::GetCard(int cardId) {
 	wxSQLite3::Statement stmt = this->db.GetConnection()->PrepareStatement(
-		"SELECT card_id, deck_id, front, back, tags, card_type, choices, next_review_date "
+		"SELECT card_id, deck_id, front, back, tags, card_type, choices, "
+		"next_review_date, last_reviewed_date, interval_days, ease_factor, repetition_count "
 		"FROM cards WHERE card_id = ?;"
 	);
 	stmt.Bind(1, cardId);
@@ -92,7 +99,9 @@ int CardDbService::AddCard(const Card& card) {
 
 bool CardDbService::UpdateCard(const Card& card) {
 	wxSQLite3::Statement stmt = this->db.GetConnection()->PrepareStatement(
-		"UPDATE cards SET front = ?, back = ?, tags = ?, card_type = ?, choices = ? "
+		"UPDATE cards SET front = ?, back = ?, tags = ?, card_type = ?, choices = ?, "
+		"interval_days = ?, ease_factor = ?, repetition_count = ?, "
+		"next_review_date = ?, last_reviewed_date = ? "
 		"WHERE card_id = ?;"
 	);
 	stmt.Bind(1, wxString(card.GetFront()));
@@ -100,6 +109,11 @@ bool CardDbService::UpdateCard(const Card& card) {
 	stmt.Bind(3, wxString(Tag::Join(card.GetTags())));
 	stmt.Bind(4, static_cast<int>(card.GetCardType()));
 	stmt.Bind(5, wxString(JoinCsv(card.GetChoices())));
-	stmt.Bind(6, card.GetCardId());
+	stmt.Bind(6, card.GetIntervalDays());
+	stmt.Bind(7, card.GetEaseFactor());
+	stmt.Bind(8, card.GetRepetitionCount());
+	stmt.Bind(9, wxString(card.GetNextReviewDate().has_value() ? card.GetNextReviewDate()->ToIso() : ""));
+	stmt.Bind(10, wxString(card.GetLastReviewedDate().has_value() ? card.GetLastReviewedDate()->ToIso() : ""));
+	stmt.Bind(11, card.GetCardId());
 	return stmt.ExecuteUpdate() > 0;
 }
