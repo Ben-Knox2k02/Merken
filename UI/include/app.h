@@ -1,6 +1,6 @@
 #include <wx/wx.h>
 #include <optional>
-#include "../../Composition/composition_root.h"
+#include "../../DiComposition/composition_root.h"
 
 class App : public wxApp {
 	public:
