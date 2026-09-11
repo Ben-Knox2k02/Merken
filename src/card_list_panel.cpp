@@ -15,9 +15,10 @@ CardListPanel::CardListPanel(wxWindow* parent, int deckID) : wxPanel(parent), de
     this->cardList = new wxDataViewCtrl(this, wxID_ANY);							 // CARD LIST
 	this->cardList->SetBackgroundColour(wxColour(*wxBLUE));
 	this->cardList->SetForegroundColour(wxColour(*wxWHITE));
-    this->cardList->AppendTextColumn("Front", 0, wxDATAVIEW_CELL_INERT, 200);
-    this->cardList->AppendTextColumn("Back", 1,  wxDATAVIEW_CELL_INERT, 200);
-    this->cardList->AppendTextColumn("Tags", 2,  wxDATAVIEW_CELL_INERT, 200);
+	
+    this->cardList->AppendTextColumn("Front", 0, wxDATAVIEW_CELL_INERT, 300);
+    this->cardList->AppendTextColumn("Back", 1,  wxDATAVIEW_CELL_INERT, 300);
+    this->cardList->AppendTextColumn("Tags", 2,  wxDATAVIEW_CELL_INERT, 300);
 	
 	this->cardViewModel = new wxDataViewListStore();
 	this->cardList->AssociateModel(cardViewModel);
@@ -49,17 +50,19 @@ CardListPanel::CardListPanel(wxWindow* parent, int deckID) : wxPanel(parent), de
     this->buttonSizer->Add(this->editButton, 0, 5);
     this->buttonSizer->Add(this->deleteButton, 0, 5);
 
-    this->rootSizer->Add(this->buttonSizer, 0, wxALL, 10);
+    this->rootSizer->Add(this->buttonSizer, 0, wxALIGN_CENTER | wxALL, 10);
     this->SetSizer(this->rootSizer);
     this->LoadCards();
+	
+	//======== BIND EVENT HANDLERS =======================================
 
 	this->Bind(wxEVT_PAINT, &CardListPanel::OnPaint, this);
-    this->addButton->Bind(wxEVT_BUTTON, &CardListPanel::OnAdd, this);				// BIND EVENTS
+    this->addButton->Bind(wxEVT_BUTTON, &CardListPanel::OnAdd, this);				
     this->editButton->Bind(wxEVT_BUTTON, &CardListPanel::OnEdit, this);
     this->deleteButton->Bind(wxEVT_BUTTON, &CardListPanel::OnDelete, this);
 }
 
-void CardListPanel::OnPaint(wxPaintEvent& event) {
+void CardListPanel::OnPaint(wxPaintEvent& event) {				// PAINT METHOD FOR DOUBLE BUFFERING
 	wxAutoBufferedPaintDC dc(this);
 	dc.SetBrush(wxBrush(this->GetBackgroundColour()));
 	dc.SetPen(*wxTRANSPARENT_PEN);
@@ -67,7 +70,7 @@ void CardListPanel::OnPaint(wxPaintEvent& event) {
 }
 
 void CardListPanel::LoadCards() {
-    // TODO: Load cards from SQLite
+    // TODO: LOAD CARD DATA FROM SQLite
 }
 
 int CardListPanel::GetSelectedRow() const {
@@ -90,6 +93,7 @@ void CardListPanel::OnAdd(wxCommandEvent& event) {								// ADD CARD
 		this->cardViewModel->AppendItem(row);
 	}
 	
+	event.Skip();		// PROPAGATE EVENTS
 }
 
 void CardListPanel::OnEdit(wxCommandEvent& event) {								// EDIT CARD
@@ -120,6 +124,7 @@ void CardListPanel::OnEdit(wxCommandEvent& event) {								// EDIT CARD
 		this->cardViewModel->SetValue(wxVariant(dialog.tagCtrl->GetValue()), item, 2);
 	}
 	
+	event.Skip();
 }
 
 void CardListPanel::OnDelete(wxCommandEvent& event) {							// DELETE CARD
@@ -138,4 +143,6 @@ void CardListPanel::OnDelete(wxCommandEvent& event) {							// DELETE CARD
 			this->cardViewModel->DeleteItem(row);
 		}
 	}
+	
+	event.Skip();
 }
