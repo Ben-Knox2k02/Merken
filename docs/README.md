@@ -13,6 +13,19 @@ New `.cpp` files under `Application/`, `Infrastructure/`, and `UI/src/` are pick
 
 ---
 
+## Due tasks
+
+Open work for each role is a checklist next to this file. Check items off when done.
+
+| Role | Where to look |
+|---|---|
+| UI | [UI_TODO.md](UI_TODO.md) |
+| Database | [DB_TODO.md](DB_TODO.md) |
+| Application | no open task list right now — study/review use cases are in |
+| APIs | still the Gemini / Calendar stubs below |
+
+---
+
 ## UI
 
 Call **use cases** from event handlers. Do not talk to SQLite, Gemini, or Google Calendar.
@@ -37,7 +50,7 @@ void OnAddDeck(wxCommandEvent&) {
 - Fill a `*Request`, call `Execute`, read the `*Response`.
 - If a screen action has no use case yet, ask Application to add one.
 
-Existing use cases: `CreateDeckUseCase`, `UpdateDeckUseCase`, `GetDecksUseCase`, `CreateCardUseCase`, `UpdateCardUseCase`, `GetCardsUseCase`, `CreateEventUseCase`.
+Existing use cases: `CreateDeckUseCase`, `UpdateDeckUseCase`, `GetDecksUseCase`, `StudyDeckUseCase`, `CreateCardUseCase`, `UpdateCardUseCase`, `GetCardsUseCase`, `ReviewCardUseCase`, `CreateEventUseCase`.
 
 ---
 
