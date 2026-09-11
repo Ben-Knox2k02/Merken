@@ -19,25 +19,25 @@ Call **use cases** from event handlers. Do not talk to SQLite, Gemini, or Google
 
 ```cpp
 #include "app.h"
-#include "../../Application/UseCases/Course/CreateCourse/create_course_usecase.h"
+#include "../../Application/UseCases/Deck/CreateDeck/create_deck_usecase.h"
 wxDECLARE_APP(App);
 
-void OnAddCourse(wxCommandEvent&) {
-    CreateCourseRequest request;
+void OnAddDeck(wxCommandEvent&) {
+    CreateDeckRequest request;
     request.name = nameCtrl->GetValue().ToStdString();
 
-    auto useCase = wxGetApp().GetInjector().create<CreateCourseUseCase>();
-    CreateCourseResponse response = useCase.Execute(request);
+    auto useCase = wxGetApp().GetInjector().create<CreateDeckUseCase>();
+    CreateDeckResponse response = useCase.Execute(request);
 
     // update the screen from response
 }
 ```
 
-- Resolve with `create<TheUseCase>()`, never `create<ICourseDBService>()`.
+- Resolve with `create<TheUseCase>()`, never `create<IDeckDBService>()`.
 - Fill a `*Request`, call `Execute`, read the `*Response`.
 - If a screen action has no use case yet, ask Application to add one.
 
-Existing use cases: `CreateCourseUseCase`, `UpdateCourseUseCase`, `CreateEventUseCase`.
+Existing use cases: `CreateDeckUseCase`, `UpdateDeckUseCase`, `GetDecksUseCase`, `CreateCardUseCase`, `UpdateCardUseCase`, `GetCardsUseCase`, `CreateEventUseCase`.
 
 ---
 
@@ -49,18 +49,18 @@ A user action = one use case. Use cases depend on **interfaces**, never on Infra
 
 1. Folder: `Application/UseCases/<Area>/<Name>/`
 2. Add `*_request.h`, `*_response.h`, `*_usecase.h`, `*_usecase.cpp`
-3. Constructor takes interface references (`ICourseDBService&`, `IAIAPIService&`, …)
-4. `Execute` uses domain types (`Course`, `CalendarEvent`, …) and returns a response
+3. Constructor takes interface references (`IDeckDBService&`, `IAIAPIService&`, …)
+4. `Execute` uses domain types (`Deck`, `CalendarEvent`, …) and returns a response
 
 ```cpp
-CreateCourseUseCase(ICourseDBService& courseDBService);
+CreateDeckUseCase(IDeckDBService& deckDBService);
 
-CreateCourseResponse Execute(const CreateCourseRequest& request);
+CreateDeckResponse Execute(const CreateDeckRequest& request);
 ```
 
-- Do **not** bind use cases in DI. UI does `injector.create<CreateCourseUseCase>()`.
+- Do **not** bind use cases in DI. UI does `injector.create<CreateDeckUseCase>()`.
 - Need a new capability (e.g. list decks)? Add a method to the interface in `Application/ServiceInterfaces/`. Database or API then implements it.
-- IDs are `int` (`cardId`, `deckId`, `calendarEventId`, `courseId`). Pass `0` for a new row; SQLite assigns the auto-increment value.
+- IDs are `int` (`cardId`, `deckId`, `calendarEventId`). Pass `0` for a new row; SQLite assigns the auto-increment value.
 
 ---
 
