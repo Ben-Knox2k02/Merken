@@ -104,33 +104,23 @@ di::bind<IDeckDBService>().to<DeckDbService>().in(di::singleton),
 
 ## Third-party APIs (Gemini + Google Calendar)
 
-Interfaces already exist. Fill in the stubs; keep the method signatures unless Application agrees to change them.
+Fill in the stubs. Keep method signatures unless Application agrees to change them.
 
-| Interface | Implementation | Status |
-|---|---|---|
-| `IAIAPIService` | `Infrastructure/GeminiApi/gemini_api_service.*` | stub (`return ""`) |
-| `ICalendarAPIService` | `Infrastructure/GoogleCalendar/google_calendar_service.*` | stub (echo event / `true`) |
+| Interface | Implementation |
+|---|---|
+| `IAIAPIService` | `Infrastructure/GeminiApi/gemini_api_service.*` |
+| `ICalendarAPIService` | `Infrastructure/GoogleCalendar/google_calendar_service.*` |
 
-Keys come from `IAppSettingsService` / `AppSettings` (`aiApiKey`, `calendarApiKey` in `app_settings.json`). Do not hardcode secrets.
-
-```cpp
-std::string GeminiApiService::GenerateResponse(
-    const std::string& prompt,
-    const AppSettings& settings
-) {
-    // call Gemini with settings.aiApiKey
-}
-```
-
-Use cases already pass `AppSettings` in (see `CreateEventUseCase`). If you need extra config, add a field to `AppSettings` and `app_settings.json`.
-
-**New API service:** add interface under `Application/ServiceInterfaces/`, implement under `Infrastructure/`, then register:
+**HTTP:** do not use curl/wxWebRequest yourself. Injected `IHttpClient& httpClient` is already there (`Get` / `PostJson`). Keys come from `AppSettings` (`aiApiKey`, `calendarApiKey`). Do not hardcode secrets.
 
 ```cpp
-di::bind<IAIAPIService>().to<GeminiApiService>().in(di::singleton),
+HttpResponse response = this->httpClient.PostJson(url, jsonBody, {
+    {"x-goog-api-key", settings.aiApiKey}
+});
+if (!response.Ok()) { return ""; }
 ```
 
-Services are **singletons**. Use cases are not.
+Use cases already pass `AppSettings` (see `CreateEventUseCase`). New API service: interface in `Application/ServiceInterfaces/`, impl in `Infrastructure/`, bind as singleton in `DiComposition`. Do not bind `IHttpClient` again — it is already registered.
 
 ---
 
