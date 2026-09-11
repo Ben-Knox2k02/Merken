@@ -51,6 +51,7 @@ void DeckPanel::LoadDecks() {
 	const int previouslySelected = this->GetSelectedDeckId();
 	this->deckViewModel->DeleteAllItems();
 
+	// Retrieve the list of decks using the GetDecksUseCase.
 	auto useCase = wxGetApp().GetInjector().create<GetDecksUseCase>();
 	GetDecksResponse response = useCase.Execute();
 
@@ -105,10 +106,12 @@ void DeckPanel::OnAddDeck(wxCommandEvent&) {
 		return;
 	}
 
+	// Prepare the request to create a new deck.
 	CreateDeckRequest request;
 	request.name = name;
 	request.description = dialog.descriptionCtrl->GetValue().ToStdString();
 
+	// Call the CreateDeckUseCase to create a new deck.
 	auto useCase = wxGetApp().GetInjector().create<CreateDeckUseCase>();
 	CreateDeckResponse response = useCase.Execute(request);
 	if (response.deckId == 0) {
@@ -128,6 +131,7 @@ void DeckPanel::OnEditDeck(wxCommandEvent&) {
 		return;
 	}
 
+	// Retrieve the list of decks using the GetDecksUseCase.
 	auto getDecks = wxGetApp().GetInjector().create<GetDecksUseCase>();
 	GetDecksResponse decks = getDecks.Execute();
 	const DeckResponse* selected = nullptr;
@@ -150,11 +154,13 @@ void DeckPanel::OnEditDeck(wxCommandEvent&) {
 		return;
 	}
 
+	// Prepare the request to update the deck with the new information.
 	UpdateDeckRequest request;
 	request.deckId = deckId;
 	request.name = name;
 	request.description = dialog.descriptionCtrl->GetValue().ToStdString();
 
+	// Call the UpdateDeckUseCase to update the deck with the new information.
 	auto useCase = wxGetApp().GetInjector().create<UpdateDeckUseCase>();
 	if (!useCase.Execute(request)) {
 		ShowCenteredMessage(this, "Could not update deck.", "Edit Deck", wxOK | wxICON_ERROR);

@@ -52,6 +52,7 @@ void CardListPanel::LoadCards() {
 	this->cardViewModel->DeleteAllItems();
 	if (this->deckID == 0) { return; }
 
+	// Retrieve the list of cards for the current deck using the GetCardsUseCase.
 	auto useCase = wxGetApp().GetInjector().create<GetCardsUseCase>();
 	GetCardsResponse response = useCase.Execute(GetCardsRequest{this->deckID});
 
@@ -92,12 +93,14 @@ void CardListPanel::OnAdd(wxCommandEvent&) {
 		return;
 	}
 
+	// Prepare the request to create a new card.
 	CreateCardRequest request;
 	request.deckId = this->deckID;
 	request.front = front;
 	request.back = back;
 	request.tags = dialog.tagCtrl->GetValue().ToStdString();
 
+	// Call the CreateCardUseCase to create a new card.
 	auto useCase = wxGetApp().GetInjector().create<CreateCardUseCase>();
 	CreateCardResponse response = useCase.Execute(request);
 	if (response.cardId == 0) {
@@ -134,13 +137,14 @@ void CardListPanel::OnEdit(wxCommandEvent&) {
 		ShowCenteredMessage(this, "Front and back are required.", "Edit Card", wxOK | wxICON_WARNING);
 		return;
 	}
-
+	// Prepare the request to update the card with the new information.
 	UpdateCardRequest request;
 	request.cardId = cardId;
 	request.front = newFront;
 	request.back = newBack;
 	request.tags = dialog.tagCtrl->GetValue().ToStdString();
 
+	// Call the UpdateCardUseCase to update the card with the new information.
 	auto useCase = wxGetApp().GetInjector().create<UpdateCardUseCase>();
 	if (!useCase.Execute(request)) {
 		ShowCenteredMessage(this, "Could not update card.", "Edit Card", wxOK | wxICON_ERROR);
