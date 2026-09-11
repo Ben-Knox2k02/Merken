@@ -1,24 +1,24 @@
-#include <wx/wxsqlite3.h>
-#include <string>
-#include <memory>
-#include <stdexcept>
-
 #ifndef DATABASE_CONTEXT_REAL_H
 #define DATABASE_CONTEXT_REAL_H
 
+#include <wx/wxsqlite3.h>
+#include <string>
+#include <memory>
+
 class DatabaseContext {
 	public:
-		DatabaseContext(const std::string& dbPath);
+		explicit DatabaseContext(const std::string& dbPath);
 		~DatabaseContext();
 
-        // Prevents copying and assignment of the DatabaseContext instance.
-        DatabaseContext(const DatabaseContext&) = delete;
-        DatabaseContext& operator=(const DatabaseContext&) = delete;
+		DatabaseContext(const DatabaseContext&) = delete;
+		DatabaseContext& operator=(const DatabaseContext&) = delete;
 
-        // Returns a pointer to the underlying wxSQLite3::Database instance.
-		wxSQLite3::Database* GetConnection() const;
+		wxSQLite3::Database* GetConnection();
 
 	private:
+		void EnsureOpen();
+
+		std::string dbPath;
 		std::unique_ptr<wxSQLite3::Database> db;
 };
 

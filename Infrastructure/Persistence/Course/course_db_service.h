@@ -2,8 +2,7 @@
 #define COURSE_DB_SERVICE_REAL_H
 
 #include "../../../Application/ServiceInterfaces/course_db_service.h"
-#include <wx/wxsqlite3.h>
-#include <database_context.h>
+#include "../DatabaseContext/database_context.h"
 
 class CourseDbService : public ICourseDBService {
 	public:

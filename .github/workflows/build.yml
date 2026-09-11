@@ -41,31 +41,47 @@ jobs:
         shell: bash
         run: |
           mkdir -p obj
-          find UseCases Infrastructure Application -name '*.cpp' | while read -r file; do
+          INC="-IUI/include -IThirdParty/boost-di -IThirdParty/wxSQLite3/include -IThirdParty/wxSQLite3/src $(wx-config --cxxflags)"
+          find Infrastructure Application -name '*.cpp' | while read -r file; do
             echo "Compiling $file"
-            g++ -std=c++17 -c "$file" $(wx-config --cxxflags) -o "obj/$(basename "${file%.cpp}").o"
+            g++ -std=c++17 -c "$file" $INC -o "obj/$(basename "${file%.cpp}").o"
           done
 
           for file in UI/src/*.cpp; do
             echo "Compiling $file"
-            g++ -std=c++17 -c "$file" -IUI/include $(wx-config --cxxflags) -o "obj/$(basename "${file%.cpp}").o"
+            g++ -std=c++17 -c "$file" $INC -o "obj/$(basename "${file%.cpp}").o"
           done
-          UUIDLIBS=""
-          if [ "$RUNNER_OS" = "Linux" ]; then UUIDLIBS="-luuid"; fi
-          g++ obj/app.o obj/mainframe.o obj/card_dialog.o obj/card_list_panel.o obj/deck_panel.o $(wx-config --libs) $UUIDLIBS -o CourseTracker
+
+          echo "Compiling ThirdParty/wxSQLite3/src/wxsqlite3.cpp"
+          g++ -std=c++17 -c ThirdParty/wxSQLite3/src/wxsqlite3.cpp $INC -o obj/wxsqlite3.o
+
+          echo "Compiling ThirdParty/wxSQLite3/src/sqlite3mc_amalgamation.c"
+          cc -c ThirdParty/wxSQLite3/src/sqlite3mc_amalgamation.c -IThirdParty/wxSQLite3/src -o obj/sqlite3mc_amalgamation.o
+
+          EXTRALIBS="-lpthread"
+          if [ "$RUNNER_OS" = "Linux" ]; then EXTRALIBS="$EXTRALIBS -ldl -luuid"; fi
+          g++ obj/*.o $(wx-config --libs) $EXTRALIBS -o CourseTracker
 
       - name: Compile and link (Windows / MSYS2)
         if: runner.os == 'Windows'
         shell: msys2 {0}
         run: |
           mkdir -p obj
-          find UseCases Infrastructure Application -name '*.cpp' | while read -r file; do
+          INC="-IUI/include -IThirdParty/boost-di -IThirdParty/wxSQLite3/include -IThirdParty/wxSQLite3/src $(wx-config --cxxflags)"
+          find Infrastructure Application -name '*.cpp' | while read -r file; do
             echo "Compiling $file"
-            g++ -std=c++17 -c "$file" $(wx-config --cxxflags) -o "obj/$(basename "${file%.cpp}").o"
+            g++ -std=c++17 -c "$file" $INC -o "obj/$(basename "${file%.cpp}").o"
           done
 
           for file in UI/src/*.cpp; do
             echo "Compiling $file"
-            g++ -std=c++17 -c "$file" -IUI/include $(wx-config --cxxflags) -o "obj/$(basename "${file%.cpp}").o"
+            g++ -std=c++17 -c "$file" $INC -o "obj/$(basename "${file%.cpp}").o"
           done
-          g++ obj/app.o obj/mainframe.o obj/card_dialog.o obj/card_list_panel.o obj/deck_panel.o $(wx-config --libs) -o CourseTracker.exe
+
+          echo "Compiling ThirdParty/wxSQLite3/src/wxsqlite3.cpp"
+          g++ -std=c++17 -c ThirdParty/wxSQLite3/src/wxsqlite3.cpp $INC -o obj/wxsqlite3.o
+
+          echo "Compiling ThirdParty/wxSQLite3/src/sqlite3mc_amalgamation.c"
+          cc -c ThirdParty/wxSQLite3/src/sqlite3mc_amalgamation.c -IThirdParty/wxSQLite3/src -o obj/sqlite3mc_amalgamation.o
+
+          g++ obj/*.o $(wx-config --libs) -lrpcrt4 -o CourseTracker.exe

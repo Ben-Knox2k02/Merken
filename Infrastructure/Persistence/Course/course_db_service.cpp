@@ -1,4 +1,5 @@
 #include "course_db_service.h"
+#include <wx/wxsqlite3.h>
 
 // Ensures the database schema for the courses table exists.
 void CourseDbService::EnsureSchema() {

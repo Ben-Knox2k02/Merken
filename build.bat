@@ -12,7 +12,7 @@ set WX=C:\wxWidgets
 set PATH=%MINGW%\bin;%PATH%
 
 rem --- INCLUDE / LIB PATHS -------------------------------------------
-set INC=-I UI\include -I ThirdParty\boost-di -I ThirdParty\wxSQLite3\include -I %WX%\lib\gcc_lib\mswu -I %WX%\include
+set INC=-I UI\include -I ThirdParty\boost-di -I ThirdParty\wxSQLite3\include -I ThirdParty\wxSQLite3\src -I %WX%\lib\gcc_lib\mswu -I %WX%\include
 set LIB=-L %WX%\lib\gcc_lib
 
 rem --- WXWIDGETS LIBS -------------------------------------------------
@@ -64,6 +64,9 @@ for /r ThirdParty\wxSQLite3\src %%f in (*.cpp) do (
     echo %%f
     %MINGW%\bin\g++.exe -std=c++17 -c "%%f" %INC% -o obj\%%~nf.o
 )
+
+echo ThirdParty\wxSQLite3\src\sqlite3mc_amalgamation.c
+%MINGW%\bin\gcc.exe -c ThirdParty\wxSQLite3\src\sqlite3mc_amalgamation.c -I ThirdParty\wxSQLite3\src -o obj\sqlite3mc_amalgamation.o
 
 for %%f in (UI\src\*.cpp) do (
     echo %%f
