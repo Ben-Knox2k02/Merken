@@ -2,6 +2,8 @@ obj/
 *.o
 *.exe
 CourseTracker
+Merken
+Merken.app/
 *.db
 src/manifest.rc
 UI/src/manifest.rc
