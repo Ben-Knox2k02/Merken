@@ -2,7 +2,6 @@
 #define CARD_DIALOG_H
 
 #include <wx/wx.h>
-#include <wx/dataview.h>
 
 class CardDialog : public wxDialog {
 	public:

@@ -5,8 +5,6 @@
 DeckPanel::DeckPanel(wxWindow* parent) : wxPanel(parent) {
 	this->rootSizer = new wxBoxSizer(wxVERTICAL);
 
-	this->SetBackgroundStyle(wxBG_STYLE_PAINT);
-	this->SetBackgroundColour(*wxWHITE);
 	this->SetMinSize(wxSize(240, -1));
 	
 	this->header = new wxStaticText(this, wxID_ANY, "Decks");

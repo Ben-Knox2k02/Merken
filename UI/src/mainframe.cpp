@@ -40,6 +40,7 @@ MainFrame::MainFrame(const wxString& title) : wxFrame(nullptr, wxID_ANY, title, 
 	this->menuBar->Append(fileMenu, "File");			// ATTACH MENUS
 	this->menuBar->Append(editMenu, "Edit");
 	this->menuBar->Append(studyMenu, "Study");
+	this->menuBar->Append(calendarMenu, "Calendar");
 	this->menuBar->Append(AIMenu, "AI");
 	this->menuBar->Append(helpMenu, "Help");
 	 
@@ -47,11 +48,11 @@ MainFrame::MainFrame(const wxString& title) : wxFrame(nullptr, wxID_ANY, title, 
 	this->CreateStatusBar();
 	
 	this->rootSizer = new wxBoxSizer(wxHORIZONTAL);
+	this->currentPanel = nullptr;
 	
 	this->deckPanel = new DeckPanel(this);
 
 	this->activePanel = new wxPanel(this, wxID_ANY);
-	this->activePanel->SetBackgroundColour(*wxBLUE);
 	this->SwapCurrentPanel(new CardListPanel(this->activePanel, 0));
 	
 	this->rootSizer->Add(deckPanel, 0, wxEXPAND | wxALL, 0);
@@ -84,8 +85,6 @@ void MainFrame::SwapCurrentPanel(wxPanel* newPanel) {
 	//this->activePanel->DestroyChildren();
 	
 	this->currentPanel = newPanel;
-	this->currentPanel->SetBackgroundStyle(wxBG_STYLE_PAINT);
-    this->currentPanel->SetBackgroundColour(*wxWHITE);
 	
 	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
 	sizer->Add(this->currentPanel, 1, wxEXPAND);

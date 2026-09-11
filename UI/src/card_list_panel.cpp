@@ -3,18 +3,11 @@
 CardListPanel::CardListPanel(wxWindow* parent, int deckID) : wxPanel(parent), deckID(deckID) {
     this->rootSizer = new wxBoxSizer(wxVERTICAL);
 
-	this->SetBackgroundStyle(wxBG_STYLE_PAINT);
-	this->SetBackgroundColour(wxColour(*wxWHITE));
-	
     this->header = new wxStaticText(this, wxID_ANY, "Cards in Deck");				 // HEADER
-	this->header->SetBackgroundColour(wxColour(240, 240, 240));
-	this->header->SetForegroundColour(wxColour(*wxBLACK));
     this->header->SetFont(this->header->GetFont().Bold());
     this->rootSizer->Add(this->header, 0, wxALL, 10);
 
     this->cardList = new wxDataViewCtrl(this, wxID_ANY);							 // CARD LIST
-	this->cardList->SetBackgroundColour(wxColour(*wxBLUE));
-	this->cardList->SetForegroundColour(wxColour(*wxWHITE));
     this->cardList->AppendTextColumn("Front", 0, wxDATAVIEW_CELL_INERT, 200);
     this->cardList->AppendTextColumn("Back", 1,  wxDATAVIEW_CELL_INERT, 200);
     this->cardList->AppendTextColumn("Tags", 2,  wxDATAVIEW_CELL_INERT, 200);
@@ -34,36 +27,20 @@ CardListPanel::CardListPanel(wxWindow* parent, int deckID) : wxPanel(parent), de
     this->buttonSizer = new wxBoxSizer(wxHORIZONTAL);								 // BUTTONS
 	
     this->addButton = new wxButton(this, wxID_ANY, "Add");
-	this->addButton->SetBackgroundColour(wxColour(*wxWHITE));
-	this->addButton->SetForegroundColour(wxColour(*wxBLACK));
-	
     this->editButton = new wxButton(this, wxID_ANY, "Edit");
-	this->editButton->SetBackgroundColour(wxColour(*wxWHITE));
-	this->editButton->SetForegroundColour(wxColour(*wxBLACK));
-	
     this->deleteButton = new wxButton(this, wxID_ANY, "Delete");
-	this->deleteButton->SetBackgroundColour(wxColour(*wxWHITE));
-	this->deleteButton->SetForegroundColour(wxColour(*wxBLACK));
 
-    this->buttonSizer->Add(this->addButton, 0, 5);
-    this->buttonSizer->Add(this->editButton, 0, 5);
-    this->buttonSizer->Add(this->deleteButton, 0, 5);
+    this->buttonSizer->Add(this->addButton, 0, wxRIGHT, 5);
+    this->buttonSizer->Add(this->editButton, 0, wxRIGHT, 5);
+    this->buttonSizer->Add(this->deleteButton, 0);
 
-    this->rootSizer->Add(this->buttonSizer, 0, wxALL, 10);
+    this->rootSizer->Add(this->buttonSizer, 0, wxEXPAND | wxALL, 10);
     this->SetSizer(this->rootSizer);
     this->LoadCards();
 
-	this->Bind(wxEVT_PAINT, &CardListPanel::OnPaint, this);
     this->addButton->Bind(wxEVT_BUTTON, &CardListPanel::OnAdd, this);				// BIND EVENTS
     this->editButton->Bind(wxEVT_BUTTON, &CardListPanel::OnEdit, this);
     this->deleteButton->Bind(wxEVT_BUTTON, &CardListPanel::OnDelete, this);
-}
-
-void CardListPanel::OnPaint(wxPaintEvent& event) {
-	wxAutoBufferedPaintDC dc(this);
-	dc.SetBrush(wxBrush(this->GetBackgroundColour()));
-	dc.SetPen(*wxTRANSPARENT_PEN);
-	dc.DrawRectangle(this->GetClientRect());
 }
 
 void CardListPanel::LoadCards() {
