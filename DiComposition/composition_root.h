@@ -15,7 +15,6 @@
 #undef MERKEN_RESTORE_WX_UNDERSCORE
 #endif
 
-#include "../Application/ServiceInterfaces/course_db_service.h"
 #include "../Application/ServiceInterfaces/deck_db_service.h"
 #include "../Application/ServiceInterfaces/card_db_service.h"
 #include "../Application/ServiceInterfaces/calendar_api_service.h"
@@ -24,7 +23,6 @@
 #include "../Application/ServiceInterfaces/http_client.h"
 
 #include "../Infrastructure/Persistence/DatabaseContext/database_context.h"
-#include "../Infrastructure/Persistence/Course/course_db_service.h"
 #include "../Infrastructure/Persistence/Deck/deck_db_service.h"
 #include "../Infrastructure/Persistence/Card/card_db_service.h"
 #include "../Infrastructure/GoogleCalendar/google_calendar_service.h"
@@ -40,7 +38,6 @@ inline constexpr const char* kDatabaseFileName = "merken.db";
 inline auto MakeInjector() {
 	return di::make_injector(
 		di::bind<DatabaseContext>().in(di::singleton).to<DatabaseContext>(std::string{kDatabaseFileName}),
-		di::bind<ICourseDBService>().to<CourseDbService>().in(di::singleton),
 		di::bind<IDeckDBService>().to<DeckDbService>().in(di::singleton),
 		di::bind<ICardDBService>().to<CardDbService>().in(di::singleton),
 		di::bind<IHttpClient>().to<WxHttpClient>().in(di::singleton),

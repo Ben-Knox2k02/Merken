@@ -6,9 +6,7 @@
 
 class DeckDbService : public IDeckDBService {
 	public:
-		DeckDbService(DatabaseContext& dbContext) : db(dbContext) {
-			this->EnsureSchema();
-		}
+		DeckDbService(DatabaseContext& dbContext) : db(dbContext) {}
 
 		std::vector<Deck> GetDecks() override;
 		std::optional<Deck> GetDeck(int deckId) override;
@@ -17,7 +15,6 @@ class DeckDbService : public IDeckDBService {
 
 	private:
 		DatabaseContext& db;
-		void EnsureSchema();
 };
 
 #endif
