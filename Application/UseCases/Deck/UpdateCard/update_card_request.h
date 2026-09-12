@@ -4,6 +4,7 @@
 #include <string>
 
 struct UpdateCardRequest {
+	int deckId;
 	int cardId;
 	std::string front;
 	std::string back;

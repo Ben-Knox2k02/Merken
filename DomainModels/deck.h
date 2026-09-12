@@ -23,6 +23,15 @@ class Deck {
 		const std::string& GetCreatedAt() const { return this->createdAt; }
 		const std::vector<Card>& GetCards() const { return this->cards; }
 
+		Card* FindCard(int cardId) {
+			for (Card& card : this->cards) {
+				if (card.GetCardId() == cardId) {
+					return &card;
+				}
+			}
+			return nullptr;
+		}
+
 		std::vector<Card> GetDueCards(const Date& onDate) const {
 			std::vector<Card> dueCards;
 			for (const Card& card : this->cards) {

@@ -12,10 +12,6 @@ StudyDeckResponse StudyDeckUseCase::Execute(const StudyDeckRequest& request) {
 	response.deckName = deck->GetName();
 
 	const Date today = this->dateProviderService.GetCurrentDate();
-	for (const Card& card : this->cardDBService.GetCards(request.deckId)) {
-		deck->AddCard(card);
-	}
-
 	for (const Card& card : deck->GetDueCards(today)) {
 		response.dueCards.push_back(CardResponse{
 			card.GetCardId(),

@@ -3,7 +3,7 @@
 
 #include <string>
 #include <vector>
-#include "../../Card/GetCards/card_response.h"
+#include "../GetCards/card_response.h"
 
 struct StudyDeckResponse {
 	int deckId;

@@ -1,9 +1,9 @@
 #include "card_list_panel.h"
 #include "centered_message.h"
 #include "app.h"
-#include "../../Application/UseCases/Card/GetCards/get_cards_usecase.h"
-#include "../../Application/UseCases/Card/CreateCard/create_card_usecase.h"
-#include "../../Application/UseCases/Card/UpdateCard/update_card_usecase.h"
+#include "../../Application/UseCases/Deck/GetCards/get_cards_usecase.h"
+#include "../../Application/UseCases/Deck/CreateCard/create_card_usecase.h"
+#include "../../Application/UseCases/Deck/UpdateCard/update_card_usecase.h"
 
 wxDECLARE_APP(App);
 
@@ -139,6 +139,7 @@ void CardListPanel::OnEdit(wxCommandEvent&) {
 	}
 	// Prepare the request to update the card with the new information.
 	UpdateCardRequest request;
+	request.deckId = this->deckID;
 	request.cardId = cardId;
 	request.front = newFront;
 	request.back = newBack;

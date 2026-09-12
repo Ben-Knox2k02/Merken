@@ -7,11 +7,11 @@ New study use cases (not wired yet):
 | Use case | Request | What you get back |
 |---|---|---|
 | `StudyDeckUseCase` | `deckId` | `deckName`, `dueCards` (`CardResponse`: id, front, back, tags) |
-| `ReviewCardUseCase` | `cardId`, `remembered` | `success`, `nextReviewDate`, today’s `cardsReviewed` / `cardsCorrect` / `retentionRate` |
+| `ReviewCardUseCase` | `deckId`, `cardId`, `remembered` | `success`, `nextReviewDate`, today’s `cardsReviewed` / `cardsCorrect` / `retentionRate` |
 
 ```cpp
 #include "../../Application/UseCases/Deck/StudyDeck/study_deck_usecase.h"
-#include "../../Application/UseCases/Card/ReviewCard/review_card_usecase.h"
+#include "../../Application/UseCases/Deck/ReviewCard/review_card_usecase.h"
 ```
 
 ---
@@ -37,5 +37,5 @@ New study use cases (not wired yet):
 
 ## Don’t
 
-- Do not `create<ICardDBService>()`, `IDailyProgressDBService`, or `IDateProviderService`.
+- Do not `create<IDeckDBService>()`, `IDailyProgressDBService`, or `IDateProviderService`.
 - Do not compute due-ness or next-review dates in the UI. `StudyDeck` already filtered; `ReviewCard` already scheduled.

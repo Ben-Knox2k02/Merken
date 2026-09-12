@@ -16,7 +16,6 @@
 #endif
 
 #include "../Application/ServiceInterfaces/deck_db_service.h"
-#include "../Application/ServiceInterfaces/card_db_service.h"
 #include "../Application/ServiceInterfaces/daily_progress_db_service.h"
 #include "../Application/ServiceInterfaces/calendar_api_service.h"
 #include "../Application/ServiceInterfaces/ai_api_service.h"
@@ -26,7 +25,6 @@
 
 #include "../Infrastructure/Persistence/DatabaseContext/database_context.h"
 #include "../Infrastructure/Persistence/Deck/deck_db_service.h"
-#include "../Infrastructure/Persistence/Card/card_db_service.h"
 #include "../Infrastructure/Persistence/DailyProgress/daily_progress_db_service.h"
 #include "../Infrastructure/GoogleCalendar/google_calendar_service.h"
 #include "../Infrastructure/GeminiApi/gemini_api_service.h"
@@ -43,7 +41,6 @@ inline auto MakeInjector() {
 	return di::make_injector(
 		di::bind<DatabaseContext>().in(di::singleton).to<DatabaseContext>(std::string{kDatabaseFileName}),
 		di::bind<IDeckDBService>().to<DeckDbService>().in(di::singleton),
-		di::bind<ICardDBService>().to<CardDbService>().in(di::singleton),
 		di::bind<IDailyProgressDBService>().to<DailyProgressDbService>().in(di::singleton),
 		di::bind<IHttpClient>().to<WxHttpClient>().in(di::singleton),
 		di::bind<ICalendarAPIService>().to<GoogleCalendarService>().in(di::singleton),

@@ -13,7 +13,12 @@ class DeckDbService : public IDeckDBService {
 		int AddDeck(const Deck& deck) override;
 		bool UpdateDeck(const Deck& deck) override;
 
+		int AddCard(const Card& card) override;
+		bool UpdateCard(const Card& card) override;
+
 	private:
+		void LoadCards(Deck& deck);
+
 		DatabaseContext& db;
 };
 

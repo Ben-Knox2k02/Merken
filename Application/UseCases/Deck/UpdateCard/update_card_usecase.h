@@ -2,17 +2,17 @@
 #define UPDATE_CARD_USE_CASE_H
 
 #include "update_card_request.h"
-#include "../../../ServiceInterfaces/card_db_service.h"
+#include "../../../ServiceInterfaces/deck_db_service.h"
 
 class UpdateCardUseCase {
 	public:
-		explicit UpdateCardUseCase(ICardDBService& cardDBService)
-			: cardDBService(cardDBService) {}
+		explicit UpdateCardUseCase(IDeckDBService& deckDBService)
+			: deckDBService(deckDBService) {}
 
 		bool Execute(const UpdateCardRequest& request);
 
 	private:
-		ICardDBService& cardDBService;
+		IDeckDBService& deckDBService;
 };
 
 #endif

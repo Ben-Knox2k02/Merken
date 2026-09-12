@@ -10,15 +10,20 @@ ReviewCardResponse ReviewCardUseCase::Execute(const ReviewCardRequest& request) 
 	response.cardsCorrect = 0;
 	response.retentionRate = 0.0;
 
-	std::optional<Card> card = this->cardDBService.GetCard(request.cardId);
-	if (!card.has_value()) {
+	std::optional<Deck> deck = this->deckDBService.GetDeck(request.deckId);
+	if (!deck.has_value()) {
+		return response;
+	}
+
+	Card* card = deck->FindCard(request.cardId);
+	if (card == nullptr) {
 		return response;
 	}
 
 	const Date today = this->dateProviderService.GetCurrentDate();
 	card->RecordReview(request.remembered, today);
 	card->SetNextReviewDate(today.AddDays(card->GetIntervalDays()));
-	if (!this->cardDBService.UpdateCard(*card)) {
+	if (!this->deckDBService.UpdateCard(*card)) {
 		return response;
 	}
 

@@ -3,17 +3,17 @@
 
 #include "create_card_request.h"
 #include "create_card_response.h"
-#include "../../../ServiceInterfaces/card_db_service.h"
+#include "../../../ServiceInterfaces/deck_db_service.h"
 
 class CreateCardUseCase {
 	public:
-		explicit CreateCardUseCase(ICardDBService& cardDBService)
-			: cardDBService(cardDBService) {}
+		explicit CreateCardUseCase(IDeckDBService& deckDBService)
+			: deckDBService(deckDBService) {}
 
 		CreateCardResponse Execute(const CreateCardRequest& request);
 
 	private:
-		ICardDBService& cardDBService;
+		IDeckDBService& deckDBService;
 };
 
 #endif

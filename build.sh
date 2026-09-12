@@ -21,6 +21,7 @@ if ! command -v wx-config >/dev/null 2>&1; then
 fi
 
 mkdir -p obj
+rm -f obj/*.o
 
 INC="-IUI/include -IThirdParty/boost-di -IThirdParty/wxSQLite3/include -IThirdParty/wxSQLite3/src $(wx-config --cxxflags)"
 
