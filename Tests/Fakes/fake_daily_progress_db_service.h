@@ -36,9 +36,15 @@ class FakeDailyProgressDbService : public IDailyProgressDBService {
 			return true;
 		}
 
-		bool UpdateDailyProgress(const DailyProgress&) override {
+		bool UpdateDailyProgress(const DailyProgress& progress) override {
 			this->updateCount += 1;
-			return true;
+			for (DailyProgress& row : this->rows) {
+				if (row.GetDate() == progress.GetDate()) {
+					row = progress;
+					return true;
+				}
+			}
+			return false;
 		}
 };
 
