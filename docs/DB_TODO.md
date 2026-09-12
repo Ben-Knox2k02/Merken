@@ -12,7 +12,7 @@ Application already reads/writes these names. Match them exactly.
 
 ## New table
 
-- [ ] Append a **new** script (do not edit existing `CREATE TABLE` strings) for table `daily_progress`.
+- [x] Append a **new** script (do not edit existing `CREATE TABLE` strings) for table `daily_progress`.
 
 | Column | Type | Notes |
 |---|---|---|
@@ -20,5 +20,7 @@ Application already reads/writes these names. Match them exactly.
 | `cards_reviewed` | INTEGER | default 0 |
 | `cards_correct` | INTEGER | default 0 |
 
-- [ ] No retention column. Retention is computed in the domain, not SQL.
-- [ ] No extra indexes required for now.
+- [x] No retention column. Retention is computed in the domain, not SQL.
+- [x] No extra indexes required for now.
+
+Progress history / heatmap uses this same `daily_progress` table. No new table or columns. Nothing else is required.

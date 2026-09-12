@@ -56,7 +56,7 @@ void OnAddDeck(wxCommandEvent&) {
 - Fill a `*Request`, call `Execute`, read the `*Response`.
 - If a screen action has no use case yet, ask Application to add one.
 
-Existing use cases: `CreateDeckUseCase`, `UpdateDeckUseCase`, `GetDecksUseCase`, `StudyDeckUseCase`, `CreateCardUseCase`, `UpdateCardUseCase`, `GetCardsUseCase`, `ReviewCardUseCase`, `CreateEventUseCase`.
+Existing use cases: `CreateDeckUseCase`, `UpdateDeckUseCase`, `GetDecksUseCase`, `StudyDeckUseCase`, `CreateCardUseCase`, `UpdateCardUseCase`, `GetCardsUseCase`, `ReviewCardUseCase`, `GetTodaysProgressUseCase`, `GetProgressHistoryUseCase`, `CreateEventUseCase`.
 
 `Deck` is the aggregate: cards are only loaded and changed through a deck. `GetDeck` loads the deck **and its cards**. `GetDecks` (the list) does not. Card add/list/update/review live under `Application/UseCases/Deck/`. Persist with `IDeckDBService.AddCard` / `UpdateCard`. There is no `ICardDBService`.
 

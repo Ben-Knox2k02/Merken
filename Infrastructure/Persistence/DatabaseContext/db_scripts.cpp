@@ -28,5 +28,12 @@ std::vector<std::string> DbScripts::GetScripts() const {
 				FOREIGN KEY (deck_id) REFERENCES decks(deck_id)
 			);
 		)",
+		R"(
+			CREATE TABLE IF NOT EXISTS daily_progress (
+				date TEXT PRIMARY KEY,
+				cards_reviewed INTEGER NOT NULL DEFAULT 0,
+				cards_correct INTEGER NOT NULL DEFAULT 0
+			);
+		)",
 	};
 }
