@@ -13,6 +13,12 @@ New `.cpp` files under `Application/`, `Infrastructure/`, and `UI/src/` are pick
 
 ---
 
+## Project timeline
+
+The sprint Gantt chart is in [MerkinGanttChart.pdf](MerkinGanttChart.pdf). The editable Excel workbook is on [SharePoint](https://ostatemailokstate-my.sharepoint.com/:x:/g/personal/luke_scoggins_okstate_edu/IQAl9d_6ChIXS7xOtJ6wrFpCAbzqfI_1UORrJufsh7cqG4U?e=KSnxBA).
+
+---
+
 ## Due tasks
 
 Open work for each role is a checklist next to this file. Check items off when done.
