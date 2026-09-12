@@ -1,6 +1,7 @@
 #ifndef FAKE_DAILY_PROGRESS_DB_SERVICE_H
 #define FAKE_DAILY_PROGRESS_DB_SERVICE_H
 
+#include <algorithm>
 #include <vector>
 #include <optional>
 #include "../../Application/ServiceInterfaces/daily_progress_db_service.h"
@@ -10,6 +11,8 @@ class FakeDailyProgressDbService : public IDailyProgressDBService {
 		std::vector<DailyProgress> rows;
 		int addCount = 0;
 		int updateCount = 0;
+		std::optional<Date> lastRangeStart;
+		std::optional<Date> lastRangeEnd;
 
 		std::optional<DailyProgress> GetDailyProgress(const Date& date) override {
 			for (const DailyProgress& progress : this->rows) {
@@ -21,12 +24,17 @@ class FakeDailyProgressDbService : public IDailyProgressDBService {
 		}
 
 		std::vector<DailyProgress> GetDailyProgressRange(const Date& startDate, const Date& endDate) override {
+			this->lastRangeStart = startDate;
+			this->lastRangeEnd = endDate;
 			std::vector<DailyProgress> matching;
 			for (const DailyProgress& progress : this->rows) {
 				if (progress.GetDate() >= startDate && progress.GetDate() <= endDate) {
 					matching.push_back(progress);
 				}
 			}
+			std::sort(matching.begin(), matching.end(), [](const DailyProgress& left, const DailyProgress& right) {
+				return left.GetDate() < right.GetDate();
+			});
 			return matching;
 		}
 
