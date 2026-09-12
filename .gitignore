@@ -4,6 +4,8 @@ obj/
 CourseTracker
 Merken
 Merken.app/
+merken_tests
+merken_tests.exe
 *.db
 src/manifest.rc
 UI/src/manifest.rc
