@@ -9,12 +9,12 @@ CreateEventResponse CreateEventUseCase::Execute(const CreateEventRequest& reques
 	CalendarEvent createdEvent = this->calendarAPIService.CreateEvent(event, settings);
 
 	return CreateEventResponse{
-		createdEvent.GetCalendarEventId(),
-		createdEvent.GetTitle(),
-		createdEvent.GetDescription(),
-		createdEvent.GetStartTime(),
-		createdEvent.GetEndTime(),
-		createdEvent.GetReminderMinutes(),
-		createdEvent.GetGoogleEventId()
+		.calendarEventId = createdEvent.GetCalendarEventId(),
+		.title = createdEvent.GetTitle(),
+		.description = createdEvent.GetDescription(),
+		.startTime = createdEvent.GetStartTime(),
+		.endTime = createdEvent.GetEndTime(),
+		.reminderMinutes = createdEvent.GetReminderMinutes(),
+		.googleEventId = createdEvent.GetGoogleEventId()
 	};
 }

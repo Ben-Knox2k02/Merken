@@ -9,9 +9,10 @@ CreateDeckResponse CreateDeckUseCase::Execute(const CreateDeckRequest& request) 
 	
 	Deck deck(0, request.name, request.description, createdAt);
 	int deckId = this->deckDBService.AddDeck(deck);
+	
 	return CreateDeckResponse{
-		deckId,
-		request.name,
-		request.description,
-		createdAt};
+		.deckId = deckId,
+		.name = request.name,
+		.description = request.description,
+		.createdAt = createdAt};
 }

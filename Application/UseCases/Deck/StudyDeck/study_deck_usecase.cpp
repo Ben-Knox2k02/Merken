@@ -14,11 +14,11 @@ StudyDeckResponse StudyDeckUseCase::Execute(const StudyDeckRequest& request) {
 	const Date today = this->dateProviderService.GetCurrentDate();
 	for (const Card& card : deck->GetDueCards(today)) {
 		response.dueCards.push_back(CardResponse{
-			card.GetCardId(),
-			card.GetDeckId(),
-			card.GetFront(),
-			card.GetBack(),
-			Tag::Join(card.GetTags())
+			.cardId = card.GetCardId(),
+			.deckId = card.GetDeckId(),
+			.front = card.GetFront(),
+			.back = card.GetBack(),
+			.tags = Tag::Join(card.GetTags())
 		});
 	}
 	return response;

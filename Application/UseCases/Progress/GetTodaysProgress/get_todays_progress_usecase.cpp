@@ -7,11 +7,11 @@ GetTodaysProgressResponse GetTodaysProgressUseCase::Execute() {
 	if (!progress.has_value()) {
 		progress = DailyProgress(today);
 	}
-
-	GetTodaysProgressResponse response;
-	response.date = progress->GetDate().ToIso();
-	response.cardsReviewed = progress->GetCardsReviewed();
-	response.cardsCorrect = progress->GetCardsCorrect();
-	response.retentionRate = progress->RetentionRate();
-	return response;
+	
+	return GetTodaysProgressResponse{
+		.date = progress->GetDate().ToIso(),
+		.cardsReviewed = progress->GetCardsReviewed(),
+		.cardsCorrect = progress->GetCardsCorrect(),
+		.retentionRate = progress->RetentionRate()
+	};
 }

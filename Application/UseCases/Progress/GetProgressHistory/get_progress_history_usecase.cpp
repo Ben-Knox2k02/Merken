@@ -44,10 +44,10 @@ GetProgressHistoryResponse GetProgressHistoryUseCase::Execute(const GetProgressH
 		}
 
 		response.days.push_back(DailyProgressResponse{
-			progress.GetDate().ToIso(),
-			progress.GetCardsReviewed(),
-			progress.GetCardsCorrect(),
-			progress.RetentionRate()
+			.date = progress.GetDate().ToIso(),
+			.cardsReviewed = progress.GetCardsReviewed(),
+			.cardsCorrect = progress.GetCardsCorrect(),
+			.retentionRate = progress.RetentionRate()
 		});
 
 		const Date next = day.AddDays(1);

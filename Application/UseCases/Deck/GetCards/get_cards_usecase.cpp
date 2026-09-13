@@ -10,11 +10,11 @@ GetCardsResponse GetCardsUseCase::Execute(const GetCardsRequest& request) {
 
 	for (const Card& card : deck->GetCards()) {
 		response.cards.push_back(CardResponse{
-			card.GetCardId(),
-			card.GetDeckId(),
-			card.GetFront(),
-			card.GetBack(),
-			Tag::Join(card.GetTags())
+			.cardId = card.GetCardId(),
+			.deckId = card.GetDeckId(),
+			.front = card.GetFront(),
+			.back = card.GetBack(),
+			.tags = Tag::Join(card.GetTags())
 		});
 	}
 	return response;
