@@ -32,6 +32,23 @@ Open work for each role is a checklist next to this file. Check items off when d
 
 ---
 
+## Build, test, clean, uninstall
+
+Run these from the repo root.
+
+| Step | Windows | macOS / Linux |
+|---|---|---|
+| Build the app | `build.bat` | `./build.sh` (or double-click `build.command` on Mac) |
+| Run unit tests | `test.bat` | `./test.sh` |
+| Remove build artifacts | `clean.bat` | `./clean.sh` |
+| Remove artifacts, `merken.db`, and stored API keys | `uninstall.bat` | `./uninstall.sh` |
+
+Windows build needs wxWidgets first (`build_wxWidgets.bat`, or set `WXWIN`). Output is `Merken.exe` / `Merken` / `Merken.app`. Tests do not need wxWidgets.
+
+`clean` deletes `obj/`, binaries, and leftover object files. It does **not** delete decks or API keys. `uninstall` runs `clean`, then deletes `merken.db` and the user-data folder (Windows: `%APPDATA%\Merken`, including DPAPI-protected keys). Close the app first.
+
+---
+
 ## UI
 
 Call **use cases** from event handlers. Do not talk to SQLite, Gemini, or Google Calendar.
