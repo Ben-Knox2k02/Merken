@@ -13,7 +13,7 @@ class FakeCalendarApiService : public ICalendarAPIService {
 		std::vector<CalendarEvent> events;
 		std::vector<CalendarEvent> createdEvents;
 		std::vector<CalendarEvent> updatedEvents;
-		AppSettings lastSettings;
+		std::string lastApiKey;
 
 		CalendarEvent SeedEvent(
 			int calendarEventId,
@@ -28,9 +28,9 @@ class FakeCalendarApiService : public ICalendarAPIService {
 			return event;
 		}
 
-		CalendarEvent CreateEvent(const CalendarEvent& event, const AppSettings& settings) override {
+		CalendarEvent CreateEvent(const CalendarEvent& event, const std::string& apiKey) override {
 			this->createdEvents.push_back(event);
-			this->lastSettings = settings;
+			this->lastApiKey = apiKey;
 
 			const int eventId = this->nextEventId;
 			this->nextEventId += 1;
@@ -42,8 +42,8 @@ class FakeCalendarApiService : public ICalendarAPIService {
 			return created;
 		}
 
-		std::optional<CalendarEvent> GetEvent(const std::string& googleEventId, const AppSettings& settings) override {
-			this->lastSettings = settings;
+		std::optional<CalendarEvent> GetEvent(const std::string& googleEventId, const std::string& apiKey) override {
+			this->lastApiKey = apiKey;
 			if (googleEventId.empty()) {
 				return std::nullopt;
 			}
@@ -55,9 +55,9 @@ class FakeCalendarApiService : public ICalendarAPIService {
 			return std::nullopt;
 		}
 
-		bool UpdateEvent(const CalendarEvent& event, const AppSettings& settings) override {
+		bool UpdateEvent(const CalendarEvent& event, const std::string& apiKey) override {
 			this->updatedEvents.push_back(event);
-			this->lastSettings = settings;
+			this->lastApiKey = apiKey;
 			if (event.GetGoogleEventId().empty()) {
 				return false;
 			}

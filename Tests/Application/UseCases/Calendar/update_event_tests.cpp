@@ -30,8 +30,7 @@ TEST_CASE("UpdateEventUseCase updates an existing event") {
 	CHECK(sent.GetStartTime() == "2026-09-12T18:00:00");
 	CHECK(sent.GetEndTime() == "2026-09-12T19:00:00");
 	CHECK(sent.GetReminderMinutes() == 15);
-	CHECK(calendarApi.lastSettings.calendarApiKey == "cal-key");
-	CHECK(calendarApi.lastSettings.aiApiKey == "ai-key");
+	CHECK(calendarApi.lastApiKey == "cal-key");
 }
 
 TEST_CASE("UpdateEventUseCase uses the default reminder when none is set") {

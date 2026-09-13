@@ -6,7 +6,7 @@ CreateEventResponse CreateEventUseCase::Execute(const CreateEventRequest& reques
 	event.UpdateReminderMinutes(request.reminderMinutes);
 
 	AppSettings settings = this->appSettingsService.GetSettings();
-	CalendarEvent createdEvent = this->calendarAPIService.CreateEvent(event, settings);
+	CalendarEvent createdEvent = this->calendarAPIService.CreateEvent(event, settings.calendarApiKey);
 
 	return CreateEventResponse{
 		.calendarEventId = createdEvent.GetCalendarEventId(),

@@ -8,7 +8,7 @@ class GeminiApiService : public IAIAPIService {
 	public:
 		explicit GeminiApiService(IHttpClient& httpClient) : httpClient(httpClient) {}
 
-		std::string GenerateResponse(const std::string& prompt, const AppSettings& settings) override;
+		std::string GenerateResponse(const std::string& prompt, const std::string& apiKey) override;
 
 	private:
 		IHttpClient& httpClient;

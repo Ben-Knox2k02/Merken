@@ -27,8 +27,7 @@ TEST_CASE("CreateEventUseCase sends the event and settings to the calendar API")
 	CHECK(sent.GetStartTime() == "2026-09-12T18:00:00");
 	CHECK(sent.GetEndTime() == "2026-09-12T19:00:00");
 	CHECK(sent.GetReminderMinutes() == 15);
-	CHECK(calendarApi.lastSettings.calendarApiKey == "cal-key");
-	CHECK(calendarApi.lastSettings.aiApiKey == "ai-key");
+	CHECK(calendarApi.lastApiKey == "cal-key");
 
 	CHECK(response.calendarEventId == 1);
 	CHECK(response.title == "Study Spanish");

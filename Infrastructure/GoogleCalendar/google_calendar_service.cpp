@@ -1,14 +1,14 @@
 #include "google_calendar_service.h"
 
 // dummy placeholder, does not call the real Google Calendar API yet
-CalendarEvent GoogleCalendarService::CreateEvent(const CalendarEvent& event, const AppSettings& settings) {
-	(void)settings;
+CalendarEvent GoogleCalendarService::CreateEvent(const CalendarEvent& event, const std::string& apiKey) {
+	(void)apiKey;
 	(void)this->httpClient;
 	return event;
 }
 
-std::optional<CalendarEvent> GoogleCalendarService::GetEvent(const std::string& googleEventId, const AppSettings& settings) {
-	(void)settings;
+std::optional<CalendarEvent> GoogleCalendarService::GetEvent(const std::string& googleEventId, const std::string& apiKey) {
+	(void)apiKey;
 	(void)this->httpClient;
 	if (googleEventId.empty()) {
 		return std::nullopt;
@@ -18,9 +18,9 @@ std::optional<CalendarEvent> GoogleCalendarService::GetEvent(const std::string& 
 	return event;
 }
 
-bool GoogleCalendarService::UpdateEvent(const CalendarEvent& event, const AppSettings& settings) {
+bool GoogleCalendarService::UpdateEvent(const CalendarEvent& event, const std::string& apiKey) {
 	(void)event;
-	(void)settings;
+	(void)apiKey;
 	(void)this->httpClient;
 	return true;
 }

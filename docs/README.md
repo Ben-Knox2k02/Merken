@@ -139,16 +139,16 @@ Fill in the stubs. Keep method signatures unless Application agrees to change th
 | `IAIAPIService` | `Infrastructure/GeminiApi/gemini_api_service.*` |
 | `ICalendarAPIService` | `Infrastructure/GoogleCalendar/google_calendar_service.*` |
 
-**HTTP:** do not use curl/wxWebRequest yourself. Injected `IHttpClient& httpClient` is already there (`Get` / `PostJson`). Keys come from `AppSettings` (`aiApiKey`, `calendarApiKey`) via `IAppSettingsService`. Do not hardcode secrets. They are stored in the OS user data directory (Windows: DPAPI-protected `%APPDATA%\Merken\settings.bin`). Do not read `app_settings.json`. UI wiring is [UI_TODO.md](UI_TODO.md#settings-api-keys).
+**HTTP:** do not use curl/wxWebRequest yourself. Injected `IHttpClient& httpClient` is already there (`Get` / `PostJson`). Methods take `apiKey` only (Gemini: `aiApiKey`, Calendar: `calendarApiKey`). Do not hardcode secrets or take full `AppSettings`. Keys are stored in the OS user data directory (Windows: DPAPI-protected `%APPDATA%\Merken\settings.bin`). Do not read `app_settings.json`. UI wiring is [UI_TODO.md](UI_TODO.md#settings-api-keys).
 
 ```cpp
 HttpResponse response = this->httpClient.PostJson(url, jsonBody, {
-    {"x-goog-api-key", settings.aiApiKey}
+    {"x-goog-api-key", apiKey}
 });
 if (!response.Ok()) { return ""; }
 ```
 
-Use cases already pass `AppSettings` (see `CreateEventUseCase`). New API service: interface in `Application/Services/`, impl in `Infrastructure/`, bind as singleton in `DiComposition`. Do not bind `IHttpClient` again — it is already registered.
+Use cases already pass the matching key (see `CreateEventUseCase`). New API service: interface in `Application/Services/`, impl in `Infrastructure/`, bind as singleton in `DiComposition`. Do not bind `IHttpClient` again — it is already registered.
 
 ---
 
