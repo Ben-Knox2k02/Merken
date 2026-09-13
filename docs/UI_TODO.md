@@ -46,6 +46,16 @@ Calendar events (not wired yet). Do **not** call `ICalendarAPIService` or Google
 #include "../../Application/UseCases/Calendar/GetEvents/get_events_usecase.h"
 ```
 
+AI study (not wired yet). Do **not** call `IAIAPIService`, Gemini, or `IAiStudyCacheService`. `AiStudyUseCase` loads the deck, calls Gemini **once**, and caches the question list. This is not spaced-repetition study — do not call `ReviewCardUseCase`.
+
+| Use case | Request | What you get back |
+|---|---|---|
+| `AiStudyUseCase` | `deckId` | `success`, `deckName`, `questions[]`: `cardId`, `type` (`AiQuestionTypeResponse::Sentence` / `FillIn`), `text`, `back` |
+
+```cpp
+#include "../../Application/UseCases/AI/AiStudy/ai_study_usecase.h"
+```
+
 ---
 
 ## Study deck
@@ -79,8 +89,16 @@ Calendar events (not wired yet). Do **not** call `ICalendarAPIService` or Google
 - [ ] Opening **Calendar** runs `GetEventsUseCase` (`Execute()`, no request) and shows the returned events. An empty list is valid (no events, missing key, or API failure).
 - [ ] Do **not** call `ICalendarAPIService`, Google Calendar, or `IAppSettingsService`. The use case loads `calendarApiKey`.
 
+## AI study
+
+- [ ] Opening **AI** with a selected deck runs `AiStudyUseCase` (`deckId` only) **once**. Keep the returned `questions` list in the panel. Gemini is a network call — keep the UI responsive (worker thread, post back).
+- [ ] Show `text` one at a time. `FillIn` has a `___` blank; `Sentence` is a question (no cloze). **Show answer** reveals `back`. **Got it** / **Missed it** bump session counters only, then next item in the list (no second use-case call).
+- [ ] End of list (or user stops): show correct, wrong, `correct / answered`. Closing the panel or Start test again drops the list and the score.
+- [ ] If `success` is false, show an error (no deck, no cards, missing key, or API failure). Do not treat that as a study grade.
+- [ ] Do **not** call `IAIAPIService`, Gemini, `IAiStudyCacheService`, `IAppSettingsService`, or `IDeckRepository`. Do **not** call `ReviewCardUseCase` or write daily progress from this panel.
+
 ## Don’t
 
-- Do not `create<IDeckRepository>()`, `IDailyProgressRepository`, `IDateProviderService`, `IAppSettingsService`, or `ICalendarAPIService`.
+- Do not `create<IDeckRepository>()`, `IDailyProgressRepository`, `IDateProviderService`, `IAppSettingsService`, `ICalendarAPIService`, `IAIAPIService`, or `IAiStudyCacheService`.
 - Do not compute due-ness or next-review dates in the UI. `StudyDeck` already filtered; `ReviewCard` already scheduled.
 - Do not write `app_settings.json`. API keys go through File → Settings (`SaveAppSettingsUseCase`).

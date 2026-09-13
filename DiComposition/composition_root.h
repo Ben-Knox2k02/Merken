@@ -21,6 +21,7 @@
 #include "../Application/Services/ai_api_service.h"
 #include "../Application/Services/app_settings_service.h"
 #include "../Application/Services/date_provider_service.h"
+#include "../Application/Services/ai_study_cache_service.h"
 #include "../Application/Services/http_client.h"
 
 #include "../Infrastructure/Persistence/DatabaseContext/database_context.h"
@@ -30,6 +31,7 @@
 #include "../Infrastructure/GeminiApi/gemini_api_service.h"
 #include "../Infrastructure/AppSettings/app_settings_service.h"
 #include "../Infrastructure/DateProvider/date_provider_service.h"
+#include "../Infrastructure/AiStudyCache/in_memory_ai_study_cache_service.h"
 #include "../Infrastructure/Http/wx_http_client.h"
 
 namespace di = boost::di;
@@ -46,7 +48,8 @@ inline auto MakeInjector() {
 		di::bind<ICalendarAPIService>().to<GoogleCalendarService>().in(di::singleton),
 		di::bind<IAIAPIService>().to<GeminiApiService>().in(di::singleton),
 		di::bind<IAppSettingsService>().to<AppSettingsService>().in(di::singleton),
-		di::bind<IDateProviderService>().to<DateProviderService>().in(di::singleton)
+		di::bind<IDateProviderService>().to<DateProviderService>().in(di::singleton),
+		di::bind<IAiStudyCacheService>().to<InMemoryAiStudyCacheService>().in(di::singleton)
 	);
 }
 

@@ -28,7 +28,7 @@ There is no JSON library. Build request bodies as strings. Pull fields out of `r
 - [ ] Request body: the `prompt` as the user text. Response: the model’s text (`candidates[0].content.parts[0].text`).
 - [ ] On missing key, failed HTTP, or missing text in the body, return `""` (same as today’s stub). Do not throw.
 
-`IAIAPIService` is not called by a use case yet. Still implement it so Application can wire a use case later.
+`AiStudyUseCase` already loads the Gemini key, builds `AiPrompt::Build(deck)` (one question per card, tagged `sentence` or `fill-in`), and calls `GenerateResponse` **once**. The use case parses with `AiQuestion::ParseMultiple` and stores the list on `IAiStudyCacheService`. An empty reply is treated as failure. Still implement the stub.
 
 ## Google Calendar (`CreateEvent` / `GetEvent` / `GetEvents` / `UpdateEvent`)
 
