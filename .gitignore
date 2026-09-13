@@ -1,7 +1,6 @@
 obj/
 *.o
 *.exe
-CourseTracker
 Merken
 Merken.app/
 merken_tests

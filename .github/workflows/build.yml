@@ -60,7 +60,7 @@ jobs:
 
           EXTRALIBS="-lpthread"
           if [ "$RUNNER_OS" = "Linux" ]; then EXTRALIBS="$EXTRALIBS -ldl"; fi
-          g++ obj/*.o $(wx-config --libs) $EXTRALIBS -o CourseTracker
+          g++ obj/*.o $(wx-config --libs) $EXTRALIBS -o Merken
 
       - name: Compile and link (Windows / MSYS2)
         if: runner.os == 'Windows'
@@ -84,7 +84,7 @@ jobs:
           echo "Compiling ThirdParty/wxSQLite3/src/sqlite3mc_amalgamation.c"
           cc -c ThirdParty/wxSQLite3/src/sqlite3mc_amalgamation.c -IThirdParty/wxSQLite3/src -o obj/sqlite3mc_amalgamation.o
 
-          g++ obj/*.o $(wx-config --libs) -o CourseTracker.exe
+          g++ obj/*.o $(wx-config --libs) -o Merken.exe
 
   test:
     strategy:
