@@ -9,6 +9,7 @@ class GoogleCalendarService : public ICalendarAPIService {
 		explicit GoogleCalendarService(IHttpClient& httpClient) : httpClient(httpClient) {}
 
 		CalendarEvent CreateEvent(const CalendarEvent& event, const AppSettings& settings) override;
+		std::optional<CalendarEvent> GetEvent(const std::string& googleEventId, const AppSettings& settings) override;
 		bool UpdateEvent(const CalendarEvent& event, const AppSettings& settings) override;
 
 	private:

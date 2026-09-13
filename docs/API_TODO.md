@@ -34,8 +34,11 @@ There is no JSON library. Build request bodies as strings. Pull fields out of `r
 
 `CreateEventUseCase` already loads `AppSettings` and calls `CreateEvent`. Put the Google event id on the domain object (`SetGoogleEventId`) and return that `CalendarEvent`. Use cases map `googleEventId` onto the response.
 
+`UpdateEventUseCase` loads `AppSettings`, calls `GetEvent(googleEventId)`, mutates that `CalendarEvent` if found, then calls `UpdateEvent`. It returns `false` when the event is missing.
+
 - [ ] `CreateEvent`: `PostJson` to Calendar `calendars/primary/events` with `settings.calendarApiKey`. Map `title` → `summary`, `description`, `startTime` / `endTime` as `dateTime`, `reminderMinutes` as a popup reminder.
 - [ ] On success, `SetGoogleEventId` from the response `"id"` and return that event. On failure, return the event **without** a Google id (do not invent one).
+- [ ] `GetEvent`: `Get` Calendar `calendars/primary/events/{googleEventId}` with `settings.calendarApiKey`. Empty id, 404, or failed HTTP → `std::nullopt`. On success, fill a `CalendarEvent` (`summary` → title, times, reminder, `SetGoogleEventId`).
 - [ ] `UpdateEvent`: send the same fields for an existing `GetGoogleEventId()`. Return `true` only when HTTP succeeds. Empty Google id or failed HTTP → `false`.
 
 `IHttpClient` has `Get` and `PostJson` only. Calendar **update** is PATCH/PUT. Do **not** add methods on `IHttpClient` yourself — ask Application for `PatchJson` (or similar), then implement `UpdateEvent`. Until that exists, `UpdateEvent` can keep returning `false` on a real call you cannot make.

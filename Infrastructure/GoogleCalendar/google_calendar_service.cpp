@@ -7,6 +7,17 @@ CalendarEvent GoogleCalendarService::CreateEvent(const CalendarEvent& event, con
 	return event;
 }
 
+std::optional<CalendarEvent> GoogleCalendarService::GetEvent(const std::string& googleEventId, const AppSettings& settings) {
+	(void)settings;
+	(void)this->httpClient;
+	if (googleEventId.empty()) {
+		return std::nullopt;
+	}
+	CalendarEvent event(0, "", "", "");
+	event.SetGoogleEventId(googleEventId);
+	return event;
+}
+
 bool GoogleCalendarService::UpdateEvent(const CalendarEvent& event, const AppSettings& settings) {
 	(void)event;
 	(void)settings;
