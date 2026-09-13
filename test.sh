@@ -4,6 +4,9 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 OUT=merken_tests
+echo "Cleaning previous test artifacts..."
+rm -f "$OUT" "${OUT}.exe"
+
 echo "Building $OUT"
 
 mkdir -p obj

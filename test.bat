@@ -3,6 +3,10 @@ setlocal EnableExtensions
 cd /d "%~dp0"
 
 set OUT=merken_tests.exe
+
+echo Cleaning previous test artifacts...
+if exist %OUT% del /q %OUT%
+
 if not exist obj mkdir obj
 
 echo Building %OUT%

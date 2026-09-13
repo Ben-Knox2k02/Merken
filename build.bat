@@ -2,8 +2,8 @@
 setlocal EnableExtensions
 cd /d "%~dp0"
 
-rem Incremental Merken build. Recompiles only sources newer than their .o.
-rem sqlite amalgamation is compiled once. Run build_wxWidgets.bat first.
+rem Clean rebuild. Deletes leftover .o files (including doctest objects from
+rem test.bat) so they cannot be linked into Merken.exe. Run build_wxWidgets.bat first.
 
 set OUT=Merken.exe
 if defined WXWIN (set "WX=%WXWIN%") else set "WX=C:\wxWidgets"
@@ -37,10 +37,13 @@ set LIB=-L %WX%\lib\gcc_lib
 set WXLIBS=-lwxmsw32u_core -lwxbase32u_net -lwxbase32u -lwxpng -lwxjpeg -lwxzlib -lwxregexu -lwxexpat
 set WINLIBS=-lshlwapi -lversion -lole32 -lshell32 -luuid -lrpcrt4 -luxtheme -lgdi32 -loleaut32 -lcomdlg32 -lcomctl32 -loleacc -lwinspool -lwininet -lws2_32
 
-if not exist obj mkdir obj
+echo Cleaning previous build artifacts...
+if exist obj rmdir /s /q obj
+mkdir obj
+if exist %OUT% del /q %OUT%
 
 echo Building %OUT%
-echo Compiling stale sources...
+echo Compiling...
 
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
   "$headerMax = $null;" ^
@@ -71,7 +74,7 @@ if exist obj\manifest.o del obj\manifest.o
 if exist UI\src\manifest.rc del UI\src\manifest.rc
 
 echo Linking...
-g++ obj\*.o -o %OUT% %LIB% %WXLIBS% %WINLIBS%
+g++ obj\*.o -o %OUT% -mwindows %LIB% %WXLIBS% %WINLIBS%
 if errorlevel 1 (
     echo.
     echo Link failed.
