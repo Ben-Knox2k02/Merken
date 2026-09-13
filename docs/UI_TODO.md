@@ -46,14 +46,16 @@ Calendar events (not wired yet). Do **not** call `ICalendarAPIService` or Google
 #include "../../Application/UseCases/Calendar/GetEvents/get_events_usecase.h"
 ```
 
-AI study (not wired yet). Do **not** call `IAIAPIService`, Gemini, or `IAiStudyCacheService`. `AiStudyUseCase` loads the deck, calls Gemini **once**, and caches the question list. This is not spaced-repetition study — do not call `ReviewCardUseCase`.
+AI study (not wired yet). Do **not** call `IAIAPIService`, Gemini, or `IAiStudyCacheService`. `AiStudyUseCase` loads the deck, calls Gemini **once**, and caches the sitting. Grades go through `RecordAiStudyGradeUseCase` (also on that cache). This is not spaced-repetition study — do not call `ReviewCardUseCase`.
 
 | Use case | Request | What you get back |
 |---|---|---|
 | `AiStudyUseCase` | `deckId` | `success`, `deckName`, `questions[]`: `cardId`, `type` (`AiQuestionTypeResponse::Sentence` / `FillIn`), `text`, `back` |
+| `RecordAiStudyGradeUseCase` | `gotIt` | `success`, `correct`, `wrong`, `percentage` (`correct / answered`), `complete` |
 
 ```cpp
 #include "../../Application/UseCases/AI/AiStudy/ai_study_usecase.h"
+#include "../../Application/UseCases/AI/RecordAiStudyGrade/record_ai_study_grade_usecase.h"
 ```
 
 ---
@@ -92,8 +94,8 @@ AI study (not wired yet). Do **not** call `IAIAPIService`, Gemini, or `IAiStudyC
 ## AI study
 
 - [ ] Opening **AI** with a selected deck runs `AiStudyUseCase` (`deckId` only) **once**. Keep the returned `questions` list in the panel. Gemini is a network call — keep the UI responsive (worker thread, post back).
-- [ ] Show `text` one at a time. `FillIn` has a `___` blank; `Sentence` is a question (no cloze). **Show answer** reveals `back`. **Got it** / **Missed it** bump session counters only, then next item in the list (no second use-case call).
-- [ ] End of list (or user stops): show correct, wrong, `correct / answered`. Closing the panel or Start test again drops the list and the score.
+- [ ] Show `text` one at a time. `FillIn` has a `___` blank; `Sentence` is a question (no cloze). **Show answer** reveals `back`. **Got it** / **Missed it** call `RecordAiStudyGradeUseCase` (`gotIt` true/false). Show `correct` / `wrong` / `percentage` from the response, then next item in the list.
+- [ ] When `complete` is true (or the user stops): show the end summary from that response. Closing the panel or Start test again drops the sitting (new `AiStudyUseCase` replaces the cache). Do not keep your own score counters.
 - [ ] If `success` is false, show an error (no deck, no cards, missing key, or API failure). Do not treat that as a study grade.
 - [ ] Do **not** call `IAIAPIService`, Gemini, `IAiStudyCacheService`, `IAppSettingsService`, or `IDeckRepository`. Do **not** call `ReviewCardUseCase` or write daily progress from this panel.
 

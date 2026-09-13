@@ -10,8 +10,11 @@ class FakeAiStudyCacheService : public IAiStudyCacheService {
 		int deckId = 0;
 		std::string deckName;
 		std::vector<AiQuestion> questions;
+		int correct = 0;
+		int wrong = 0;
 		int setCount = 0;
 		int clearCount = 0;
+		int recordCount = 0;
 
 		void SetSitting(
 			int deckId,
@@ -21,6 +24,8 @@ class FakeAiStudyCacheService : public IAiStudyCacheService {
 			this->deckId = deckId;
 			this->deckName = deckName;
 			this->questions = questions;
+			this->correct = 0;
+			this->wrong = 0;
 			this->setCount += 1;
 		}
 
@@ -28,10 +33,31 @@ class FakeAiStudyCacheService : public IAiStudyCacheService {
 		const std::string& GetDeckName() const override { return this->deckName; }
 		const std::vector<AiQuestion>& GetQuestions() const override { return this->questions; }
 
+		bool RecordGrade(bool gotIt) override {
+			this->recordCount += 1;
+			if (this->questions.empty()) {
+				return false;
+			}
+			if (this->correct + this->wrong >= static_cast<int>(this->questions.size())) {
+				return false;
+			}
+			if (gotIt) {
+				this->correct += 1;
+			} else {
+				this->wrong += 1;
+			}
+			return true;
+		}
+
+		int GetCorrect() const override { return this->correct; }
+		int GetWrong() const override { return this->wrong; }
+
 		void Clear() override {
 			this->deckId = 0;
 			this->deckName.clear();
 			this->questions.clear();
+			this->correct = 0;
+			this->wrong = 0;
 			this->clearCount += 1;
 		}
 };

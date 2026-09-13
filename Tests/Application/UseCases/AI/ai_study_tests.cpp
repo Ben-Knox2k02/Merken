@@ -43,6 +43,8 @@ TEST_CASE("AiStudyUseCase generates the question list in one call and caches it"
 	CHECK(cache.deckName == "Spanish");
 	REQUIRE(cache.questions.size() == 2);
 	CHECK(cache.questions[0].GetType() == AiQuestionType::FillIn);
+	CHECK(cache.correct == 0);
+	CHECK(cache.wrong == 0);
 	CHECK(cache.clearCount == 0);
 }
 

@@ -17,6 +17,9 @@ class IAiStudyCacheService {
 		virtual int GetDeckId() const = 0;
 		virtual const std::string& GetDeckName() const = 0;
 		virtual const std::vector<AiQuestion>& GetQuestions() const = 0;
+		virtual bool RecordGrade(bool gotIt) = 0;
+		virtual int GetCorrect() const = 0;
+		virtual int GetWrong() const = 0;
 		virtual void Clear() = 0;
 };
 
