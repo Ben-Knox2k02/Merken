@@ -20,10 +20,14 @@ class FakeCalendarApiService : public ICalendarAPIService {
 			const std::string& googleEventId,
 			const std::string& title,
 			const std::string& startTime,
-			const std::string& endTime
+			const std::string& endTime,
+			const std::string& description = "",
+			int reminderMinutes = 60
 		) {
 			CalendarEvent event(calendarEventId, title, startTime, endTime);
 			event.SetGoogleEventId(googleEventId);
+			event.UpdateDescription(description);
+			event.UpdateReminderMinutes(reminderMinutes);
 			this->events.push_back(event);
 			return event;
 		}
@@ -53,6 +57,11 @@ class FakeCalendarApiService : public ICalendarAPIService {
 				}
 			}
 			return std::nullopt;
+		}
+
+		std::vector<CalendarEvent> GetEvents(const std::string& apiKey) override {
+			this->lastApiKey = apiKey;
+			return this->events;
 		}
 
 		bool UpdateEvent(const CalendarEvent& event, const std::string& apiKey) override {

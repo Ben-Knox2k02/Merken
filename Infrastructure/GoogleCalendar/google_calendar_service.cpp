@@ -18,6 +18,12 @@ std::optional<CalendarEvent> GoogleCalendarService::GetEvent(const std::string& 
 	return event;
 }
 
+std::vector<CalendarEvent> GoogleCalendarService::GetEvents(const std::string& apiKey) {
+	(void)apiKey;
+	(void)this->httpClient;
+	return {};
+}
+
 bool GoogleCalendarService::UpdateEvent(const CalendarEvent& event, const std::string& apiKey) {
 	(void)event;
 	(void)apiKey;

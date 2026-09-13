@@ -10,6 +10,7 @@ class GoogleCalendarService : public ICalendarAPIService {
 
 		CalendarEvent CreateEvent(const CalendarEvent& event, const std::string& apiKey) override;
 		std::optional<CalendarEvent> GetEvent(const std::string& googleEventId, const std::string& apiKey) override;
+		std::vector<CalendarEvent> GetEvents(const std::string& apiKey) override;
 		bool UpdateEvent(const CalendarEvent& event, const std::string& apiKey) override;
 
 	private:

@@ -36,6 +36,16 @@ API keys (not wired yet). Do **not** write `app_settings.json` or call `IAppSett
 #include "../../Application/UseCases/SaveAppSettings/save_app_settings_usecase.h"
 ```
 
+Calendar events (not wired yet). Do **not** call `ICalendarAPIService` or Google Calendar. `GetEventsUseCase` loads the calendar API key.
+
+| Use case | Request | What you get back |
+|---|---|---|
+| `GetEventsUseCase` | none (`Execute()`) | events: `calendarEventId`, `title`, `description`, `startTime`, `endTime`, `reminderMinutes`, `googleEventId` |
+
+```cpp
+#include "../../Application/UseCases/Calendar/GetEvents/get_events_usecase.h"
+```
+
 ---
 
 ## Study deck
@@ -64,8 +74,13 @@ API keys (not wired yet). Do **not** write `app_settings.json` or call `IAppSett
 - [ ] Fields: Gemini API key (`aiApiKey`) and Calendar API key (`calendarApiKey`). Use password-style inputs. If save returns `false`, show an error and keep the dialog’s values.
 - [ ] Do **not** write `app_settings.json`, `merken.db`, or `%APPDATA%\Merken\settings.bin` yourself. The use case persists keys (Windows: DPAPI in the user data dir).
 
+## Calendar (view events)
+
+- [ ] Opening **Calendar** runs `GetEventsUseCase` (`Execute()`, no request) and shows the returned events. An empty list is valid (no events, missing key, or API failure).
+- [ ] Do **not** call `ICalendarAPIService`, Google Calendar, or `IAppSettingsService`. The use case loads `calendarApiKey`.
+
 ## Don’t
 
-- Do not `create<IDeckRepository>()`, `IDailyProgressRepository`, `IDateProviderService`, or `IAppSettingsService`.
+- Do not `create<IDeckRepository>()`, `IDailyProgressRepository`, `IDateProviderService`, `IAppSettingsService`, or `ICalendarAPIService`.
 - Do not compute due-ness or next-review dates in the UI. `StudyDeck` already filtered; `ReviewCard` already scheduled.
 - Do not write `app_settings.json`. API keys go through File → Settings (`SaveAppSettingsUseCase`).
