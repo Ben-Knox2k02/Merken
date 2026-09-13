@@ -28,7 +28,7 @@ Open work for each role is a checklist next to this file. Check items off when d
 | UI | [UI_TODO.md](UI_TODO.md) |
 | Database | [DB_TODO.md](DB_TODO.md) |
 | Application | no open task list right now — study/review use cases are in |
-| APIs | still the Gemini / Calendar stubs below |
+| APIs | [API_TODO.md](API_TODO.md) |
 
 ---
 
