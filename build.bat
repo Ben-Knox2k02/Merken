@@ -35,7 +35,7 @@ if "%WX_READY%"=="0" (
 set INC=-I UI\include -I ThirdParty\boost-di -I ThirdParty\wxSQLite3\include -I ThirdParty\wxSQLite3\src -I %WX%\lib\gcc_lib\mswu -I %WX%\include
 set LIB=-L %WX%\lib\gcc_lib
 set WXLIBS=-lwxmsw32u_core -lwxbase32u_net -lwxbase32u -lwxpng -lwxjpeg -lwxzlib -lwxregexu -lwxexpat
-set WINLIBS=-lshlwapi -lversion -lole32 -lshell32 -luuid -lrpcrt4 -luxtheme -lgdi32 -loleaut32 -lcomdlg32 -lcomctl32 -loleacc -lwinspool -lwininet -lws2_32
+set WINLIBS=-lshlwapi -lversion -lole32 -lshell32 -luuid -lrpcrt4 -luxtheme -lgdi32 -loleaut32 -lcomdlg32 -lcomctl32 -loleacc -lwinspool -lwininet -lws2_32 -lcrypt32
 
 echo Cleaning previous build artifacts...
 if exist obj rmdir /s /q obj

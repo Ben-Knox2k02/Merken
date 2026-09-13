@@ -26,6 +26,16 @@ Progress use cases (not wired yet). Do **not** query `daily_progress` or `IDaily
 #include "../../Application/UseCases/Progress/GetProgressHistory/get_progress_history_usecase.h"
 ```
 
+API keys (not wired yet). Do **not** write `app_settings.json` or call `IAppSettingsService`. Gemini/Calendar already load keys with `GetSettings()`. Storage is already implemented.
+
+| Use case | Request | What you get back |
+|---|---|---|
+| `SaveAppSettingsUseCase` | `calendarApiKey`, `aiApiKey` | `true` if saved |
+
+```cpp
+#include "../../Application/UseCases/AppSettings/SaveAppSettings/save_app_settings_usecase.h"
+```
+
 ---
 
 ## Study deck
@@ -48,7 +58,14 @@ Progress use cases (not wired yet). Do **not** query `daily_progress` or `IDaily
 - [ ] Wire Today's Progress: call `GetTodaysProgressUseCase` (`Execute()`, no request). Do not query `daily_progress` / `IDailyProgressRepository`.
 - [ ] Heatmap of previous days: call `GetProgressHistoryUseCase` (empty dates → last 12 weeks ending today). Map `cardsReviewed` to intensity; missing days are already zeros (intensity 0). Do not query `daily_progress` / `IDailyProgressRepository`.
 
+## Settings (API keys)
+
+- [ ] **File → Settings** opens a dialog. On OK, save with `SaveAppSettingsUseCase`. Leave the fields empty; do not load existing keys (Gemini/Calendar read them via `IAppSettingsService.GetSettings()`).
+- [ ] Fields: Gemini API key (`aiApiKey`) and Calendar API key (`calendarApiKey`). Use password-style inputs. If save returns `false`, show an error and keep the dialog’s values.
+- [ ] Do **not** write `app_settings.json`, `merken.db`, or `%APPDATA%\Merken\settings.bin` yourself. The use case persists keys (Windows: DPAPI in the user data dir).
+
 ## Don’t
 
-- Do not `create<IDeckRepository>()`, `IDailyProgressRepository`, or `IDateProviderService`.
+- Do not `create<IDeckRepository>()`, `IDailyProgressRepository`, `IDateProviderService`, or `IAppSettingsService`.
 - Do not compute due-ness or next-review dates in the UI. `StudyDeck` already filtered; `ReviewCard` already scheduled.
+- Do not write `app_settings.json`. API keys go through File → Settings (`SaveAppSettingsUseCase`).

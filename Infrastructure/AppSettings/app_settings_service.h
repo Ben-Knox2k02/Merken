@@ -6,6 +6,7 @@
 class AppSettingsService : public IAppSettingsService {
 	public:
 		AppSettings GetSettings() override;
+		bool SaveSettings(const AppSettings& settings) override;
 };
 
 #endif

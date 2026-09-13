@@ -84,7 +84,7 @@ jobs:
           echo "Compiling ThirdParty/wxSQLite3/src/sqlite3mc_amalgamation.c"
           cc -c ThirdParty/wxSQLite3/src/sqlite3mc_amalgamation.c -IThirdParty/wxSQLite3/src -o obj/sqlite3mc_amalgamation.o
 
-          g++ obj/*.o $(wx-config --libs) -o Merken.exe
+          g++ obj/*.o $(wx-config --libs) -lcrypt32 -o Merken.exe
 
   test:
     strategy:

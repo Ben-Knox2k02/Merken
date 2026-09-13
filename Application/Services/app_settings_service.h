@@ -8,6 +8,7 @@ class IAppSettingsService {
 		virtual ~IAppSettingsService() = default;
 
 		virtual AppSettings GetSettings() = 0;
+		virtual bool SaveSettings(const AppSettings& settings) = 0;
 };
 
 #endif

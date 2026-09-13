@@ -56,7 +56,7 @@ void OnAddDeck(wxCommandEvent&) {
 - Fill a `*Request`, call `Execute`, read the `*Response`.
 - If a screen action has no use case yet, ask Application to add one.
 
-Existing use cases: `CreateDeckUseCase`, `UpdateDeckUseCase`, `GetDecksUseCase`, `StudyDeckUseCase`, `CreateCardUseCase`, `UpdateCardUseCase`, `GetCardsUseCase`, `ReviewCardUseCase`, `GetTodaysProgressUseCase`, `GetProgressHistoryUseCase`, `CreateEventUseCase`, `UpdateEventUseCase`.
+Existing use cases: `CreateDeckUseCase`, `UpdateDeckUseCase`, `GetDecksUseCase`, `StudyDeckUseCase`, `CreateCardUseCase`, `UpdateCardUseCase`, `GetCardsUseCase`, `ReviewCardUseCase`, `GetTodaysProgressUseCase`, `GetProgressHistoryUseCase`, `CreateEventUseCase`, `UpdateEventUseCase`, `SaveAppSettingsUseCase`.
 
 `Deck` is the aggregate: cards are only loaded and changed through a deck. `GetDeck` loads the deck **and its cards**. `GetDecks` (the list) does not. Card add/list/update/review live under `Application/UseCases/Deck/`. Persist with `IDeckRepository.AddCard` / `UpdateCard`. There is no `ICardRepository`.
 
@@ -126,7 +126,7 @@ Fill in the stubs. Keep method signatures unless Application agrees to change th
 | `IAIAPIService` | `Infrastructure/GeminiApi/gemini_api_service.*` |
 | `ICalendarAPIService` | `Infrastructure/GoogleCalendar/google_calendar_service.*` |
 
-**HTTP:** do not use curl/wxWebRequest yourself. Injected `IHttpClient& httpClient` is already there (`Get` / `PostJson`). Keys come from `AppSettings` (`aiApiKey`, `calendarApiKey`). Do not hardcode secrets.
+**HTTP:** do not use curl/wxWebRequest yourself. Injected `IHttpClient& httpClient` is already there (`Get` / `PostJson`). Keys come from `AppSettings` (`aiApiKey`, `calendarApiKey`) via `IAppSettingsService`. Do not hardcode secrets. They are stored in the OS user data directory (Windows: DPAPI-protected `%APPDATA%\Merken\settings.bin`). Do not read `app_settings.json`. UI wiring is [UI_TODO.md](UI_TODO.md#settings-api-keys).
 
 ```cpp
 HttpResponse response = this->httpClient.PostJson(url, jsonBody, {

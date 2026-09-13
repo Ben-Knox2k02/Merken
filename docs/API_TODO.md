@@ -18,7 +18,7 @@ HttpResponse response = this->httpClient.PostJson(url, jsonBody, {
 if (!response.Ok()) { return ""; }
 ```
 
-There is no JSON library. Build request bodies as strings. Pull fields out of `response.body` the same way `AppSettingsService` reads `app_settings.json` (search for `"key"`). Escape quotes in user text.
+There is no JSON library. Build request bodies as strings. Pull fields out of `response.body` by searching for `"key"`. Escape quotes in user text.
 
 ---
 
@@ -49,4 +49,4 @@ There is no JSON library. Build request bodies as strings. Pull fields out of `r
 - Do not open your own HTTP session, sockets, or curl.
 - Do not persist to SQLite or call `I*Repository`. Calendar/Gemini only talk to the network.
 - Do not change `IAIAPIService` / `ICalendarAPIService` signatures, `AppSettings` field names, or `DiComposition` bindings for HTTP/Gemini/Calendar.
-- Do not commit real API keys. `app_settings.json` stays dummy values in git.
+- Do not commit real API keys. Do not read or write `app_settings.json`. Keys come from `AppSettings` (`IAppSettingsService.GetSettings()`).

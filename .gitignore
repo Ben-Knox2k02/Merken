@@ -3,6 +3,8 @@ obj/
 *.exe
 Merken
 Merken.app/
+app_settings.json
+settings.bin
 merken_tests
 merken_tests.exe
 *.db
