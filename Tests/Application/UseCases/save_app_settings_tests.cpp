@@ -1,6 +1,6 @@
 #include "doctest/doctest.h"
-#include "../../../../Application/UseCases/AppSettings/SaveAppSettings/save_app_settings_usecase.h"
-#include "../../../Fakes/fake_app_settings_service.h"
+#include "../../../Application/UseCases/SaveAppSettings/save_app_settings_usecase.h"
+#include "../../Fakes/fake_app_settings_service.h"
 
 TEST_CASE("SaveAppSettingsUseCase stores API keys") {
 	FakeAppSettingsService appSettings;

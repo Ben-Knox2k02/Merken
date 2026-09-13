@@ -2,7 +2,7 @@
 #define SAVE_APP_SETTINGS_USE_CASE_H
 
 #include "save_app_settings_request.h"
-#include "../../../Services/app_settings_service.h"
+#include "../../Services/app_settings_service.h"
 
 class SaveAppSettingsUseCase {
 	public:

@@ -33,7 +33,7 @@ API keys (not wired yet). Do **not** write `app_settings.json` or call `IAppSett
 | `SaveAppSettingsUseCase` | `calendarApiKey`, `aiApiKey` | `true` if saved |
 
 ```cpp
-#include "../../Application/UseCases/AppSettings/SaveAppSettings/save_app_settings_usecase.h"
+#include "../../Application/UseCases/SaveAppSettings/save_app_settings_usecase.h"
 ```
 
 ---
