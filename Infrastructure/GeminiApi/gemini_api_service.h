@@ -1,8 +1,8 @@
 #ifndef GEMINI_API_SERVICE_REAL_H
 #define GEMINI_API_SERVICE_REAL_H
 
-#include "../../Application/ServiceInterfaces/ai_api_service.h"
-#include "../../Application/ServiceInterfaces/http_client.h"
+#include "../../Application/Services/ai_api_service.h"
+#include "../../Application/Services/http_client.h"
 
 class GeminiApiService : public IAIAPIService {
 	public:

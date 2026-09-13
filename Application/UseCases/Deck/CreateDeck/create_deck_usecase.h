@@ -3,8 +3,8 @@
 
 #include "create_deck_request.h"
 #include "create_deck_response.h"
-#include "../../../ServiceInterfaces/deck_repository.h"
-#include "../../../ServiceInterfaces/date_provider_service.h"
+#include "../../../Repositories/deck_repository.h"
+#include "../../../Services/date_provider_service.h"
 
 class CreateDeckUseCase {
 	public:

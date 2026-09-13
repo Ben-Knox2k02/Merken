@@ -1,7 +1,7 @@
 #ifndef FAKE_APP_SETTINGS_SERVICE_H
 #define FAKE_APP_SETTINGS_SERVICE_H
 
-#include "../../Application/ServiceInterfaces/app_settings_service.h"
+#include "../../Application/Services/app_settings_service.h"
 
 class FakeAppSettingsService : public IAppSettingsService {
 	public:

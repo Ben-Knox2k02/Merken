@@ -2,7 +2,7 @@
 #define UPDATE_CARD_USE_CASE_H
 
 #include "update_card_request.h"
-#include "../../../ServiceInterfaces/deck_repository.h"
+#include "../../../Repositories/deck_repository.h"
 
 class UpdateCardUseCase {
 	public:

@@ -2,7 +2,7 @@
 #define GET_DECKS_USE_CASE_H
 
 #include "get_decks_response.h"
-#include "../../../ServiceInterfaces/deck_repository.h"
+#include "../../../Repositories/deck_repository.h"
 
 class GetDecksUseCase {
 	public:

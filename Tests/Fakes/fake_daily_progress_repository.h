@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <vector>
 #include <optional>
-#include "../../Application/ServiceInterfaces/daily_progress_repository.h"
+#include "../../Application/Repositories/daily_progress_repository.h"
 
 class FakeDailyProgressRepository : public IDailyProgressRepository {
 	public:

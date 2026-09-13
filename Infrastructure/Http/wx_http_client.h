@@ -1,7 +1,7 @@
 #ifndef WX_HTTP_CLIENT_H
 #define WX_HTTP_CLIENT_H
 
-#include "../../Application/ServiceInterfaces/http_client.h"
+#include "../../Application/Services/http_client.h"
 #include <wx/wx.h>
 #include <wx/webrequest.h>
 #include <mutex>

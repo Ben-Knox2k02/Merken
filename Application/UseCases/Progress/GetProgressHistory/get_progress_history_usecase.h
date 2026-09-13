@@ -3,8 +3,8 @@
 
 #include "get_progress_history_request.h"
 #include "get_progress_history_response.h"
-#include "../../../ServiceInterfaces/daily_progress_repository.h"
-#include "../../../ServiceInterfaces/date_provider_service.h"
+#include "../../../Repositories/daily_progress_repository.h"
+#include "../../../Services/date_provider_service.h"
 
 class GetProgressHistoryUseCase {
 	public:

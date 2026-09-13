@@ -4,7 +4,7 @@ Layers do not call across each other except through the interfaces and use cases
 
 | You | Own | Do not touch |
 |---|---|---|
-| UI | `UI/` | `Infrastructure/`, `Application/ServiceInterfaces/` |
+| UI | `UI/` | `Infrastructure/`, `Application/Services/`, `Application/Repositories/` |
 | Application | `Application/`, `DomainModels/`, `Infrastructure/Persistence/` (repositories) | `UI/`, `db_scripts.cpp`, Gemini, Calendar, HTTP |
 | Database | `Infrastructure/Persistence/DatabaseContext/db_scripts.cpp` | `UI/`, repositories, Gemini, Calendar |
 | APIs | `Infrastructure/GeminiApi/`, `Infrastructure/GoogleCalendar/` | `UI/`, SQL |
@@ -80,15 +80,15 @@ CreateDeckResponse Execute(const CreateDeckRequest& request);
 ```
 
 - Do **not** bind use cases in DI. UI does `injector.create<CreateDeckUseCase>()`.
-- Need a new capability (e.g. list decks)? Add a method to the interface in `Application/ServiceInterfaces/`, then implement it in the repository (or ask APIs if it is Gemini/Calendar).
+- Need a new capability (e.g. list decks)? Add a method to the interface in `Application/Repositories/` (or `Application/Services/` for Gemini/Calendar), then implement it in Infrastructure.
 - IDs are `int` (`cardId`, `deckId`, `calendarEventId`). Pass `0` for a new row; SQLite assigns the auto-increment value.
 
 **Add a repository**
 
-Repositories live in `Infrastructure/Persistence/<Entity>/`. They query and write rows. They do not create tables.
+Interfaces live in `Application/Repositories/`. Implementations live in `Infrastructure/Persistence/<Entity>/`. They query and write rows. They do not create tables.
 
 1. Domain type in `DomainModels/`.
-2. Interface in `Application/ServiceInterfaces/` (e.g. `IDeckRepository`).
+2. Interface in `Application/Repositories/` (e.g. `IDeckRepository`).
 3. Implementation in `Infrastructure/Persistence/<Entity>/`. Inject `DatabaseContext&`.
 4. Ask Database to append a SQL string in `db_scripts.cpp` for any new table or column.
 5. Register in `DiComposition/composition_root.h`:
@@ -135,7 +135,7 @@ HttpResponse response = this->httpClient.PostJson(url, jsonBody, {
 if (!response.Ok()) { return ""; }
 ```
 
-Use cases already pass `AppSettings` (see `CreateEventUseCase`). New API service: interface in `Application/ServiceInterfaces/`, impl in `Infrastructure/`, bind as singleton in `DiComposition`. Do not bind `IHttpClient` again — it is already registered.
+Use cases already pass `AppSettings` (see `CreateEventUseCase`). New API service: interface in `Application/Services/`, impl in `Infrastructure/`, bind as singleton in `DiComposition`. Do not bind `IHttpClient` again — it is already registered.
 
 ---
 

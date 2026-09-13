@@ -1,7 +1,7 @@
 #ifndef DECK_REPOSITORY_REAL_H
 #define DECK_REPOSITORY_REAL_H
 
-#include "../../../Application/ServiceInterfaces/deck_repository.h"
+#include "../../../Application/Repositories/deck_repository.h"
 #include "../DatabaseContext/database_context.h"
 
 class DeckRepository : public IDeckRepository {

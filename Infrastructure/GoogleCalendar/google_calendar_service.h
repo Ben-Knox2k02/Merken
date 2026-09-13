@@ -1,8 +1,8 @@
 #ifndef GOOGLE_CALENDAR_SERVICE_REAL_H
 #define GOOGLE_CALENDAR_SERVICE_REAL_H
 
-#include "../../Application/ServiceInterfaces/calendar_api_service.h"
-#include "../../Application/ServiceInterfaces/http_client.h"
+#include "../../Application/Services/calendar_api_service.h"
+#include "../../Application/Services/http_client.h"
 
 class GoogleCalendarService : public ICalendarAPIService {
 	public:

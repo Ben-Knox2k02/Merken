@@ -1,7 +1,7 @@
 #ifndef DAILY_PROGRESS_REPOSITORY_REAL_H
 #define DAILY_PROGRESS_REPOSITORY_REAL_H
 
-#include "../../../Application/ServiceInterfaces/daily_progress_repository.h"
+#include "../../../Application/Repositories/daily_progress_repository.h"
 #include "../DatabaseContext/database_context.h"
 
 class DailyProgressRepository : public IDailyProgressRepository {

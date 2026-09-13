@@ -3,7 +3,7 @@
 
 #include <string>
 #include <vector>
-#include "../../Application/ServiceInterfaces/calendar_api_service.h"
+#include "../../Application/Services/calendar_api_service.h"
 
 class FakeCalendarApiService : public ICalendarAPIService {
 	public:

@@ -3,7 +3,7 @@
 
 #include "get_cards_request.h"
 #include "get_cards_response.h"
-#include "../../../ServiceInterfaces/deck_repository.h"
+#include "../../../Repositories/deck_repository.h"
 
 class GetCardsUseCase {
 	public:

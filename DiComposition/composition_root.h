@@ -15,13 +15,13 @@
 #undef MERKEN_RESTORE_WX_UNDERSCORE
 #endif
 
-#include "../Application/ServiceInterfaces/deck_repository.h"
-#include "../Application/ServiceInterfaces/daily_progress_repository.h"
-#include "../Application/ServiceInterfaces/calendar_api_service.h"
-#include "../Application/ServiceInterfaces/ai_api_service.h"
-#include "../Application/ServiceInterfaces/app_settings_service.h"
-#include "../Application/ServiceInterfaces/date_provider_service.h"
-#include "../Application/ServiceInterfaces/http_client.h"
+#include "../Application/Repositories/deck_repository.h"
+#include "../Application/Repositories/daily_progress_repository.h"
+#include "../Application/Services/calendar_api_service.h"
+#include "../Application/Services/ai_api_service.h"
+#include "../Application/Services/app_settings_service.h"
+#include "../Application/Services/date_provider_service.h"
+#include "../Application/Services/http_client.h"
 
 #include "../Infrastructure/Persistence/DatabaseContext/database_context.h"
 #include "../Infrastructure/Persistence/Deck/deck_repository.h"

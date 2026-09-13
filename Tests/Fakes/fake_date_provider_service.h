@@ -1,7 +1,7 @@
 #ifndef FAKE_DATE_PROVIDER_SERVICE_H
 #define FAKE_DATE_PROVIDER_SERVICE_H
 
-#include "../../Application/ServiceInterfaces/date_provider_service.h"
+#include "../../Application/Services/date_provider_service.h"
 
 class FakeDateProviderService : public IDateProviderService {
 	public:

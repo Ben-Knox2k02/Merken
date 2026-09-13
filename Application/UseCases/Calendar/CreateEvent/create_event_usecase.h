@@ -3,8 +3,8 @@
 
 #include "create_event_request.h"
 #include "create_event_response.h"
-#include "../../../ServiceInterfaces/calendar_api_service.h"
-#include "../../../ServiceInterfaces/app_settings_service.h"
+#include "../../../Services/calendar_api_service.h"
+#include "../../../Services/app_settings_service.h"
 
 class CreateEventUseCase {
 	public:
