@@ -1,13 +1,13 @@
-#ifndef DAILY_PROGRESS_DB_SERVICE_H
-#define DAILY_PROGRESS_DB_SERVICE_H
+#ifndef DAILY_PROGRESS_REPOSITORY_H
+#define DAILY_PROGRESS_REPOSITORY_H
 
 #include <vector>
 #include <optional>
 #include "../../DomainModels/daily_progress.h"
 
-class IDailyProgressDBService {
+class IDailyProgressRepository {
 	public:
-		virtual ~IDailyProgressDBService() = default;
+		virtual ~IDailyProgressRepository() = default;
 
 		virtual std::optional<DailyProgress> GetDailyProgress(const Date& date) = 0;
 		virtual std::vector<DailyProgress> GetDailyProgressRange(const Date& startDate, const Date& endDate) = 0;

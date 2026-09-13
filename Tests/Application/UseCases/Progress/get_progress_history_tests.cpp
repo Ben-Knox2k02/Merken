@@ -1,6 +1,6 @@
 #include "doctest/doctest.h"
 #include "../../../../Application/UseCases/Progress/GetProgressHistory/get_progress_history_usecase.h"
-#include "../../../Fakes/fake_daily_progress_db_service.h"
+#include "../../../Fakes/fake_daily_progress_repository.h"
 #include "../../../Fakes/fake_date_provider_service.h"
 
 namespace {
@@ -18,9 +18,9 @@ Date MustParse(const std::string& iso) {
 }
 
 TEST_CASE("GetProgressHistoryUseCase defaults to the last 12 weeks ending today") {
-	FakeDailyProgressDbService progressDb;
+	FakeDailyProgressRepository progressRepository;
 	FakeDateProviderService dates(TestDate());
-	GetProgressHistoryUseCase useCase(progressDb, dates);
+	GetProgressHistoryUseCase useCase(progressRepository, dates);
 
 	GetProgressHistoryRequest request;
 	GetProgressHistoryResponse response = useCase.Execute(request);
@@ -30,20 +30,20 @@ TEST_CASE("GetProgressHistoryUseCase defaults to the last 12 weeks ending today"
 	CHECK(response.days.back().date == "2026-09-12");
 	CHECK(response.days.front().cardsReviewed == 0);
 	CHECK(response.days.back().retentionRate == 0.0);
-	REQUIRE(progressDb.lastRangeStart.has_value());
-	REQUIRE(progressDb.lastRangeEnd.has_value());
-	CHECK(*progressDb.lastRangeStart == MustParse("2026-06-21"));
-	CHECK(*progressDb.lastRangeEnd == TestDate());
-	CHECK(progressDb.addCount == 0);
-	CHECK(progressDb.updateCount == 0);
+	REQUIRE(progressRepository.lastRangeStart.has_value());
+	REQUIRE(progressRepository.lastRangeEnd.has_value());
+	CHECK(*progressRepository.lastRangeStart == MustParse("2026-06-21"));
+	CHECK(*progressRepository.lastRangeEnd == TestDate());
+	CHECK(progressRepository.addCount == 0);
+	CHECK(progressRepository.updateCount == 0);
 }
 
 TEST_CASE("GetProgressHistoryUseCase fills missing days and maps stored rows") {
-	FakeDailyProgressDbService progressDb;
-	progressDb.rows.push_back(DailyProgress(MustParse("2026-09-11"), 4, 3));
-	progressDb.rows.push_back(DailyProgress(MustParse("2026-09-01"), 8, 8));
+	FakeDailyProgressRepository progressRepository;
+	progressRepository.rows.push_back(DailyProgress(MustParse("2026-09-11"), 4, 3));
+	progressRepository.rows.push_back(DailyProgress(MustParse("2026-09-01"), 8, 8));
 	FakeDateProviderService dates(TestDate());
-	GetProgressHistoryUseCase useCase(progressDb, dates);
+	GetProgressHistoryUseCase useCase(progressRepository, dates);
 
 	GetProgressHistoryRequest request;
 	request.startDate = "2026-09-10";
@@ -61,13 +61,13 @@ TEST_CASE("GetProgressHistoryUseCase fills missing days and maps stored rows") {
 	CHECK(response.days[1].retentionRate == doctest::Approx(0.75));
 	CHECK(response.days[2].date == "2026-09-12");
 	CHECK(response.days[2].cardsReviewed == 0);
-	CHECK(progressDb.addCount == 0);
+	CHECK(progressRepository.addCount == 0);
 }
 
 TEST_CASE("GetProgressHistoryUseCase returns empty when dates are invalid or reversed") {
-	FakeDailyProgressDbService progressDb;
+	FakeDailyProgressRepository progressRepository;
 	FakeDateProviderService dates(TestDate());
-	GetProgressHistoryUseCase useCase(progressDb, dates);
+	GetProgressHistoryUseCase useCase(progressRepository, dates);
 
 	GetProgressHistoryRequest badStart;
 	badStart.startDate = "not-a-date";
@@ -83,13 +83,13 @@ TEST_CASE("GetProgressHistoryUseCase returns empty when dates are invalid or rev
 	reversed.startDate = "2026-09-12";
 	reversed.endDate = "2026-09-10";
 	CHECK(useCase.Execute(reversed).days.empty());
-	CHECK_FALSE(progressDb.lastRangeStart.has_value());
+	CHECK_FALSE(progressRepository.lastRangeStart.has_value());
 }
 
 TEST_CASE("GetProgressHistoryUseCase includes the max date without hanging") {
-	FakeDailyProgressDbService progressDb;
+	FakeDailyProgressRepository progressRepository;
 	FakeDateProviderService dates(TestDate());
-	GetProgressHistoryUseCase useCase(progressDb, dates);
+	GetProgressHistoryUseCase useCase(progressRepository, dates);
 
 	GetProgressHistoryRequest request;
 	request.startDate = "9999-12-31";

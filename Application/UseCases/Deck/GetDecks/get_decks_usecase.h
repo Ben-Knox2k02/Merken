@@ -2,17 +2,17 @@
 #define GET_DECKS_USE_CASE_H
 
 #include "get_decks_response.h"
-#include "../../../ServiceInterfaces/deck_db_service.h"
+#include "../../../ServiceInterfaces/deck_repository.h"
 
 class GetDecksUseCase {
 	public:
-		explicit GetDecksUseCase(IDeckDBService& deckDBService)
-			: deckDBService(deckDBService) {}
+		explicit GetDecksUseCase(IDeckRepository& deckRepository)
+			: deckRepository(deckRepository) {}
 
 		GetDecksResponse Execute();
 
 	private:
-		IDeckDBService& deckDBService;
+		IDeckRepository& deckRepository;
 };
 
 #endif

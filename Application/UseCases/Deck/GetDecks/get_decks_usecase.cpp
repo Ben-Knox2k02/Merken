@@ -2,7 +2,7 @@
 
 GetDecksResponse GetDecksUseCase::Execute() {
 	GetDecksResponse response;
-	for (const Deck& deck : this->deckDBService.GetDecks()) {
+	for (const Deck& deck : this->deckRepository.GetDecks()) {
 		response.decks.push_back(DeckResponse{
 			.deckId = deck.GetDeckId(),
 			.name = deck.GetName(),

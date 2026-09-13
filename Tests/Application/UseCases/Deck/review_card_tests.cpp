@@ -1,7 +1,7 @@
 #include "doctest/doctest.h"
 #include "../../../../Application/UseCases/Deck/ReviewCard/review_card_usecase.h"
-#include "../../../Fakes/fake_deck_db_service.h"
-#include "../../../Fakes/fake_daily_progress_db_service.h"
+#include "../../../Fakes/fake_deck_repository.h"
+#include "../../../Fakes/fake_daily_progress_repository.h"
 #include "../../../Fakes/fake_date_provider_service.h"
 
 namespace {
@@ -13,12 +13,12 @@ Date TestDate() {
 }
 
 TEST_CASE("ReviewCardUseCase records a remembered review") {
-	FakeDeckDbService deckDb;
-	FakeDailyProgressDbService progressDb;
+	FakeDeckRepository deckRepository;
+	FakeDailyProgressRepository progressRepository;
 	FakeDateProviderService dates(TestDate());
-	const int deckId = deckDb.SeedDeck("Spanish");
-	const int cardId = deckDb.SeedCard(deckId, "Hola", "Hello");
-	ReviewCardUseCase useCase(deckDb, progressDb, dates);
+	const int deckId = deckRepository.SeedDeck("Spanish");
+	const int cardId = deckRepository.SeedCard(deckId, "Hola", "Hello");
+	ReviewCardUseCase useCase(deckRepository, progressRepository, dates);
 
 	ReviewCardRequest request;
 	request.deckId = deckId;
@@ -34,10 +34,10 @@ TEST_CASE("ReviewCardUseCase records a remembered review") {
 	CHECK(response.cardsReviewed == 1);
 	CHECK(response.cardsCorrect == 1);
 	CHECK(response.retentionRate == doctest::Approx(1.0));
-	CHECK(progressDb.addCount == 1);
-	CHECK(progressDb.updateCount == 0);
+	CHECK(progressRepository.addCount == 1);
+	CHECK(progressRepository.updateCount == 0);
 
-	Card* stored = deckDb.FindStoredCard(deckId, cardId);
+	Card* stored = deckRepository.FindStoredCard(deckId, cardId);
 	REQUIRE(stored != nullptr);
 	CHECK(stored->GetIntervalDays() == 1);
 	CHECK(stored->GetRepetitionCount() == 1);
@@ -46,13 +46,13 @@ TEST_CASE("ReviewCardUseCase records a remembered review") {
 }
 
 TEST_CASE("ReviewCardUseCase records a forgotten review and updates existing progress") {
-	FakeDeckDbService deckDb;
-	FakeDailyProgressDbService progressDb;
+	FakeDeckRepository deckRepository;
+	FakeDailyProgressRepository progressRepository;
 	FakeDateProviderService dates(TestDate());
-	const int deckId = deckDb.SeedDeck("Spanish");
-	const int firstId = deckDb.SeedCard(deckId, "Hola", "Hello");
-	const int secondId = deckDb.SeedCard(deckId, "Adios", "Goodbye");
-	ReviewCardUseCase useCase(deckDb, progressDb, dates);
+	const int deckId = deckRepository.SeedDeck("Spanish");
+	const int firstId = deckRepository.SeedCard(deckId, "Hola", "Hello");
+	const int secondId = deckRepository.SeedCard(deckId, "Adios", "Goodbye");
+	ReviewCardUseCase useCase(deckRepository, progressRepository, dates);
 
 	ReviewCardRequest remembered;
 	remembered.deckId = deckId;
@@ -72,21 +72,21 @@ TEST_CASE("ReviewCardUseCase records a forgotten review and updates existing pro
 	CHECK(response.cardsReviewed == 2);
 	CHECK(response.cardsCorrect == 1);
 	CHECK(response.retentionRate == doctest::Approx(0.5));
-	CHECK(progressDb.addCount == 1);
-	CHECK(progressDb.updateCount == 1);
+	CHECK(progressRepository.addCount == 1);
+	CHECK(progressRepository.updateCount == 1);
 
-	Card* stored = deckDb.FindStoredCard(deckId, secondId);
+	Card* stored = deckRepository.FindStoredCard(deckId, secondId);
 	REQUIRE(stored != nullptr);
 	CHECK(stored->GetRepetitionCount() == 0);
 	CHECK(stored->GetEaseFactor() == doctest::Approx(2.3));
 }
 
 TEST_CASE("ReviewCardUseCase fails when the deck or card is missing") {
-	FakeDeckDbService deckDb;
-	FakeDailyProgressDbService progressDb;
+	FakeDeckRepository deckRepository;
+	FakeDailyProgressRepository progressRepository;
 	FakeDateProviderService dates(TestDate());
-	const int deckId = deckDb.SeedDeck("Spanish");
-	ReviewCardUseCase useCase(deckDb, progressDb, dates);
+	const int deckId = deckRepository.SeedDeck("Spanish");
+	ReviewCardUseCase useCase(deckRepository, progressRepository, dates);
 
 	ReviewCardRequest missingDeck;
 	missingDeck.deckId = 99;
@@ -99,17 +99,17 @@ TEST_CASE("ReviewCardUseCase fails when the deck or card is missing") {
 	missingCard.cardId = 99;
 	missingCard.remembered = true;
 	CHECK_FALSE(useCase.Execute(missingCard).success);
-	CHECK(progressDb.addCount == 0);
+	CHECK(progressRepository.addCount == 0);
 }
 
 TEST_CASE("ReviewCardUseCase fails when the card update is not persisted") {
-	FakeDeckDbService deckDb;
-	FakeDailyProgressDbService progressDb;
+	FakeDeckRepository deckRepository;
+	FakeDailyProgressRepository progressRepository;
 	FakeDateProviderService dates(TestDate());
-	const int deckId = deckDb.SeedDeck("Spanish");
-	const int cardId = deckDb.SeedCard(deckId, "Hola", "Hello");
-	deckDb.updateCardSucceeds = false;
-	ReviewCardUseCase useCase(deckDb, progressDb, dates);
+	const int deckId = deckRepository.SeedDeck("Spanish");
+	const int cardId = deckRepository.SeedCard(deckId, "Hola", "Hello");
+	deckRepository.updateCardSucceeds = false;
+	ReviewCardUseCase useCase(deckRepository, progressRepository, dates);
 
 	ReviewCardRequest request;
 	request.deckId = deckId;
@@ -117,5 +117,5 @@ TEST_CASE("ReviewCardUseCase fails when the card update is not persisted") {
 	request.remembered = true;
 
 	CHECK_FALSE(useCase.Execute(request).success);
-	CHECK(progressDb.addCount == 0);
+	CHECK(progressRepository.addCount == 0);
 }

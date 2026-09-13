@@ -3,7 +3,7 @@
 
 GetTodaysProgressResponse GetTodaysProgressUseCase::Execute() {
 	const Date today = this->dateProviderService.GetCurrentDate();
-	std::optional<DailyProgress> progress = this->dailyProgressDBService.GetDailyProgress(today);
+	std::optional<DailyProgress> progress = this->dailyProgressRepository.GetDailyProgress(today);
 	if (!progress.has_value()) {
 		progress = DailyProgress(today);
 	}

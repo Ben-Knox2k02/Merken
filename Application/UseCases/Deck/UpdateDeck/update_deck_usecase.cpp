@@ -2,10 +2,10 @@
 #include <optional>
 
 bool UpdateDeckUseCase::Execute(const UpdateDeckRequest& request) {
-	std::optional<Deck> existing = this->deckDBService.GetDeck(request.deckId);
+	std::optional<Deck> existing = this->deckRepository.GetDeck(request.deckId);
 	if (!existing.has_value()) { return false; }
 
 	existing->UpdateName(request.name);
 	existing->UpdateDescription(request.description);
-	return this->deckDBService.UpdateDeck(*existing);
+	return this->deckRepository.UpdateDeck(*existing);
 }

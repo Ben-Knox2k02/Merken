@@ -1,10 +1,10 @@
 #include "doctest/doctest.h"
 #include "../../../../Application/UseCases/Deck/GetCards/get_cards_usecase.h"
-#include "../../../Fakes/fake_deck_db_service.h"
+#include "../../../Fakes/fake_deck_repository.h"
 
 TEST_CASE("GetCardsUseCase returns no cards when the deck is missing") {
-	FakeDeckDbService deckDb;
-	GetCardsUseCase useCase(deckDb);
+	FakeDeckRepository deckRepository;
+	GetCardsUseCase useCase(deckRepository);
 
 	GetCardsRequest request;
 	request.deckId = 99;
@@ -15,11 +15,11 @@ TEST_CASE("GetCardsUseCase returns no cards when the deck is missing") {
 }
 
 TEST_CASE("GetCardsUseCase maps cards in a deck") {
-	FakeDeckDbService deckDb;
-	const int deckId = deckDb.SeedDeck("Spanish");
-	deckDb.SeedCard(deckId, "Hola", "Hello", "Greeting");
-	deckDb.SeedCard(deckId, "Adios", "Goodbye");
-	GetCardsUseCase useCase(deckDb);
+	FakeDeckRepository deckRepository;
+	const int deckId = deckRepository.SeedDeck("Spanish");
+	deckRepository.SeedCard(deckId, "Hola", "Hello", "Greeting");
+	deckRepository.SeedCard(deckId, "Adios", "Goodbye");
+	GetCardsUseCase useCase(deckRepository);
 
 	GetCardsRequest request;
 	request.deckId = deckId;

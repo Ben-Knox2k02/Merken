@@ -3,21 +3,21 @@
 
 #include "study_deck_request.h"
 #include "study_deck_response.h"
-#include "../../../ServiceInterfaces/deck_db_service.h"
+#include "../../../ServiceInterfaces/deck_repository.h"
 #include "../../../ServiceInterfaces/date_provider_service.h"
 
 class StudyDeckUseCase {
 	public:
 		StudyDeckUseCase(
-			IDeckDBService& deckDBService,
+			IDeckRepository& deckRepository,
 			IDateProviderService& dateProviderService
-		) : deckDBService(deckDBService),
+		) : deckRepository(deckRepository),
 			dateProviderService(dateProviderService) {}
 
 		StudyDeckResponse Execute(const StudyDeckRequest& request);
 
 	private:
-		IDeckDBService& deckDBService;
+		IDeckRepository& deckRepository;
 		IDateProviderService& dateProviderService;
 };
 

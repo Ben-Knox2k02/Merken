@@ -1,6 +1,6 @@
 #include "doctest/doctest.h"
 #include "../../../../Application/UseCases/Deck/CreateDeck/create_deck_usecase.h"
-#include "../../../Fakes/fake_deck_db_service.h"
+#include "../../../Fakes/fake_deck_repository.h"
 #include "../../../Fakes/fake_date_provider_service.h"
 
 namespace {
@@ -12,9 +12,9 @@ Date TestDate() {
 }
 
 TEST_CASE("CreateDeckUseCase persists a deck and returns it") {
-	FakeDeckDbService deckDb;
+	FakeDeckRepository deckRepository;
 	FakeDateProviderService dates(TestDate());
-	CreateDeckUseCase useCase(deckDb, dates);
+	CreateDeckUseCase useCase(deckRepository, dates);
 
 	CreateDeckRequest request;
 	request.name = "Spanish";
@@ -22,8 +22,8 @@ TEST_CASE("CreateDeckUseCase persists a deck and returns it") {
 
 	CreateDeckResponse response = useCase.Execute(request);
 
-	REQUIRE(deckDb.addedDecks.size() == 1);
-	const Deck& saved = deckDb.addedDecks[0];
+	REQUIRE(deckRepository.addedDecks.size() == 1);
+	const Deck& saved = deckRepository.addedDecks[0];
 	CHECK(saved.GetDeckId() == 0);
 	CHECK(saved.GetName() == "Spanish");
 	CHECK(saved.GetDescription() == "Vocabulary");
@@ -36,9 +36,9 @@ TEST_CASE("CreateDeckUseCase persists a deck and returns it") {
 }
 
 TEST_CASE("CreateDeckUseCase allows an empty description") {
-	FakeDeckDbService deckDb;
+	FakeDeckRepository deckRepository;
 	FakeDateProviderService dates(TestDate());
-	CreateDeckUseCase useCase(deckDb, dates);
+	CreateDeckUseCase useCase(deckRepository, dates);
 
 	CreateDeckRequest request;
 	request.name = "Untitled";
@@ -46,17 +46,17 @@ TEST_CASE("CreateDeckUseCase allows an empty description") {
 
 	CreateDeckResponse response = useCase.Execute(request);
 
-	REQUIRE(deckDb.addedDecks.size() == 1);
-	CHECK(deckDb.addedDecks[0].GetDescription() == "");
+	REQUIRE(deckRepository.addedDecks.size() == 1);
+	CHECK(deckRepository.addedDecks[0].GetDescription() == "");
 	CHECK(response.description == "");
 	CHECK(response.deckId == 1);
 }
 
-TEST_CASE("CreateDeckUseCase returns ids from the db service") {
-	FakeDeckDbService deckDb;
-	deckDb.nextDeckId = 42;
+TEST_CASE("CreateDeckUseCase returns ids from the repository") {
+	FakeDeckRepository deckRepository;
+	deckRepository.nextDeckId = 42;
 	FakeDateProviderService dates(TestDate());
-	CreateDeckUseCase useCase(deckDb, dates);
+	CreateDeckUseCase useCase(deckRepository, dates);
 
 	CreateDeckRequest first;
 	first.name = "One";
@@ -65,5 +65,5 @@ TEST_CASE("CreateDeckUseCase returns ids from the db service") {
 
 	CHECK(useCase.Execute(first).deckId == 42);
 	CHECK(useCase.Execute(second).deckId == 43);
-	CHECK(deckDb.addedDecks.size() == 2);
+	CHECK(deckRepository.addedDecks.size() == 2);
 }

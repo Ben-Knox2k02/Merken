@@ -30,7 +30,7 @@ GetProgressHistoryResponse GetProgressHistoryUseCase::Execute(const GetProgressH
 	}
 
 	const std::vector<DailyProgress> stored =
-		this->dailyProgressDBService.GetDailyProgressRange(startDate, endDate);
+		this->dailyProgressRepository.GetDailyProgressRange(startDate, endDate);
 
 	size_t storedIndex = 0;
 	Date day = startDate;

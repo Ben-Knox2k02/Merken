@@ -3,17 +3,17 @@
 
 #include "get_cards_request.h"
 #include "get_cards_response.h"
-#include "../../../ServiceInterfaces/deck_db_service.h"
+#include "../../../ServiceInterfaces/deck_repository.h"
 
 class GetCardsUseCase {
 	public:
-		explicit GetCardsUseCase(IDeckDBService& deckDBService)
-			: deckDBService(deckDBService) {}
+		explicit GetCardsUseCase(IDeckRepository& deckRepository)
+			: deckRepository(deckRepository) {}
 
 		GetCardsResponse Execute(const GetCardsRequest& request);
 
 	private:
-		IDeckDBService& deckDBService;
+		IDeckRepository& deckRepository;
 };
 
 #endif

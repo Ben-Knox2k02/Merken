@@ -1,12 +1,12 @@
 #include "doctest/doctest.h"
 #include "../../../../Application/UseCases/Deck/UpdateCard/update_card_usecase.h"
-#include "../../../Fakes/fake_deck_db_service.h"
+#include "../../../Fakes/fake_deck_repository.h"
 
 TEST_CASE("UpdateCardUseCase updates front, back, and tags") {
-	FakeDeckDbService deckDb;
-	const int deckId = deckDb.SeedDeck("Spanish");
-	const int cardId = deckDb.SeedCard(deckId, "Hola", "Hello", "Old");
-	UpdateCardUseCase useCase(deckDb);
+	FakeDeckRepository deckRepository;
+	const int deckId = deckRepository.SeedDeck("Spanish");
+	const int cardId = deckRepository.SeedCard(deckId, "Hola", "Hello", "Old");
+	UpdateCardUseCase useCase(deckRepository);
 
 	UpdateCardRequest request;
 	request.deckId = deckId;
@@ -16,7 +16,7 @@ TEST_CASE("UpdateCardUseCase updates front, back, and tags") {
 	request.tags = "Greeting, Formal";
 
 	CHECK(useCase.Execute(request));
-	Card* updated = deckDb.FindStoredCard(deckId, cardId);
+	Card* updated = deckRepository.FindStoredCard(deckId, cardId);
 	REQUIRE(updated != nullptr);
 	CHECK(updated->GetFront() == "Buenos dias");
 	CHECK(updated->GetBack() == "Good morning");
@@ -26,8 +26,8 @@ TEST_CASE("UpdateCardUseCase updates front, back, and tags") {
 }
 
 TEST_CASE("UpdateCardUseCase returns false when the deck is missing") {
-	FakeDeckDbService deckDb;
-	UpdateCardUseCase useCase(deckDb);
+	FakeDeckRepository deckRepository;
+	UpdateCardUseCase useCase(deckRepository);
 
 	UpdateCardRequest request;
 	request.deckId = 99;
@@ -39,9 +39,9 @@ TEST_CASE("UpdateCardUseCase returns false when the deck is missing") {
 }
 
 TEST_CASE("UpdateCardUseCase returns false when the card is missing") {
-	FakeDeckDbService deckDb;
-	const int deckId = deckDb.SeedDeck("Spanish");
-	UpdateCardUseCase useCase(deckDb);
+	FakeDeckRepository deckRepository;
+	const int deckId = deckRepository.SeedDeck("Spanish");
+	UpdateCardUseCase useCase(deckRepository);
 
 	UpdateCardRequest request;
 	request.deckId = deckId;
@@ -53,11 +53,11 @@ TEST_CASE("UpdateCardUseCase returns false when the card is missing") {
 }
 
 TEST_CASE("UpdateCardUseCase returns false when the db update fails") {
-	FakeDeckDbService deckDb;
-	const int deckId = deckDb.SeedDeck("Spanish");
-	const int cardId = deckDb.SeedCard(deckId, "Hola", "Hello");
-	deckDb.updateCardSucceeds = false;
-	UpdateCardUseCase useCase(deckDb);
+	FakeDeckRepository deckRepository;
+	const int deckId = deckRepository.SeedDeck("Spanish");
+	const int cardId = deckRepository.SeedCard(deckId, "Hola", "Hello");
+	deckRepository.updateCardSucceeds = false;
+	UpdateCardUseCase useCase(deckRepository);
 
 	UpdateCardRequest request;
 	request.deckId = deckId;

@@ -1,8 +1,8 @@
-#include "deck_db_service.h"
+#include "deck_repository.h"
 #include "card_row.h"
 #include <wx/wxsqlite3.h>
 
-std::vector<Deck> DeckDbService::GetDecks() {
+std::vector<Deck> DeckRepository::GetDecks() {
 	std::vector<Deck> decks;
 	wxSQLite3::ResultSet result = this->db.GetConnection()->ExecuteQuery(
 		"SELECT deck_id, name, description, created_at FROM decks ORDER BY deck_id;"
@@ -20,7 +20,7 @@ std::vector<Deck> DeckDbService::GetDecks() {
 	return decks;
 }
 
-std::optional<Deck> DeckDbService::GetDeck(int deckId) {
+std::optional<Deck> DeckRepository::GetDeck(int deckId) {
 	wxSQLite3::Statement stmt = this->db.GetConnection()->PrepareStatement(
 		"SELECT deck_id, name, description, created_at FROM decks WHERE deck_id = ?;"
 	);
@@ -39,7 +39,7 @@ std::optional<Deck> DeckDbService::GetDeck(int deckId) {
 	return deck;
 }
 
-void DeckDbService::LoadCards(Deck& deck) {
+void DeckRepository::LoadCards(Deck& deck) {
 	wxSQLite3::Statement stmt = this->db.GetConnection()->PrepareStatement(
 		"SELECT card_id, deck_id, front, back, tags, card_type, choices, "
 		"next_review_date, last_reviewed_date, interval_days, ease_factor, repetition_count "
@@ -53,7 +53,7 @@ void DeckDbService::LoadCards(Deck& deck) {
 	}
 }
 
-int DeckDbService::AddDeck(const Deck& deck) {
+int DeckRepository::AddDeck(const Deck& deck) {
 	try {
 		wxSQLite3::Statement stmt = this->db.GetConnection()->PrepareStatement(
 			"INSERT INTO decks (name, description, created_at) VALUES (?, ?, ?);"
@@ -68,7 +68,7 @@ int DeckDbService::AddDeck(const Deck& deck) {
 	}
 }
 
-bool DeckDbService::UpdateDeck(const Deck& deck) {
+bool DeckRepository::UpdateDeck(const Deck& deck) {
 	wxSQLite3::Statement stmt = this->db.GetConnection()->PrepareStatement(
 		"UPDATE decks SET name = ?, description = ? WHERE deck_id = ?;"
 	);
@@ -78,7 +78,7 @@ bool DeckDbService::UpdateDeck(const Deck& deck) {
 	return stmt.ExecuteUpdate() > 0;
 }
 
-int DeckDbService::AddCard(const Card& card) {
+int DeckRepository::AddCard(const Card& card) {
 	try {
 		wxSQLite3::Statement stmt = this->db.GetConnection()->PrepareStatement(
 			"INSERT INTO cards (deck_id, front, back, tags, card_type, choices) "
@@ -97,7 +97,7 @@ int DeckDbService::AddCard(const Card& card) {
 	}
 }
 
-bool DeckDbService::UpdateCard(const Card& card) {
+bool DeckRepository::UpdateCard(const Card& card) {
 	wxSQLite3::Statement stmt = this->db.GetConnection()->PrepareStatement(
 		"UPDATE cards SET front = ?, back = ?, tags = ?, card_type = ?, choices = ?, "
 		"interval_days = ?, ease_factor = ?, repetition_count = ?, "

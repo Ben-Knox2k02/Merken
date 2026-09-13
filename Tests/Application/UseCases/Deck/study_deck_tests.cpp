@@ -1,6 +1,6 @@
 #include "doctest/doctest.h"
 #include "../../../../Application/UseCases/Deck/StudyDeck/study_deck_usecase.h"
-#include "../../../Fakes/fake_deck_db_service.h"
+#include "../../../Fakes/fake_deck_repository.h"
 #include "../../../Fakes/fake_date_provider_service.h"
 
 namespace {
@@ -12,20 +12,20 @@ Date TestDate() {
 }
 
 TEST_CASE("StudyDeckUseCase returns only due cards") {
-	FakeDeckDbService deckDb;
-	const int deckId = deckDb.SeedDeck("Spanish");
-	const int dueNew = deckDb.SeedCard(deckId, "Hola", "Hello");
-	const int dueToday = deckDb.SeedCard(deckId, "Adios", "Goodbye");
-	const int notDue = deckDb.SeedCard(deckId, "Gracias", "Thanks");
-	Card* todayCard = deckDb.FindStoredCard(deckId, dueToday);
-	Card* laterCard = deckDb.FindStoredCard(deckId, notDue);
+	FakeDeckRepository deckRepository;
+	const int deckId = deckRepository.SeedDeck("Spanish");
+	const int dueNew = deckRepository.SeedCard(deckId, "Hola", "Hello");
+	const int dueToday = deckRepository.SeedCard(deckId, "Adios", "Goodbye");
+	const int notDue = deckRepository.SeedCard(deckId, "Gracias", "Thanks");
+	Card* todayCard = deckRepository.FindStoredCard(deckId, dueToday);
+	Card* laterCard = deckRepository.FindStoredCard(deckId, notDue);
 	REQUIRE(todayCard != nullptr);
 	REQUIRE(laterCard != nullptr);
 	todayCard->SetNextReviewDate(TestDate());
 	laterCard->SetNextReviewDate(TestDate().AddDays(1));
 
 	FakeDateProviderService dates(TestDate());
-	StudyDeckUseCase useCase(deckDb, dates);
+	StudyDeckUseCase useCase(deckRepository, dates);
 
 	StudyDeckRequest request;
 	request.deckId = deckId;
@@ -41,9 +41,9 @@ TEST_CASE("StudyDeckUseCase returns only due cards") {
 }
 
 TEST_CASE("StudyDeckUseCase returns an empty due list when the deck is missing") {
-	FakeDeckDbService deckDb;
+	FakeDeckRepository deckRepository;
 	FakeDateProviderService dates(TestDate());
-	StudyDeckUseCase useCase(deckDb, dates);
+	StudyDeckUseCase useCase(deckRepository, dates);
 
 	StudyDeckRequest request;
 	request.deckId = 99;

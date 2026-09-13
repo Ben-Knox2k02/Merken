@@ -1,4 +1,4 @@
-#include "daily_progress_db_service.h"
+#include "daily_progress_repository.h"
 #include <wx/wxsqlite3.h>
 
 namespace {
@@ -11,7 +11,7 @@ std::optional<DailyProgress> MapDailyProgressRow(wxSQLite3::ResultSet& result) {
 }
 }
 
-std::optional<DailyProgress> DailyProgressDbService::GetDailyProgress(const Date& date) {
+std::optional<DailyProgress> DailyProgressRepository::GetDailyProgress(const Date& date) {
 	wxSQLite3::Statement stmt = this->db.GetConnection()->PrepareStatement(
 		"SELECT date, cards_reviewed, cards_correct FROM daily_progress WHERE date = ?;"
 	);
@@ -22,7 +22,7 @@ std::optional<DailyProgress> DailyProgressDbService::GetDailyProgress(const Date
 	return MapDailyProgressRow(result);
 }
 
-std::vector<DailyProgress> DailyProgressDbService::GetDailyProgressRange(const Date& startDate, const Date& endDate) {
+std::vector<DailyProgress> DailyProgressRepository::GetDailyProgressRange(const Date& startDate, const Date& endDate) {
 	std::vector<DailyProgress> progressList;
 	wxSQLite3::Statement stmt = this->db.GetConnection()->PrepareStatement(
 		"SELECT date, cards_reviewed, cards_correct FROM daily_progress "
@@ -41,7 +41,7 @@ std::vector<DailyProgress> DailyProgressDbService::GetDailyProgressRange(const D
 	return progressList;
 }
 
-bool DailyProgressDbService::AddDailyProgress(const DailyProgress& progress) {
+bool DailyProgressRepository::AddDailyProgress(const DailyProgress& progress) {
 	try {
 		wxSQLite3::Statement stmt = this->db.GetConnection()->PrepareStatement(
 			"INSERT INTO daily_progress (date, cards_reviewed, cards_correct) VALUES (?, ?, ?);"
@@ -55,7 +55,7 @@ bool DailyProgressDbService::AddDailyProgress(const DailyProgress& progress) {
 	}
 }
 
-bool DailyProgressDbService::UpdateDailyProgress(const DailyProgress& progress) {
+bool DailyProgressRepository::UpdateDailyProgress(const DailyProgress& progress) {
 	wxSQLite3::Statement stmt = this->db.GetConnection()->PrepareStatement(
 		"UPDATE daily_progress SET cards_reviewed = ?, cards_correct = ? WHERE date = ?;"
 	);

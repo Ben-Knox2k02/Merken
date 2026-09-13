@@ -2,21 +2,21 @@
 #define GET_TODAYS_PROGRESS_USE_CASE_H
 
 #include "get_todays_progress_response.h"
-#include "../../../ServiceInterfaces/daily_progress_db_service.h"
+#include "../../../ServiceInterfaces/daily_progress_repository.h"
 #include "../../../ServiceInterfaces/date_provider_service.h"
 
 class GetTodaysProgressUseCase {
 	public:
 		GetTodaysProgressUseCase(
-			IDailyProgressDBService& dailyProgressDBService,
+			IDailyProgressRepository& dailyProgressRepository,
 			IDateProviderService& dateProviderService
-		) : dailyProgressDBService(dailyProgressDBService),
+		) : dailyProgressRepository(dailyProgressRepository),
 			dateProviderService(dateProviderService) {}
 
 		GetTodaysProgressResponse Execute();
 
 	private:
-		IDailyProgressDBService& dailyProgressDBService;
+		IDailyProgressRepository& dailyProgressRepository;
 		IDateProviderService& dateProviderService;
 };
 

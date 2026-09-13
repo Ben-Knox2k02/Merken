@@ -1,12 +1,12 @@
-#ifndef FAKE_DAILY_PROGRESS_DB_SERVICE_H
-#define FAKE_DAILY_PROGRESS_DB_SERVICE_H
+#ifndef FAKE_DAILY_PROGRESS_REPOSITORY_H
+#define FAKE_DAILY_PROGRESS_REPOSITORY_H
 
 #include <algorithm>
 #include <vector>
 #include <optional>
-#include "../../Application/ServiceInterfaces/daily_progress_db_service.h"
+#include "../../Application/ServiceInterfaces/daily_progress_repository.h"
 
-class FakeDailyProgressDbService : public IDailyProgressDBService {
+class FakeDailyProgressRepository : public IDailyProgressRepository {
 	public:
 		std::vector<DailyProgress> rows;
 		int addCount = 0;

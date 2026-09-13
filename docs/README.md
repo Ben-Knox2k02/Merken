@@ -5,8 +5,8 @@ Layers do not call across each other except through the interfaces and use cases
 | You | Own | Do not touch |
 |---|---|---|
 | UI | `UI/` | `Infrastructure/`, `Application/ServiceInterfaces/` |
-| Application | `Application/`, `DomainModels/`, `Infrastructure/Persistence/` (db services) | `UI/`, `db_scripts.cpp`, Gemini, Calendar, HTTP |
-| Database | `Infrastructure/Persistence/DatabaseContext/db_scripts.cpp` | `UI/`, db services, Gemini, Calendar |
+| Application | `Application/`, `DomainModels/`, `Infrastructure/Persistence/` (repositories) | `UI/`, `db_scripts.cpp`, Gemini, Calendar, HTTP |
+| Database | `Infrastructure/Persistence/DatabaseContext/db_scripts.cpp` | `UI/`, repositories, Gemini, Calendar |
 | APIs | `Infrastructure/GeminiApi/`, `Infrastructure/GoogleCalendar/` | `UI/`, SQL |
 
 New `.cpp` files under `Application/`, `Infrastructure/`, and `UI/src/` are picked up by `build.bat` and CI. New services must also be bound in `DiComposition/composition_root.h`.
@@ -52,13 +52,13 @@ void OnAddDeck(wxCommandEvent&) {
 }
 ```
 
-- Resolve with `create<TheUseCase>()`, never `create<IDeckDBService>()`.
+- Resolve with `create<TheUseCase>()`, never `create<IDeckRepository>()`.
 - Fill a `*Request`, call `Execute`, read the `*Response`.
 - If a screen action has no use case yet, ask Application to add one.
 
 Existing use cases: `CreateDeckUseCase`, `UpdateDeckUseCase`, `GetDecksUseCase`, `StudyDeckUseCase`, `CreateCardUseCase`, `UpdateCardUseCase`, `GetCardsUseCase`, `ReviewCardUseCase`, `GetTodaysProgressUseCase`, `GetProgressHistoryUseCase`, `CreateEventUseCase`.
 
-`Deck` is the aggregate: cards are only loaded and changed through a deck. `GetDeck` loads the deck **and its cards**. `GetDecks` (the list) does not. Card add/list/update/review live under `Application/UseCases/Deck/`. Persist with `IDeckDBService.AddCard` / `UpdateCard`. There is no `ICardDBService`.
+`Deck` is the aggregate: cards are only loaded and changed through a deck. `GetDeck` loads the deck **and its cards**. `GetDecks` (the list) does not. Card add/list/update/review live under `Application/UseCases/Deck/`. Persist with `IDeckRepository.AddCard` / `UpdateCard`. There is no `ICardRepository`.
 
 ---
 
@@ -70,33 +70,33 @@ A user action = one use case. Use cases depend on **interfaces**, never on Infra
 
 1. Folder: `Application/UseCases/<Area>/<Name>/`
 2. Add `*_request.h`, `*_response.h`, `*_usecase.h`, `*_usecase.cpp`
-3. Constructor takes interface references (`IDeckDBService&`, `IAIAPIService&`, …)
+3. Constructor takes interface references (`IDeckRepository&`, `IAIAPIService&`, …)
 4. `Execute` uses domain types (`Deck`, `CalendarEvent`, …) and returns a response
 
 ```cpp
-CreateDeckUseCase(IDeckDBService& deckDBService);
+CreateDeckUseCase(IDeckRepository& deckRepository);
 
 CreateDeckResponse Execute(const CreateDeckRequest& request);
 ```
 
 - Do **not** bind use cases in DI. UI does `injector.create<CreateDeckUseCase>()`.
-- Need a new capability (e.g. list decks)? Add a method to the interface in `Application/ServiceInterfaces/`, then implement it in the db service (or ask APIs if it is Gemini/Calendar).
+- Need a new capability (e.g. list decks)? Add a method to the interface in `Application/ServiceInterfaces/`, then implement it in the repository (or ask APIs if it is Gemini/Calendar).
 - IDs are `int` (`cardId`, `deckId`, `calendarEventId`). Pass `0` for a new row; SQLite assigns the auto-increment value.
 
-**Add a db service**
+**Add a repository**
 
-Db services live in `Infrastructure/Persistence/<Entity>/`. They query and write rows. They do not create tables.
+Repositories live in `Infrastructure/Persistence/<Entity>/`. They query and write rows. They do not create tables.
 
 1. Domain type in `DomainModels/`.
-2. Interface in `Application/ServiceInterfaces/` (e.g. `IDeckDBService`).
+2. Interface in `Application/ServiceInterfaces/` (e.g. `IDeckRepository`).
 3. Implementation in `Infrastructure/Persistence/<Entity>/`. Inject `DatabaseContext&`.
 4. Ask Database to append a SQL string in `db_scripts.cpp` for any new table or column.
 5. Register in `DiComposition/composition_root.h`:
 
 ```cpp
-#include "../Infrastructure/Persistence/Deck/deck_db_service.h"
+#include "../Infrastructure/Persistence/Deck/deck_repository.h"
 
-di::bind<IDeckDBService>().to<DeckDbService>().in(di::singleton),
+di::bind<IDeckRepository>().to<DeckRepository>().in(di::singleton),
 ```
 
 ---
@@ -105,7 +105,7 @@ di::bind<IDeckDBService>().to<DeckDbService>().in(di::singleton),
 
 One shared SQLite file: `merken.db`. `DatabaseContext` opens it when constructed, creates the file if missing, and applies scripts. Do not open your own connection.
 
-**Your job is only to add scripts.** Append a SQL string in `Infrastructure/Persistence/DatabaseContext/db_scripts.cpp`. Do not edit or reorder scripts that already shipped. Do not touch db services, use cases, or how migrations run.
+**Your job is only to add scripts.** Append a SQL string in `Infrastructure/Persistence/DatabaseContext/db_scripts.cpp`. Do not edit or reorder scripts that already shipped. Do not touch repositories, use cases, or how migrations run.
 
 ```cpp
 R"(
@@ -113,7 +113,7 @@ ALTER TABLE decks ADD COLUMN color TEXT NOT NULL DEFAULT '';
 )",
 ```
 
-`DatabaseContext` applies new scripts on init and skips ones that already ran. Application owns the db services that read and write those tables.
+`DatabaseContext` applies new scripts on init and skips ones that already ran. Application owns the repositories that read and write those tables.
 
 ---
 

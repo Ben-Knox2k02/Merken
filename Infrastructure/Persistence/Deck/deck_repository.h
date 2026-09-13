@@ -1,12 +1,12 @@
-#ifndef DECK_DB_SERVICE_REAL_H
-#define DECK_DB_SERVICE_REAL_H
+#ifndef DECK_REPOSITORY_REAL_H
+#define DECK_REPOSITORY_REAL_H
 
-#include "../../../Application/ServiceInterfaces/deck_db_service.h"
+#include "../../../Application/ServiceInterfaces/deck_repository.h"
 #include "../DatabaseContext/database_context.h"
 
-class DeckDbService : public IDeckDBService {
+class DeckRepository : public IDeckRepository {
 	public:
-		DeckDbService(DatabaseContext& dbContext) : db(dbContext) {}
+		DeckRepository(DatabaseContext& dbContext) : db(dbContext) {}
 
 		std::vector<Deck> GetDecks() override;
 		std::optional<Deck> GetDeck(int deckId) override;

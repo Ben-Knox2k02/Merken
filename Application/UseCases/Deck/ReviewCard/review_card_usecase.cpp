@@ -10,7 +10,7 @@ ReviewCardResponse ReviewCardUseCase::Execute(const ReviewCardRequest& request) 
 	response.cardsCorrect = 0;
 	response.retentionRate = 0.0;
 
-	std::optional<Deck> deck = this->deckDBService.GetDeck(request.deckId);
+	std::optional<Deck> deck = this->deckRepository.GetDeck(request.deckId);
 	if (!deck.has_value()) {
 		return response;
 	}
@@ -23,18 +23,18 @@ ReviewCardResponse ReviewCardUseCase::Execute(const ReviewCardRequest& request) 
 	const Date today = this->dateProviderService.GetCurrentDate();
 	card->RecordReview(request.remembered, today);
 	card->SetNextReviewDate(today.AddDays(card->GetIntervalDays()));
-	if (!this->deckDBService.UpdateCard(*card)) {
+	if (!this->deckRepository.UpdateCard(*card)) {
 		return response;
 	}
 
-	std::optional<DailyProgress> progress = this->dailyProgressDBService.GetDailyProgress(today);
+	std::optional<DailyProgress> progress = this->dailyProgressRepository.GetDailyProgress(today);
 	if (!progress.has_value()) {
 		progress = DailyProgress(today);
 		progress->RecordCard(request.remembered);
-		this->dailyProgressDBService.AddDailyProgress(*progress);
+		this->dailyProgressRepository.AddDailyProgress(*progress);
 	} else {
 		progress->RecordCard(request.remembered);
-		this->dailyProgressDBService.UpdateDailyProgress(*progress);
+		this->dailyProgressRepository.UpdateDailyProgress(*progress);
 	}
 
 	response.success = true;

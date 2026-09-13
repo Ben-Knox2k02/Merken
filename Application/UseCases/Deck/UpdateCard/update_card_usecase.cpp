@@ -2,7 +2,7 @@
 #include <optional>
 
 bool UpdateCardUseCase::Execute(const UpdateCardRequest& request) {
-	std::optional<Deck> deck = this->deckDBService.GetDeck(request.deckId);
+	std::optional<Deck> deck = this->deckRepository.GetDeck(request.deckId);
 	if (!deck.has_value()) { return false; }
 
 	Card* card = deck->FindCard(request.cardId);
@@ -10,5 +10,5 @@ bool UpdateCardUseCase::Execute(const UpdateCardRequest& request) {
 
 	card->UpdateContent(request.front, request.back);
 	card->UpdateTags(Tag::Split(request.tags));
-	return this->deckDBService.UpdateCard(*card);
+	return this->deckRepository.UpdateCard(*card);
 }

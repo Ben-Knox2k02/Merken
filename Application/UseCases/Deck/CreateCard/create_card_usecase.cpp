@@ -9,7 +9,7 @@ CreateCardResponse CreateCardUseCase::Execute(const CreateCardRequest& request) 
 	response.back = request.back;
 	response.tags = request.tags;
 
-	std::optional<Deck> deck = this->deckDBService.GetDeck(request.deckId);
+	std::optional<Deck> deck = this->deckRepository.GetDeck(request.deckId);
 	if (!deck.has_value()) {
 		return response;
 	}
@@ -17,6 +17,6 @@ CreateCardResponse CreateCardUseCase::Execute(const CreateCardRequest& request) 
 	Card card(0, request.deckId, request.front, request.back);
 	card.UpdateTags(Tag::Split(request.tags));
 	deck->AddCard(card);
-	response.cardId = this->deckDBService.AddCard(card);
+	response.cardId = this->deckRepository.AddCard(card);
 	return response;
 }

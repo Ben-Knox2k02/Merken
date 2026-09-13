@@ -2,17 +2,17 @@
 #define UPDATE_DECK_USE_CASE_H
 
 #include "update_deck_request.h"
-#include "../../../ServiceInterfaces/deck_db_service.h"
+#include "../../../ServiceInterfaces/deck_repository.h"
 
 class UpdateDeckUseCase {
 	public:
-		explicit UpdateDeckUseCase(IDeckDBService& deckDBService)
-			: deckDBService(deckDBService) {}
+		explicit UpdateDeckUseCase(IDeckRepository& deckRepository)
+			: deckRepository(deckRepository) {}
 
 		bool Execute(const UpdateDeckRequest& request);
 
 	private:
-		IDeckDBService& deckDBService;
+		IDeckRepository& deckRepository;
 };
 
 #endif

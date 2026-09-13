@@ -44,6 +44,6 @@ There is no JSON library. Build request bodies as strings. Pull fields out of `r
 
 - Do not `create<IHttpClient>()` from UI or use cases. Services receive it in the constructor.
 - Do not open your own HTTP session, sockets, or curl.
-- Do not persist to SQLite or call `I*DBService`. Calendar/Gemini only talk to the network.
+- Do not persist to SQLite or call `I*Repository`. Calendar/Gemini only talk to the network.
 - Do not change `IAIAPIService` / `ICalendarAPIService` signatures, `AppSettings` field names, or `DiComposition` bindings for HTTP/Gemini/Calendar.
 - Do not commit real API keys. `app_settings.json` stays dummy values in git.

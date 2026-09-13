@@ -8,7 +8,7 @@ CreateDeckResponse CreateDeckUseCase::Execute(const CreateDeckRequest& request) 
 		.ToIso();
 	
 	Deck deck(0, request.name, request.description, createdAt);
-	int deckId = this->deckDBService.AddDeck(deck);
+	int deckId = this->deckRepository.AddDeck(deck);
 	
 	return CreateDeckResponse{
 		.deckId = deckId,

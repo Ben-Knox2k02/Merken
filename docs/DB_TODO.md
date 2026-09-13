@@ -1,6 +1,6 @@
 # Database due tasks
 
-Your job is **only** to append SQL in `Infrastructure/Persistence/DatabaseContext/db_scripts.cpp`. Do not edit or reorder scripts that already shipped. Do not touch db services or use cases. How migrations run is already in [README.md](README.md#database).
+Your job is **only** to append SQL in `Infrastructure/Persistence/DatabaseContext/db_scripts.cpp`. Do not edit or reorder scripts that already shipped. Do not touch repositories or use cases. How migrations run is already in [README.md](README.md#database).
 
 Application already reads/writes these names. Match them exactly.
 

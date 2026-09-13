@@ -1,10 +1,10 @@
 #include "doctest/doctest.h"
 #include "../../../../Application/UseCases/Deck/GetDecks/get_decks_usecase.h"
-#include "../../../Fakes/fake_deck_db_service.h"
+#include "../../../Fakes/fake_deck_repository.h"
 
 TEST_CASE("GetDecksUseCase returns no decks when none exist") {
-	FakeDeckDbService deckDb;
-	GetDecksUseCase useCase(deckDb);
+	FakeDeckRepository deckRepository;
+	GetDecksUseCase useCase(deckRepository);
 
 	GetDecksResponse response = useCase.Execute();
 
@@ -12,10 +12,10 @@ TEST_CASE("GetDecksUseCase returns no decks when none exist") {
 }
 
 TEST_CASE("GetDecksUseCase maps stored decks") {
-	FakeDeckDbService deckDb;
-	deckDb.SeedDeck("Spanish", "Vocabulary", "2026-09-12");
-	deckDb.SeedDeck("History", "", "2026-01-01");
-	GetDecksUseCase useCase(deckDb);
+	FakeDeckRepository deckRepository;
+	deckRepository.SeedDeck("Spanish", "Vocabulary", "2026-09-12");
+	deckRepository.SeedDeck("History", "", "2026-01-01");
+	GetDecksUseCase useCase(deckRepository);
 
 	GetDecksResponse response = useCase.Execute();
 

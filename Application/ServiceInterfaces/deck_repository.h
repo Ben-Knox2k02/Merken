@@ -1,13 +1,13 @@
-#ifndef DECK_DB_SERVICE_H
-#define DECK_DB_SERVICE_H
+#ifndef DECK_REPOSITORY_H
+#define DECK_REPOSITORY_H
 
 #include <vector>
 #include <optional>
 #include "../../DomainModels/deck.h"
 
-class IDeckDBService {
+class IDeckRepository {
 	public:
-		virtual ~IDeckDBService() = default;
+		virtual ~IDeckRepository() = default;
 
 		virtual std::vector<Deck> GetDecks() = 0;
 		virtual std::optional<Deck> GetDeck(int deckId) = 0;

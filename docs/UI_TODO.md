@@ -1,6 +1,6 @@
 # UI due tasks
 
-Call **use cases** from event handlers. Do not talk to SQLite or `I*DBService`. Pattern is in [README.md](README.md#ui).
+Call **use cases** from event handlers. Do not talk to SQLite or `I*Repository`. Pattern is in [README.md](README.md#ui).
 
 New study use cases (not wired yet):
 
@@ -14,7 +14,7 @@ New study use cases (not wired yet):
 #include "../../Application/UseCases/Deck/ReviewCard/review_card_usecase.h"
 ```
 
-Progress use cases (not wired yet). Do **not** query `daily_progress` or `IDailyProgressDBService`. Empty history dates default to the last 12 weeks ending today (computed in the use case).
+Progress use cases (not wired yet). Do **not** query `daily_progress` or `IDailyProgressRepository`. Empty history dates default to the last 12 weeks ending today (computed in the use case).
 
 | Use case | Request | What you get back |
 |---|---|---|
@@ -45,10 +45,10 @@ Progress use cases (not wired yet). Do **not** query `daily_progress` or `IDaily
 
 - [ ] Session progress bar: remaining / starting size of `dueCards` (e.g. `4 / 15`).
 - [ ] Optional: show today’s `cardsReviewed` / `retentionRate` from `ReviewCardResponse` on the study screen.
-- [ ] Wire Today's Progress: call `GetTodaysProgressUseCase` (`Execute()`, no request). Do not query `daily_progress` / `IDailyProgressDBService`.
-- [ ] Heatmap of previous days: call `GetProgressHistoryUseCase` (empty dates → last 12 weeks ending today). Map `cardsReviewed` to intensity; missing days are already zeros (intensity 0). Do not query `daily_progress` / `IDailyProgressDBService`.
+- [ ] Wire Today's Progress: call `GetTodaysProgressUseCase` (`Execute()`, no request). Do not query `daily_progress` / `IDailyProgressRepository`.
+- [ ] Heatmap of previous days: call `GetProgressHistoryUseCase` (empty dates → last 12 weeks ending today). Map `cardsReviewed` to intensity; missing days are already zeros (intensity 0). Do not query `daily_progress` / `IDailyProgressRepository`.
 
 ## Don’t
 
-- Do not `create<IDeckDBService>()`, `IDailyProgressDBService`, or `IDateProviderService`.
+- Do not `create<IDeckRepository>()`, `IDailyProgressRepository`, or `IDateProviderService`.
 - Do not compute due-ness or next-review dates in the UI. `StudyDeck` already filtered; `ReviewCard` already scheduled.

@@ -1,11 +1,11 @@
-#ifndef FAKE_DECK_DB_SERVICE_H
-#define FAKE_DECK_DB_SERVICE_H
+#ifndef FAKE_DECK_REPOSITORY_H
+#define FAKE_DECK_REPOSITORY_H
 
 #include <vector>
 #include <optional>
-#include "../../Application/ServiceInterfaces/deck_db_service.h"
+#include "../../Application/ServiceInterfaces/deck_repository.h"
 
-class FakeDeckDbService : public IDeckDBService {
+class FakeDeckRepository : public IDeckRepository {
 	public:
 		int nextDeckId = 1;
 		int nextCardId = 1;

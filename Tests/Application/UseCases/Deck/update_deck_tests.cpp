@@ -1,11 +1,11 @@
 #include "doctest/doctest.h"
 #include "../../../../Application/UseCases/Deck/UpdateDeck/update_deck_usecase.h"
-#include "../../../Fakes/fake_deck_db_service.h"
+#include "../../../Fakes/fake_deck_repository.h"
 
 TEST_CASE("UpdateDeckUseCase updates name and description") {
-	FakeDeckDbService deckDb;
-	const int deckId = deckDb.SeedDeck("Old", "Old desc", "2026-09-12");
-	UpdateDeckUseCase useCase(deckDb);
+	FakeDeckRepository deckRepository;
+	const int deckId = deckRepository.SeedDeck("Old", "Old desc", "2026-09-12");
+	UpdateDeckUseCase useCase(deckRepository);
 
 	UpdateDeckRequest request;
 	request.deckId = deckId;
@@ -13,7 +13,7 @@ TEST_CASE("UpdateDeckUseCase updates name and description") {
 	request.description = "New desc";
 
 	CHECK(useCase.Execute(request));
-	std::optional<Deck> updated = deckDb.GetDeck(deckId);
+	std::optional<Deck> updated = deckRepository.GetDeck(deckId);
 	REQUIRE(updated.has_value());
 	CHECK(updated->GetName() == "New");
 	CHECK(updated->GetDescription() == "New desc");
@@ -21,8 +21,8 @@ TEST_CASE("UpdateDeckUseCase updates name and description") {
 }
 
 TEST_CASE("UpdateDeckUseCase returns false when the deck is missing") {
-	FakeDeckDbService deckDb;
-	UpdateDeckUseCase useCase(deckDb);
+	FakeDeckRepository deckRepository;
+	UpdateDeckUseCase useCase(deckRepository);
 
 	UpdateDeckRequest request;
 	request.deckId = 99;
@@ -33,10 +33,10 @@ TEST_CASE("UpdateDeckUseCase returns false when the deck is missing") {
 }
 
 TEST_CASE("UpdateDeckUseCase returns false when the db update fails") {
-	FakeDeckDbService deckDb;
-	const int deckId = deckDb.SeedDeck("Spanish");
-	deckDb.updateDeckSucceeds = false;
-	UpdateDeckUseCase useCase(deckDb);
+	FakeDeckRepository deckRepository;
+	const int deckId = deckRepository.SeedDeck("Spanish");
+	deckRepository.updateDeckSucceeds = false;
+	UpdateDeckUseCase useCase(deckRepository);
 
 	UpdateDeckRequest request;
 	request.deckId = deckId;

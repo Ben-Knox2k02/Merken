@@ -3,7 +3,7 @@
 
 GetCardsResponse GetCardsUseCase::Execute(const GetCardsRequest& request) {
 	GetCardsResponse response;
-	std::optional<Deck> deck = this->deckDBService.GetDeck(request.deckId);
+	std::optional<Deck> deck = this->deckRepository.GetDeck(request.deckId);
 	if (!deck.has_value()) {
 		return response;
 	}
