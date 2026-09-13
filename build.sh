@@ -3,16 +3,49 @@ set -euo pipefail
 
 cd "$(dirname "$0")"
 
+# Homebrew refuses to run as root, and a root build would leave root-owned
+# artifacts. If this was started with sudo, drop back to the real user.
+if [[ ${EUID:-$(id -u)} -eq 0 ]]; then
+	target="${SUDO_USER:-}"
+	if [[ -z "$target" || "$target" == "root" ]]; then
+		if [[ "$(uname -s)" == "Darwin" ]]; then
+			target="$(stat -f '%Su' .)"
+		else
+			target="$(stat -c '%U' .)"
+		fi
+	fi
+	if [[ -n "$target" && "$target" != "root" ]]; then
+		echo "Re-running as $target (do not use sudo with this script)."
+		exec sudo -u "$target" -H -- "$0" "$@"
+	fi
+	echo "Do not run this script as root. Run ./build.sh without sudo." >&2
+	exit 1
+fi
+
+# Finder-launched scripts often have a PATH that does not include Homebrew.
+if [[ "$(uname -s)" == "Darwin" ]]; then
+	for brew_prefix in /opt/homebrew /usr/local; do
+		if [[ -x "$brew_prefix/bin/brew" ]]; then
+			export PATH="$brew_prefix/bin:$PATH"
+			break
+		fi
+	done
+fi
+
 OUT=Merken
 echo "Building $OUT"
 
 if [[ "$(uname -s)" == "Darwin" ]]; then
-	if ! command -v brew >/dev/null 2>&1; then
-		echo "Homebrew not found. Install it from https://brew.sh then run this again." >&2
-		exit 1
+	if command -v wx-config >/dev/null 2>&1; then
+		echo "Using wxwidgets $(wx-config --version)"
+	else
+		if ! command -v brew >/dev/null 2>&1; then
+			echo "Homebrew not found. Install it from https://brew.sh then run this again." >&2
+			exit 1
+		fi
+		echo "Installing wxwidgets..."
+		HOMEBREW_NO_AUTO_UPDATE=1 brew install wxwidgets
 	fi
-	echo "Installing wxwidgets (no-op if already installed)..."
-	brew install wxwidgets
 fi
 
 if ! command -v wx-config >/dev/null 2>&1; then
