@@ -6,8 +6,8 @@
 TEST_CASE("RecordAiStudyGradeUseCase records got-it and missed-it on the cache") {
 	FakeAiStudyCacheService cache;
 	cache.SetSitting(1, "Spanish", {
-		AiQuestion(7, AiQuestionType::FillIn, "___ means hello.", "Hello"),
-		AiQuestion(8, AiQuestionType::Sentence, "What means goodbye?", "Goodbye")
+		AiQuestion(7, AiQuestionType::FillIn, "___ means hello.", "Hola"),
+		AiQuestion(8, AiQuestionType::Sentence, "What Spanish word means goodbye?", "Adios")
 	});
 	RecordAiStudyGradeUseCase useCase(cache);
 
@@ -54,7 +54,7 @@ TEST_CASE("RecordAiStudyGradeUseCase fails when there is no sitting") {
 TEST_CASE("RecordAiStudyGradeUseCase fails after every question is graded") {
 	FakeAiStudyCacheService cache;
 	cache.SetSitting(1, "Spanish", {
-		AiQuestion(7, AiQuestionType::FillIn, "___ means hello.", "Hello")
+		AiQuestion(7, AiQuestionType::FillIn, "___ means hello.", "Hola")
 	});
 	RecordAiStudyGradeUseCase useCase(cache);
 

@@ -4,15 +4,16 @@
 #include "../../DomainModels/deck.h"
 
 TEST_CASE("AiQuestion stores sentence and fill-in items") {
-	const AiQuestion sentence(3, AiQuestionType::Sentence, "What Spanish word means hello?", "Hello");
+	const AiQuestion sentence(3, AiQuestionType::Sentence, "What Spanish word means hello?", "Hola");
 	CHECK(sentence.GetCardId() == 3);
 	CHECK(sentence.GetType() == AiQuestionType::Sentence);
 	CHECK(sentence.GetText() == "What Spanish word means hello?");
-	CHECK(sentence.GetBack() == "Hello");
+	CHECK(sentence.GetBack() == "Hola");
 
-	const AiQuestion fillIn(4, AiQuestionType::FillIn, "___ means goodbye.", "Goodbye");
+	const AiQuestion fillIn(4, AiQuestionType::FillIn, "___ means goodbye.", "Adios");
 	CHECK(fillIn.GetType() == AiQuestionType::FillIn);
 	CHECK(fillIn.GetText() == "___ means goodbye.");
+	CHECK(fillIn.GetBack() == "Adios");
 }
 
 TEST_CASE("AiQuestion::Parse reads one tagged line") {
@@ -23,12 +24,15 @@ TEST_CASE("AiQuestion::Parse reads one tagged line") {
 	CHECK(fillIn->GetCardId() == 7);
 	CHECK(fillIn->GetType() == AiQuestionType::FillIn);
 	CHECK(fillIn->GetText() == "___ means hello.");
-	CHECK(fillIn->GetBack() == "Hello");
+	CHECK(fillIn->GetBack() == "Hola");
 
-	std::optional<AiQuestion> sentence = AiQuestion::Parse("2. sentence | What Spanish word means hello?", card);
+	std::optional<AiQuestion> sentence = AiQuestion::Parse(
+		"2. sentence | What Spanish word means hello?",
+		card);
 	REQUIRE(sentence.has_value());
 	CHECK(sentence->GetType() == AiQuestionType::Sentence);
 	CHECK(sentence->GetText() == "What Spanish word means hello?");
+	CHECK(sentence->GetBack() == "Hola");
 }
 
 TEST_CASE("AiQuestion::Parse treats ___ without a type tag as fill-in") {
@@ -38,6 +42,7 @@ TEST_CASE("AiQuestion::Parse treats ___ without a type tag as fill-in") {
 	REQUIRE(question.has_value());
 	CHECK(question->GetType() == AiQuestionType::FillIn);
 	CHECK(question->GetText() == "___ means hello.");
+	CHECK(question->GetBack() == "Hola");
 }
 
 TEST_CASE("AiQuestion::Parse returns none for a blank line") {
@@ -60,11 +65,11 @@ TEST_CASE("AiQuestion::ParseMultiple reads typed lines in card order") {
 	CHECK(questions[0].GetCardId() == 7);
 	CHECK(questions[0].GetType() == AiQuestionType::FillIn);
 	CHECK(questions[0].GetText() == "___ means hello.");
-	CHECK(questions[0].GetBack() == "Hello");
+	CHECK(questions[0].GetBack() == "Hola");
 	CHECK(questions[1].GetCardId() == 8);
 	CHECK(questions[1].GetType() == AiQuestionType::Sentence);
 	CHECK(questions[1].GetText() == "What Spanish word means goodbye?");
-	CHECK(questions[1].GetBack() == "Goodbye");
+	CHECK(questions[1].GetBack() == "Adios");
 }
 
 TEST_CASE("AiQuestion::ParseMultiple ignores extra lines past the card count") {
@@ -72,13 +77,14 @@ TEST_CASE("AiQuestion::ParseMultiple ignores extra lines past the card count") {
 	deck.AddCard(Card(7, 1, "Hola", "Hello"));
 
 	const std::vector<AiQuestion> questions = AiQuestion::ParseMultiple(
-		"1. sentence | What means hello?\n"
+		"1. sentence | What Spanish word means hello?\n"
 		"2. fill-in | ___ means extra.\n",
 		deck.GetCards());
 
 	REQUIRE(questions.size() == 1);
 	CHECK(questions[0].GetCardId() == 7);
-	CHECK(questions[0].GetText() == "What means hello?");
+	CHECK(questions[0].GetText() == "What Spanish word means hello?");
+	CHECK(questions[0].GetBack() == "Hola");
 }
 
 TEST_CASE("AiQuestion::ParseMultiple treats an unnumbered reply as one sentence") {
@@ -93,6 +99,7 @@ TEST_CASE("AiQuestion::ParseMultiple treats an unnumbered reply as one sentence"
 	CHECK(questions[0].GetType() == AiQuestionType::Sentence);
 	CHECK(questions[0].GetText() == "What Spanish word means hello?");
 	CHECK(questions[0].GetCardId() == 7);
+	CHECK(questions[0].GetBack() == "Hola");
 }
 
 TEST_CASE("AiQuestion::ParseMultiple returns none for an empty reply") {

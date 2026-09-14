@@ -48,7 +48,7 @@ class AiQuestion {
 			if (text.empty()) {
 				return std::nullopt;
 			}
-			return AiQuestion(card.GetCardId(), type, text, card.GetBack());
+			return AiQuestion(card.GetCardId(), type, text, card.GetFront());
 		}
 
 		static std::vector<AiQuestion> ParseMultiple(
