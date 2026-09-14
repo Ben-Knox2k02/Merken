@@ -21,13 +21,13 @@ TEST_CASE("AiPrompt::Build asks for one tagged question per card") {
 
 TEST_CASE("AiPrompt::Build includes every card in the deck") {
 	Deck deck(1, "Spanish");
-	deck.AddCard(Card(1, 1, "front-1", "back-1"));
-	deck.AddCard(Card(2, 1, "front-2", "back-2"));
-	deck.AddCard(Card(3, 1, "front-3", "back-3"));
+	deck.AddCard(Card(1, 1, "Hola", "Hello"));
+	deck.AddCard(Card(2, 1, "Adios", "Goodbye"));
+	deck.AddCard(Card(3, 1, "Gracias", "Thanks"));
 
 	const std::string text = AiPrompt::Build(deck).GetText();
 
-	CHECK(text.find("Front: front-1 | Back: back-1") != std::string::npos);
-	CHECK(text.find("Front: front-2 | Back: back-2") != std::string::npos);
-	CHECK(text.find("Front: front-3 | Back: back-3") != std::string::npos);
+	CHECK(text.find("Front: Hola | Back: Hello") != std::string::npos);
+	CHECK(text.find("Front: Adios | Back: Goodbye") != std::string::npos);
+	CHECK(text.find("Front: Gracias | Back: Thanks") != std::string::npos);
 }

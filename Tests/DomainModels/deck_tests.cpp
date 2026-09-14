@@ -23,11 +23,11 @@ TEST_CASE("Deck stores identity and optional description") {
 }
 
 TEST_CASE("Deck can update name and description") {
-	Deck deck(1, "Old", "Old desc");
-	deck.UpdateName("New");
-	deck.UpdateDescription("New desc");
-	CHECK(deck.GetName() == "New");
-	CHECK(deck.GetDescription() == "New desc");
+	Deck deck(1, "Spanish", "Beginner vocab");
+	deck.UpdateName("Spanish I");
+	deck.UpdateDescription("Greetings and farewells");
+	CHECK(deck.GetName() == "Spanish I");
+	CHECK(deck.GetDescription() == "Greetings and farewells");
 }
 
 TEST_CASE("Deck add, find, and remove cards") {

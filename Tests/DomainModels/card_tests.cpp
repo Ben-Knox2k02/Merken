@@ -48,10 +48,10 @@ TEST_CASE("Card content, tags, and type can be updated") {
 	REQUIRE(card.GetTags().size() == 2);
 	CHECK(card.GetTags()[0].GetName() == "Greeting");
 
-	card.SetMultipleChoice({"A", "B", "C"});
+	card.SetMultipleChoice({"Good morning", "Good night", "Goodbye"});
 	CHECK(card.GetCardType() == CardType::MultipleChoice);
 	REQUIRE(card.GetChoices().size() == 3);
-	CHECK(card.GetChoices()[0] == "A");
+	CHECK(card.GetChoices()[0] == "Good morning");
 
 	card.SetRecall();
 	CHECK(card.GetCardType() == CardType::Recall);
