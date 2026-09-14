@@ -44,7 +44,7 @@ TEST_CASE("CreateEventUseCase uses the default reminder when none is set") {
 	CreateEventUseCase useCase(calendarApi, appSettings);
 
 	CreateEventRequest request;
-	request.title = "Quiz";
+	request.title = "Vocab quiz";
 	request.startTime = "2026-09-13T09:00:00";
 	request.endTime = "2026-09-13T09:30:00";
 

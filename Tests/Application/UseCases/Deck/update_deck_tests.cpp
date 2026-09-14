@@ -4,19 +4,19 @@
 
 TEST_CASE("UpdateDeckUseCase updates name and description") {
 	FakeDeckRepository deckRepository;
-	const int deckId = deckRepository.SeedDeck("Old", "Old desc", "2026-09-12");
+	const int deckId = deckRepository.SeedDeck("Spanish", "Beginner vocab", "2026-09-12");
 	UpdateDeckUseCase useCase(deckRepository);
 
 	UpdateDeckRequest request;
 	request.deckId = deckId;
-	request.name = "New";
-	request.description = "New desc";
+	request.name = "Spanish I";
+	request.description = "Greetings and farewells";
 
 	CHECK(useCase.Execute(request));
 	std::optional<Deck> updated = deckRepository.GetDeck(deckId);
 	REQUIRE(updated.has_value());
-	CHECK(updated->GetName() == "New");
-	CHECK(updated->GetDescription() == "New desc");
+	CHECK(updated->GetName() == "Spanish I");
+	CHECK(updated->GetDescription() == "Greetings and farewells");
 	CHECK(updated->GetCreatedAt() == "2026-09-12");
 }
 
@@ -26,7 +26,7 @@ TEST_CASE("UpdateDeckUseCase returns false when the deck is missing") {
 
 	UpdateDeckRequest request;
 	request.deckId = 99;
-	request.name = "New";
+	request.name = "Spanish I";
 	request.description = "";
 
 	CHECK_FALSE(useCase.Execute(request));
@@ -40,7 +40,7 @@ TEST_CASE("UpdateDeckUseCase returns false when the db update fails") {
 
 	UpdateDeckRequest request;
 	request.deckId = deckId;
-	request.name = "New";
+	request.name = "Spanish I";
 	request.description = "";
 
 	CHECK_FALSE(useCase.Execute(request));

@@ -25,7 +25,7 @@ TEST_CASE("GetEventsUseCase maps calendar events") {
 		"2026-09-12T19:00:00",
 		"Review vocab",
 		15);
-	calendarApi.SeedEvent(8, "gcal-8", "Quiz", "2026-09-13T09:00:00", "2026-09-13T09:30:00");
+	calendarApi.SeedEvent(8, "gcal-8", "Vocab quiz", "2026-09-13T09:00:00", "2026-09-13T09:30:00");
 	FakeAppSettingsService appSettings;
 	appSettings.settings.calendarApiKey = "cal-key";
 	GetEventsUseCase useCase(calendarApi, appSettings);
@@ -41,7 +41,7 @@ TEST_CASE("GetEventsUseCase maps calendar events") {
 	CHECK(response.events[0].reminderMinutes == 15);
 	CHECK(response.events[0].googleEventId == "gcal-7");
 	CHECK(response.events[1].calendarEventId == 8);
-	CHECK(response.events[1].title == "Quiz");
+	CHECK(response.events[1].title == "Vocab quiz");
 	CHECK(response.events[1].description == "");
 	CHECK(response.events[1].startTime == "2026-09-13T09:00:00");
 	CHECK(response.events[1].endTime == "2026-09-13T09:30:00");

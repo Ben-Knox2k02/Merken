@@ -59,9 +59,9 @@ TEST_CASE("CreateDeckUseCase returns ids from the repository") {
 	CreateDeckUseCase useCase(deckRepository, dates);
 
 	CreateDeckRequest first;
-	first.name = "One";
+	first.name = "Spanish";
 	CreateDeckRequest second;
-	second.name = "Two";
+	second.name = "History";
 
 	CHECK(useCase.Execute(first).deckId == 42);
 	CHECK(useCase.Execute(second).deckId == 43);

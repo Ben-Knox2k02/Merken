@@ -11,7 +11,7 @@ TEST_CASE("CreateCardUseCase persists a card on an existing deck") {
 	request.deckId = deckId;
 	request.front = "Hola";
 	request.back = "Hello";
-	request.tags = "Greeting, Noun";
+	request.tags = "Greeting, Informal";
 
 	CreateCardResponse response = useCase.Execute(request);
 
@@ -22,13 +22,13 @@ TEST_CASE("CreateCardUseCase persists a card on an existing deck") {
 	CHECK(deckRepository.addedCards[0].GetBack() == "Hello");
 	REQUIRE(deckRepository.addedCards[0].GetTags().size() == 2);
 	CHECK(deckRepository.addedCards[0].GetTags()[0].GetName() == "Greeting");
-	CHECK(deckRepository.addedCards[0].GetTags()[1].GetName() == "Noun");
+	CHECK(deckRepository.addedCards[0].GetTags()[1].GetName() == "Informal");
 
 	CHECK(response.cardId == 1);
 	CHECK(response.deckId == deckId);
 	CHECK(response.front == "Hola");
 	CHECK(response.back == "Hello");
-	CHECK(response.tags == "Greeting, Noun");
+	CHECK(response.tags == "Greeting, Informal");
 }
 
 TEST_CASE("CreateCardUseCase returns cardId 0 when the deck is missing") {

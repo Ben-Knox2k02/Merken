@@ -5,7 +5,7 @@
 TEST_CASE("UpdateCardUseCase updates front, back, and tags") {
 	FakeDeckRepository deckRepository;
 	const int deckId = deckRepository.SeedDeck("Spanish");
-	const int cardId = deckRepository.SeedCard(deckId, "Hola", "Hello", "Old");
+	const int cardId = deckRepository.SeedCard(deckId, "Hola", "Hello", "Greeting");
 	UpdateCardUseCase useCase(deckRepository);
 
 	UpdateCardRequest request;
@@ -32,8 +32,8 @@ TEST_CASE("UpdateCardUseCase returns false when the deck is missing") {
 	UpdateCardRequest request;
 	request.deckId = 99;
 	request.cardId = 1;
-	request.front = "A";
-	request.back = "B";
+	request.front = "Buenos dias";
+	request.back = "Good morning";
 
 	CHECK_FALSE(useCase.Execute(request));
 }
@@ -46,8 +46,8 @@ TEST_CASE("UpdateCardUseCase returns false when the card is missing") {
 	UpdateCardRequest request;
 	request.deckId = deckId;
 	request.cardId = 99;
-	request.front = "A";
-	request.back = "B";
+	request.front = "Buenos dias";
+	request.back = "Good morning";
 
 	CHECK_FALSE(useCase.Execute(request));
 }
@@ -62,8 +62,8 @@ TEST_CASE("UpdateCardUseCase returns false when the db update fails") {
 	UpdateCardRequest request;
 	request.deckId = deckId;
 	request.cardId = cardId;
-	request.front = "A";
-	request.back = "B";
+	request.front = "Buenos dias";
+	request.back = "Good morning";
 
 	CHECK_FALSE(useCase.Execute(request));
 }
