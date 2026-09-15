@@ -18,6 +18,7 @@ class CardListPanel : public wxPanel {
 		wxButton* addButton;
 		wxButton* editButton;
 		wxButton* deleteButton;
+		wxButton* studyButton;
 
 		void SetDeck(int deckId);
 		void LoadCards();
@@ -27,6 +28,7 @@ class CardListPanel : public wxPanel {
 		void OnAdd(wxCommandEvent& event);
 		void OnEdit(wxCommandEvent& event);
 		void OnDelete(wxCommandEvent& event);
+		void OnStudy(wxCommandEvent& event);
 };
 
 #endif
