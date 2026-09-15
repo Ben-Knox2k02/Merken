@@ -1,15 +1,14 @@
-#ifndef CARD_LIST_PANEL_H
-#define CARD_LIST_PANEL_H
+#ifndef FLASH_CARD_LIST_H
+#define FLASH_CARD_LIST_H
 
-#include "card_dialog.h"
 #include <wx/wx.h>
 #include <wx/dataview.h>
+#include <wx/bmpbndl.h>
 
-class CardListPanel : public wxPanel {
+class FlashCardList : public wxPanel {
 	public:
-		CardListPanel(wxWindow* parent, int deckID);
+		FlashCardList(wxWindow* parent, int deckId);
 
-		int deckID;
 		wxBoxSizer* rootSizer;
 		wxBoxSizer* buttonSizer;
 		wxStaticText* header;
@@ -20,6 +19,8 @@ class CardListPanel : public wxPanel {
 		wxButton* deleteButton;
 		wxButton* studyButton;
 
+		int deckId;
+
 		void SetDeck(int deckId);
 		void LoadCards();
 		int GetSelectedRow() const;
@@ -29,6 +30,12 @@ class CardListPanel : public wxPanel {
 		void OnEdit(wxCommandEvent& event);
 		void OnDelete(wxCommandEvent& event);
 		void OnStudy(wxCommandEvent& event);
+
+	private:
+		wxBitmapBundle cardIcon;
+
+		void AppendCard(int cardId, const wxString& front, const wxString& back, const wxString& tags);
+		wxBitmapBundle LoadCardIcon();
 };
 
 #endif

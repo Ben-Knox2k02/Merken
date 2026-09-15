@@ -1,4 +1,4 @@
-#include "deck_panel.h"
+#include "deck_panel_list.h"
 #include "deck_dialog.h"
 #include "centered_message.h"
 #include "mainframe.h"
@@ -9,23 +9,24 @@
 
 wxDECLARE_APP(App);
 
-DeckPanel::DeckPanel(wxWindow* parent) : wxPanel(parent) {
+DeckPanelList::DeckPanelList(wxWindow* parent)
+	: wxPanel(parent),
+	  selectedDeckId(0) {
+	this->SetMinSize(wxSize(320, -1));
+
 	this->rootSizer = new wxBoxSizer(wxVERTICAL);
-	this->SetMinSize(wxSize(240, -1));
 
 	this->header = new wxStaticText(this, wxID_ANY, "Decks");
 	this->header->SetFont(this->header->GetFont().Bold());
 	this->rootSizer->Add(this->header, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 10);
 
-	this->deckList = new wxDataViewCtrl(this, wxID_ANY);
-	this->deckList->AppendTextColumn("Name", 0, wxDATAVIEW_CELL_INERT, 200, wxALIGN_CENTER);
-	this->deckList->AppendTextColumn("Description", 1, wxDATAVIEW_CELL_INERT, 200, wxALIGN_CENTER);
+	this->scroller = new wxScrolledWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxVSCROLL);
+	this->scroller->SetScrollRate(0, 16);
+	this->scroller->ShowScrollbars(wxSHOW_SB_NEVER, wxSHOW_SB_DEFAULT);
 
-	this->deckViewModel = new wxDataViewListStore();
-	this->deckList->AssociateModel(this->deckViewModel);
-	this->deckViewModel->DecRef();
-
-	this->rootSizer->Add(this->deckList, 1, wxEXPAND | wxALL, 10);
+	this->listSizer = new wxBoxSizer(wxVERTICAL);
+	this->scroller->SetSizer(this->listSizer);
+	this->rootSizer->Add(this->scroller, 1, wxEXPAND | wxALL, 10);
 
 	this->addDeckButton = new wxButton(this, wxID_ANY, "Add");
 	this->editDeckButton = new wxButton(this, wxID_ANY, "Edit");
@@ -35,68 +36,99 @@ DeckPanel::DeckPanel(wxWindow* parent) : wxPanel(parent) {
 	this->buttonSizer->Add(this->addDeckButton, 1, wxRIGHT, 5);
 	this->buttonSizer->Add(this->editDeckButton, 1, wxRIGHT, 5);
 	this->buttonSizer->Add(this->deleteDeckButton, 1);
-
 	this->rootSizer->Add(this->buttonSizer, 0, wxEXPAND | wxALL, 10);
-	this->SetSizer(this->rootSizer);
-	this->LoadDecks();
 
-	this->addDeckButton->Bind(wxEVT_BUTTON, &DeckPanel::OnAddDeck, this);
-	this->editDeckButton->Bind(wxEVT_BUTTON, &DeckPanel::OnEditDeck, this);
-	this->deleteDeckButton->Bind(wxEVT_BUTTON, &DeckPanel::OnDeleteDeck, this);
-	this->deckList->Bind(wxEVT_DATAVIEW_ITEM_ACTIVATED, &DeckPanel::OnDeckActivated, this);
-	this->deckList->Bind(wxEVT_DATAVIEW_SELECTION_CHANGED, &DeckPanel::OnDeckSelectionChanged, this);
+	this->SetSizer(this->rootSizer);
+
+	this->addDeckButton->Bind(wxEVT_BUTTON, &DeckPanelList::OnAddDeck, this);
+	this->editDeckButton->Bind(wxEVT_BUTTON, &DeckPanelList::OnEditDeck, this);
+	this->deleteDeckButton->Bind(wxEVT_BUTTON, &DeckPanelList::OnDeleteDeck, this);
+
+	this->LoadDecks();
 }
 
-void DeckPanel::LoadDecks() {
+void DeckPanelList::LoadDecks() {
 	const int previouslySelected = this->GetSelectedDeckId();
-	this->deckViewModel->DeleteAllItems();
+	this->listSizer->Clear(true);
+	this->cards.clear();
+	this->cardIds.clear();
 
-	// Retrieve the list of decks using the GetDecksUseCase.
 	auto useCase = wxGetApp().GetInjector().create<GetDecksUseCase>();
 	GetDecksResponse response = useCase.Execute();
 
 	int firstDeckId = 0;
 	for (const DeckResponse& deck : response.decks) {
-		wxVector<wxVariant> row;
-		row.push_back(wxVariant(wxString(deck.name)));
-		row.push_back(wxVariant(wxString(deck.description)));
-		this->deckViewModel->AppendItem(row, static_cast<wxUIntPtr>(deck.deckId));
-		if (firstDeckId == 0) { firstDeckId = deck.deckId; }
-	}
-
-	if (previouslySelected != 0) {
-		this->SelectDeck(previouslySelected);
-	} else if (firstDeckId != 0) {
-		this->SelectDeck(firstDeckId);
-		this->NotifyDeckSelected(firstDeckId);
-	}
-}
-
-int DeckPanel::GetSelectedDeckId() const {
-	wxDataViewItem item = this->deckList->GetSelection();
-	if (!item.IsOk()) { return 0; }
-	return static_cast<int>(this->deckViewModel->GetItemData(item));
-}
-
-void DeckPanel::SelectDeck(int deckId) {
-	const unsigned int count = this->deckViewModel->GetCount();
-	for (unsigned int row = 0; row < count; ++row) {
-		wxDataViewItem item = this->deckViewModel->GetItem(row);
-		if (static_cast<int>(this->deckViewModel->GetItemData(item)) == deckId) {
-			this->deckList->Select(item);
-			return;
+		this->AddDeckCard(deck.deckId, wxString(deck.name), wxString(deck.description));
+		if (firstDeckId == 0) {
+			firstDeckId = deck.deckId;
 		}
 	}
+
+	this->scroller->FitInside();
+	this->scroller->Layout();
+
+	if (previouslySelected != 0) {
+		this->SelectDeck(previouslySelected, false);
+	} else if (firstDeckId != 0) {
+		this->SelectDeck(firstDeckId, false);
+	} else {
+		this->selectedDeckId = 0;
+	}
 }
 
-void DeckPanel::NotifyDeckSelected(int deckId) {
+void DeckPanelList::AddDeckCard(int deckId, const wxString& name, const wxString& description) {
+	DeckCardIcon* card = new DeckCardIcon(this->scroller, name, description);
+	card->SetCursor(wxCURSOR_HAND);
+	this->listSizer->Add(card, 0, wxEXPAND | wxBOTTOM, 4);
+	this->cards.push_back(card);
+	this->cardIds.push_back(deckId);
+	this->BindClicks(card, deckId);
+}
+
+DeckCardIcon* DeckPanelList::FindCard(int deckId) const {
+	for (size_t i = 0; i < this->cardIds.size(); ++i) {
+		if (this->cardIds[i] == deckId) {
+			return this->cards[i];
+		}
+	}
+	return nullptr;
+}
+
+void DeckPanelList::BindClicks(wxWindow* window, int deckId) {
+	window->Bind(wxEVT_LEFT_DOWN, [this, deckId](wxMouseEvent&) {
+		this->SelectDeck(deckId, true);
+	});
+	for (wxWindow* child : window->GetChildren()) {
+		this->BindClicks(child, deckId);
+	}
+}
+
+int DeckPanelList::GetSelectedDeckId() const {
+	return this->selectedDeckId;
+}
+
+void DeckPanelList::SelectDeck(int deckId, bool notify) {
+	this->selectedDeckId = deckId;
+	this->RefreshSelection();
+	if (notify) {
+		this->NotifyDeckSelected(deckId);
+	}
+}
+
+void DeckPanelList::RefreshSelection() {
+	for (size_t i = 0; i < this->cards.size(); ++i) {
+		this->cards[i]->SetSelected(this->cardIds[i] == this->selectedDeckId);
+	}
+}
+
+void DeckPanelList::NotifyDeckSelected(int deckId) {
 	if (deckId == 0) { return; }
 	if (auto* frame = dynamic_cast<MainFrame*>(this->GetParent())) {
 		frame->OnDeckSelected(deckId);
 	}
 }
 
-void DeckPanel::OnAddDeck(wxCommandEvent&) {
+void DeckPanelList::OnAddDeck(wxCommandEvent&) {
 	DeckDialog dialog(this, "Add Deck");
 	if (dialog.ShowModal() != wxID_OK) { return; }
 
@@ -106,12 +138,10 @@ void DeckPanel::OnAddDeck(wxCommandEvent&) {
 		return;
 	}
 
-	// Prepare the request to create a new deck.
 	CreateDeckRequest request;
 	request.name = name;
 	request.description = dialog.descriptionCtrl->GetValue().ToStdString();
 
-	// Call the CreateDeckUseCase to create a new deck.
 	auto useCase = wxGetApp().GetInjector().create<CreateDeckUseCase>();
 	CreateDeckResponse response = useCase.Execute(request);
 	if (response.deckId == 0) {
@@ -120,18 +150,16 @@ void DeckPanel::OnAddDeck(wxCommandEvent&) {
 	}
 
 	this->LoadDecks();
-	this->SelectDeck(response.deckId);
-	this->NotifyDeckSelected(response.deckId);
+	this->SelectDeck(response.deckId, true);
 }
 
-void DeckPanel::OnEditDeck(wxCommandEvent&) {
+void DeckPanelList::OnEditDeck(wxCommandEvent&) {
 	const int deckId = this->GetSelectedDeckId();
 	if (deckId == 0) {
 		ShowCenteredMessage(this, "No deck selected.", "Edit Deck", wxOK | wxICON_WARNING);
 		return;
 	}
 
-	// Retrieve the list of decks using the GetDecksUseCase.
 	auto getDecks = wxGetApp().GetInjector().create<GetDecksUseCase>();
 	GetDecksResponse decks = getDecks.Execute();
 	const DeckResponse* selected = nullptr;
@@ -154,13 +182,11 @@ void DeckPanel::OnEditDeck(wxCommandEvent&) {
 		return;
 	}
 
-	// Prepare the request to update the deck with the new information.
 	UpdateDeckRequest request;
 	request.deckId = deckId;
 	request.name = name;
 	request.description = dialog.descriptionCtrl->GetValue().ToStdString();
 
-	// Call the UpdateDeckUseCase to update the deck with the new information.
 	auto useCase = wxGetApp().GetInjector().create<UpdateDeckUseCase>();
 	if (!useCase.Execute(request)) {
 		ShowCenteredMessage(this, "Could not update deck.", "Edit Deck", wxOK | wxICON_ERROR);
@@ -168,19 +194,9 @@ void DeckPanel::OnEditDeck(wxCommandEvent&) {
 	}
 
 	this->LoadDecks();
-	this->SelectDeck(deckId);
+	this->SelectDeck(deckId, false);
 }
 
-void DeckPanel::OnDeleteDeck(wxCommandEvent&) {
+void DeckPanelList::OnDeleteDeck(wxCommandEvent&) {
 	ShowCenteredMessage(this, "Delete is not implemented yet.", "Delete Deck", wxOK | wxICON_INFORMATION);
-}
-
-void DeckPanel::OnDeckActivated(wxDataViewEvent& event) {
-	if (!event.GetItem().IsOk()) { return; }
-	this->NotifyDeckSelected(static_cast<int>(this->deckViewModel->GetItemData(event.GetItem())));
-}
-
-void DeckPanel::OnDeckSelectionChanged(wxDataViewEvent& event) {
-	if (!event.GetItem().IsOk()) { return; }
-	this->NotifyDeckSelected(static_cast<int>(this->deckViewModel->GetItemData(event.GetItem())));
 }
