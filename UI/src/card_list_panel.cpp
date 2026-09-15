@@ -1,5 +1,6 @@
 #include "card_list_panel.h"
 #include "centered_message.h"
+#include "mainframe.h"
 #include "app.h"
 #include "../../Application/UseCases/Deck/GetCards/get_cards_usecase.h"
 #include "../../Application/UseCases/Deck/CreateCard/create_card_usecase.h"
@@ -29,10 +30,12 @@ CardListPanel::CardListPanel(wxWindow* parent, int deckID) : wxPanel(parent), de
 	this->addButton = new wxButton(this, wxID_ANY, "Add");
 	this->editButton = new wxButton(this, wxID_ANY, "Edit");
 	this->deleteButton = new wxButton(this, wxID_ANY, "Delete");
+	this->studyButton = new wxButton(this, wxID_ANY, "Study Deck");
 
 	this->buttonSizer->Add(this->addButton, 0, wxRIGHT, 5);
 	this->buttonSizer->Add(this->editButton, 0, wxRIGHT, 5);
-	this->buttonSizer->Add(this->deleteButton, 0);
+	this->buttonSizer->Add(this->deleteButton, 0, wxRIGHT, 5);
+	this->buttonSizer->Add(this->studyButton, 0);
 
 	this->rootSizer->Add(this->buttonSizer, 0, wxALIGN_CENTER | wxALL, 10);
 	this->SetSizer(this->rootSizer);
@@ -41,6 +44,7 @@ CardListPanel::CardListPanel(wxWindow* parent, int deckID) : wxPanel(parent), de
 	this->addButton->Bind(wxEVT_BUTTON, &CardListPanel::OnAdd, this);
 	this->editButton->Bind(wxEVT_BUTTON, &CardListPanel::OnEdit, this);
 	this->deleteButton->Bind(wxEVT_BUTTON, &CardListPanel::OnDelete, this);
+	this->studyButton->Bind(wxEVT_BUTTON, &CardListPanel::OnStudy, this);
 }
 
 void CardListPanel::SetDeck(int deckId) {
@@ -157,4 +161,10 @@ void CardListPanel::OnEdit(wxCommandEvent&) {
 
 void CardListPanel::OnDelete(wxCommandEvent&) {
 	ShowCenteredMessage(this, "Delete is not implemented yet.", "Delete Card", wxOK | wxICON_INFORMATION);
+}
+
+void CardListPanel::OnStudy(wxCommandEvent&) {
+	if (auto* frame = dynamic_cast<MainFrame*>(wxGetTopLevelParent(this))) {
+		frame->ShowStudyDeck();
+	}
 }

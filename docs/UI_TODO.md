@@ -62,42 +62,42 @@ AI study (not wired yet). Do **not** call `IAIAPIService`, Gemini, or `IAiStudyC
 
 ## Study deck
 
-- [ ] **Study Deck** (menu and/or card-list button) runs `StudyDeckUseCase` with the selected `deckId`. Do **not** use `GetCardsUseCase` for study — that is every card, including ones not due.
-- [ ] If `dueCards` is empty, show “Nothing due today” and stay out of the flip/grade loop.
-- [ ] Study screen shows **front** first; user reveals **back**; then **Remembered** / **Forgot** (not Previous/Next as the grade).
-- [ ] Keep the `dueCards` list in the panel. After a successful review, drop that card and show the next one.
+- [x] **Study Deck** (menu and/or card-list button) runs `StudyDeckUseCase` with the selected `deckId`. Do **not** use `GetCardsUseCase` for study — that is every card, including ones not due.
+- [x] If `dueCards` is empty, show “Nothing due today” and stay out of the flip/grade loop.
+- [x] Study screen shows **front** first; user reveals **back**; then **Remembered** / **Forgot** (not Previous/Next as the grade).
+- [x] Keep the `dueCards` list in the panel. After a successful review, drop that card and show the next one.
 
 ## Review (grade)
 
-- [ ] Remembered / Forgot calls `ReviewCardUseCase` (`remembered = true/false`). If `success` is false, show an error and do not advance.
-- [ ] Do **not** wait until the user leaves study to save. Each grade is already persisted by the use case (card schedule + today’s progress).
-- [ ] When `dueCards` is empty after a grade, show an end summary from the last response: cards reviewed, cards correct, retention rate. Back/Change Deck does not need a separate “end session” use case.
+- [x] Remembered / Forgot calls `ReviewCardUseCase` (`remembered = true/false`). If `success` is false, show an error and do not advance.
+- [x] Do **not** wait until the user leaves study to save. Each grade is already persisted by the use case (card schedule + today’s progress).
+- [x] When `dueCards` is empty after a grade, show an end summary from the last response: cards reviewed, cards correct, retention rate. Back/Change Deck does not need a separate “end session” use case.
 
 ## Progress on screen
 
-- [ ] Session progress bar: remaining / starting size of `dueCards` (e.g. `4 / 15`).
-- [ ] Optional: show today’s `cardsReviewed` / `retentionRate` from `ReviewCardResponse` on the study screen.
-- [ ] Wire Today's Progress: call `GetTodaysProgressUseCase` (`Execute()`, no request). Do not query `daily_progress` / `IDailyProgressRepository`.
-- [ ] Heatmap of previous days: call `GetProgressHistoryUseCase` (empty dates → last 12 weeks ending today). Map `cardsReviewed` to intensity; missing days are already zeros (intensity 0). Do not query `daily_progress` / `IDailyProgressRepository`.
+- [x] Session progress bar: remaining / starting size of `dueCards` (e.g. `4 / 15`).
+- [x] Optional: show today’s `cardsReviewed` / `retentionRate` from `ReviewCardResponse` on the study screen.
+- [x] Wire Today's Progress: call `GetTodaysProgressUseCase` (`Execute()`, no request). Do not query `daily_progress` / `IDailyProgressRepository`.
+- [x] Heatmap of previous days: call `GetProgressHistoryUseCase` (empty dates → last 12 weeks ending today). Map `cardsReviewed` to intensity; missing days are already zeros (intensity 0). Do not query `daily_progress` / `IDailyProgressRepository`.
 
 ## Settings (API keys)
 
-- [ ] **File → Settings** opens a dialog. On OK, save with `SaveAppSettingsUseCase`. Leave the fields empty; do not load existing keys (Gemini/Calendar read them via `IAppSettingsService.GetSettings()`).
-- [ ] Fields: Gemini API key (`aiApiKey`) and Calendar API key (`calendarApiKey`). Use password-style inputs. If save returns `false`, show an error and keep the dialog’s values.
-- [ ] Do **not** write `app_settings.json`, `merken.db`, or `%APPDATA%\Merken\settings.bin` yourself. The use case persists keys (Windows: DPAPI in the user data dir).
+- [x] **File → Settings** opens a dialog. On OK, save with `SaveAppSettingsUseCase`. Leave the fields empty; do not load existing keys (Gemini/Calendar read them via `IAppSettingsService.GetSettings()`).
+- [x] Fields: Gemini API key (`aiApiKey`) and Calendar API key (`calendarApiKey`). Use password-style inputs. If save returns `false`, show an error and keep the dialog’s values.
+- [x] Do **not** write `app_settings.json`, `merken.db`, or `%APPDATA%\Merken\settings.bin` yourself. The use case persists keys (Windows: DPAPI in the user data dir).
 
 ## Calendar (view events)
 
-- [ ] Opening **Calendar** runs `GetEventsUseCase` (`Execute()`, no request) and shows the returned events. An empty list is valid (no events, missing key, or API failure).
-- [ ] Do **not** call `ICalendarAPIService`, Google Calendar, or `IAppSettingsService`. The use case loads `calendarApiKey`.
+- [x] Opening **Calendar** runs `GetEventsUseCase` (`Execute()`, no request) and shows the returned events. An empty list is valid (no events, missing key, or API failure).
+- [x] Do **not** call `ICalendarAPIService`, Google Calendar, or `IAppSettingsService`. The use case loads `calendarApiKey`.
 
 ## AI study
 
-- [ ] Opening **AI** with a selected deck runs `AiStudyUseCase` (`deckId` only) **once**. Keep the returned `questions` list in the panel. Gemini is a network call — keep the UI responsive (worker thread, post back).
-- [ ] Show `text` one at a time. `FillIn` has a `___` blank; `Sentence` is a question (no cloze). **Show answer** reveals `back`. **Got it** / **Missed it** call `RecordAiStudyGradeUseCase` (`gotIt` true/false). Show `correct` / `wrong` / `percentage` from the response, then next item in the list.
-- [ ] When `complete` is true (or the user stops): show the end summary from that response. Closing the panel or Start test again drops the sitting (new `AiStudyUseCase` replaces the cache). Do not keep your own score counters.
-- [ ] If `success` is false, show an error (no deck, no cards, missing key, or API failure). Do not treat that as a study grade.
-- [ ] Do **not** call `IAIAPIService`, Gemini, `IAiStudyCacheService`, `IAppSettingsService`, or `IDeckRepository`. Do **not** call `ReviewCardUseCase` or write daily progress from this panel.
+- [x] Opening **AI** with a selected deck runs `AiStudyUseCase` (`deckId` only) **once**. Keep the returned `questions` list in the panel. Gemini is a network call — keep the UI responsive (worker thread, post back).
+- [x] Show `text` one at a time. `FillIn` has a `___` blank; `Sentence` is a question (no cloze). **Show answer** reveals `back`. **Got it** / **Missed it** call `RecordAiStudyGradeUseCase` (`gotIt` true/false). Show `correct` / `wrong` / `percentage` from the response, then next item in the list.
+- [x] When `complete` is true (or the user stops): show the end summary from that response. Closing the panel or Start test again drops the sitting (new `AiStudyUseCase` replaces the cache). Do not keep your own score counters.
+- [x] If `success` is false, show an error (no deck, no cards, missing key, or API failure). Do not treat that as a study grade.
+- [x] Do **not** call `IAIAPIService`, Gemini, `IAiStudyCacheService`, `IAppSettingsService`, or `IDeckRepository`. Do **not** call `ReviewCardUseCase` or write daily progress from this panel.
 
 ## Don’t
 
