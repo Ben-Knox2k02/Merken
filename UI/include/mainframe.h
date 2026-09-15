@@ -3,8 +3,8 @@
 
 #include <wx/wx.h>
 
-class DeckPanel;
-class CardListPanel;
+class DeckPanelList;
+class FlashCardList;
 
 enum {
 	ID_SETTINGS = wxID_HIGHEST + 1,
@@ -20,8 +20,8 @@ class MainFrame : public wxFrame {
 
 		wxBoxSizer* rootSizer;
 
-		DeckPanel* deckPanel;
-		CardListPanel* cardListPanel;
+		DeckPanelList* deckPanelList;
+		FlashCardList* flashCardList;
 		wxPanel* currentPanel;
 		wxPanel* activePanel;
 		int selectedDeckId;

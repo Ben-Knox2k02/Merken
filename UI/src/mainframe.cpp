@@ -5,8 +5,8 @@
 #include <fstream>
 #include <algorithm>
 #include "mainframe.h"
-#include "card_list_panel.h"
-#include "deck_panel.h"
+#include "flash_card_list.h"
+#include "deck_panel_list.h"
 #include "study_panel.h"
 #include "progress_panel.h"
 #include "calendar_panel.h"
@@ -61,16 +61,16 @@ MainFrame::MainFrame(const wxString& title) : wxFrame(nullptr, wxID_ANY, title, 
 	
 	this->rootSizer = new wxBoxSizer(wxHORIZONTAL);
 	this->currentPanel = nullptr;
-	this->cardListPanel = nullptr;
+	this->flashCardList = nullptr;
 	
-	this->deckPanel = new DeckPanel(this);
+	this->deckPanelList = new DeckPanelList(this);
 
 	this->activePanel = new wxPanel(this, wxID_ANY);
-	this->cardListPanel = new CardListPanel(this->activePanel, 0);
-	this->SwapCurrentPanel(this->cardListPanel);
-	this->OnDeckSelected(this->deckPanel->GetSelectedDeckId());
+	this->flashCardList = new FlashCardList(this->activePanel, 0);
+	this->SwapCurrentPanel(this->flashCardList);
+	this->OnDeckSelected(this->deckPanelList->GetSelectedDeckId());
 	
-	this->rootSizer->Add(deckPanel, 0, wxEXPAND | wxALL, 0);
+	this->rootSizer->Add(this->deckPanelList, 0, wxEXPAND | wxALL, 0);
 	this->rootSizer->Add(activePanel, 1, wxEXPAND | wxALL, 0);
 	
 	this->SetSizer(this->rootSizer);
@@ -97,15 +97,15 @@ MainFrame::MainFrame(const wxString& title) : wxFrame(nullptr, wxID_ANY, title, 
 
 void MainFrame::OnDeckSelected(int deckId) {
 	this->selectedDeckId = deckId;
-	if (this->cardListPanel != nullptr && this->currentPanel == this->cardListPanel) {
-		this->cardListPanel->SetDeck(deckId);
+	if (this->flashCardList != nullptr && this->currentPanel == this->flashCardList) {
+		this->flashCardList->SetDeck(deckId);
 	}
 }
 
 void MainFrame::SwapCurrentPanel(wxPanel* newPanel) {
 	if (this->currentPanel != nullptr && this->currentPanel != newPanel) {
-		if (this->currentPanel == this->cardListPanel) {
-			this->cardListPanel = nullptr;
+		if (this->currentPanel == this->flashCardList) {
+			this->flashCardList = nullptr;
 		}
 		this->currentPanel->Destroy();
 		this->currentPanel = nullptr;
@@ -124,8 +124,8 @@ void MainFrame::SwapCurrentPanel(wxPanel* newPanel) {
 }
 
 void MainFrame::ShowCardList() {
-	this->cardListPanel = new CardListPanel(this->activePanel, this->selectedDeckId);
-	this->SwapCurrentPanel(this->cardListPanel);
+	this->flashCardList = new FlashCardList(this->activePanel, this->selectedDeckId);
+	this->SwapCurrentPanel(this->flashCardList);
 }
 
 void MainFrame::ShowStudyDeck() {
