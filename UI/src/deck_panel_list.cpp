@@ -6,6 +6,7 @@
 #include "../../Application/UseCases/Deck/GetDecks/get_decks_usecase.h"
 #include "../../Application/UseCases/Deck/CreateDeck/create_deck_usecase.h"
 #include "../../Application/UseCases/Deck/UpdateDeck/update_deck_usecase.h"
+#include <wx/statline.h>
 
 wxDECLARE_APP(App);
 
@@ -77,9 +78,14 @@ void DeckPanelList::LoadDecks() {
 }
 
 void DeckPanelList::AddDeckCard(int deckId, const wxString& name, const wxString& description) {
+	if (!this->cards.empty()) {
+		wxStaticLine* separator = new wxStaticLine(this->scroller, wxID_ANY);
+		this->listSizer->Add(separator, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP | wxBOTTOM, 4);
+	}
+
 	DeckCardIcon* card = new DeckCardIcon(this->scroller, name, description);
 	card->SetCursor(wxCURSOR_HAND);
-	this->listSizer->Add(card, 0, wxEXPAND | wxBOTTOM, 4);
+	this->listSizer->Add(card, 0, wxEXPAND);
 	this->cards.push_back(card);
 	this->cardIds.push_back(deckId);
 	this->BindClicks(card, deckId);
