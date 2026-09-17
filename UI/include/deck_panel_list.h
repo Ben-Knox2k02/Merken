@@ -32,10 +32,14 @@ class DeckPanelList : public wxPanel {
 		std::vector<int> cardIds;
 		int selectedDeckId;
 
+		static constexpr int kCornerRadius = 5;
+
 		void AddDeckCard(int deckId, const wxString& name, const wxString& description);
 		void BindClicks(wxWindow* window, int deckId);
 		void RefreshSelection();
 		DeckCardIcon* FindCard(int deckId) const;
+		void OnPaint(wxPaintEvent& event);
+		void OnSize(wxSizeEvent& event);
 };
 
 #endif

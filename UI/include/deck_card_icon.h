@@ -20,9 +20,6 @@ class DeckCardIcon : public wxPanel {
 		) : wxPanel(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE),
 			selected(false) {
 			this->SetBackgroundStyle(wxBG_STYLE_PAINT);
-			this->SetMinSize(wxSize(-1, kCardHeight));
-
-			wxBoxSizer* mainSizer = new wxBoxSizer(wxHORIZONTAL);
 
 			wxStaticBitmap* cardImage = new wxStaticBitmap(
 				this,
@@ -30,9 +27,6 @@ class DeckCardIcon : public wxPanel {
 				LoadIconBundle(imagePath.IsEmpty() ? DefaultIconPath() : imagePath, kIconSize)
 			);
 			cardImage->SetBackgroundStyle(wxBG_STYLE_TRANSPARENT);
-			mainSizer->Add(cardImage, 0, wxALIGN_CENTER_VERTICAL | wxLEFT | wxRIGHT, 10);
-
-			wxBoxSizer* textSizer = new wxBoxSizer(wxVERTICAL);
 
 			this->titleCtrl = new wxStaticText(this, wxID_ANY, title);
 			this->titleCtrl->SetFont(this->titleCtrl->GetFont().Bold());
@@ -43,12 +37,20 @@ class DeckCardIcon : public wxPanel {
 			this->descCtrl->Wrap(200);
 			this->ApplyTextColours();
 
-			textSizer->AddStretchSpacer(1);
-			textSizer->Add(this->titleCtrl, 0, wxBOTTOM, 2);
-			textSizer->Add(this->descCtrl, 0, wxEXPAND);
-			textSizer->AddStretchSpacer(1);
+			wxBoxSizer* titleRow = new wxBoxSizer(wxHORIZONTAL);
+			titleRow->Add(cardImage, 0, wxALIGN_TOP | wxLEFT, 10);
+			titleRow->Add(this->titleCtrl, 1, wxALIGN_TOP | wxLEFT | wxRIGHT, 10);
 
-			mainSizer->Add(textSizer, 1, wxEXPAND | wxLEFT | wxRIGHT, 12);
+			wxBoxSizer* descRow = new wxBoxSizer(wxHORIZONTAL);
+			descRow->AddSpacer(10 + kIconSize + 10);
+			descRow->Add(this->descCtrl, 1, wxEXPAND | wxRIGHT, 10);
+
+			wxBoxSizer* contentSizer = new wxBoxSizer(wxVERTICAL);
+			contentSizer->Add(titleRow, 0, wxEXPAND);
+			contentSizer->Add(descRow, 0, wxEXPAND | wxTOP, 2);
+
+			wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
+			mainSizer->Add(contentSizer, 0, wxEXPAND | wxTOP | wxBOTTOM, 10);
 			this->SetSizer(mainSizer);
 
 			this->Bind(wxEVT_PAINT, &DeckCardIcon::OnPaint, this);
@@ -77,8 +79,7 @@ class DeckCardIcon : public wxPanel {
 		}
 
 	private:
-		static constexpr int kCardHeight = 64;
-		static constexpr int kIconSize = 28;
+		static constexpr int kIconSize = 18;
 		static constexpr int kCornerRadius = 5;
 
 		wxStaticText* titleCtrl;

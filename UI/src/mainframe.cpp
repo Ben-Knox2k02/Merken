@@ -70,7 +70,7 @@ MainFrame::MainFrame(const wxString& title) : wxFrame(nullptr, wxID_ANY, title, 
 	this->SwapCurrentPanel(this->flashCardList);
 	this->OnDeckSelected(this->deckPanelList->GetSelectedDeckId());
 	
-	this->rootSizer->Add(this->deckPanelList, 0, wxEXPAND | wxALL, 0);
+	this->rootSizer->Add(this->deckPanelList, 0, wxEXPAND | wxALL, 10);
 	this->rootSizer->Add(activePanel, 1, wxEXPAND | wxALL, 0);
 	
 	this->SetSizer(this->rootSizer);
