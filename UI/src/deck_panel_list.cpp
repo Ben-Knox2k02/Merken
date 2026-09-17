@@ -7,12 +7,14 @@
 #include "../../Application/UseCases/Deck/CreateDeck/create_deck_usecase.h"
 #include "../../Application/UseCases/Deck/UpdateDeck/update_deck_usecase.h"
 #include <wx/statline.h>
+#include <wx/dcgraph.h>
 
 wxDECLARE_APP(App);
 
 DeckPanelList::DeckPanelList(wxWindow* parent)
-	: wxPanel(parent),
+	: wxPanel(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE),
 	  selectedDeckId(0) {
+	this->SetBackgroundStyle(wxBG_STYLE_PAINT);
 	this->SetMinSize(wxSize(320, -1));
 
 	this->rootSizer = new wxBoxSizer(wxVERTICAL);
@@ -44,8 +46,37 @@ DeckPanelList::DeckPanelList(wxWindow* parent)
 	this->addDeckButton->Bind(wxEVT_BUTTON, &DeckPanelList::OnAddDeck, this);
 	this->editDeckButton->Bind(wxEVT_BUTTON, &DeckPanelList::OnEditDeck, this);
 	this->deleteDeckButton->Bind(wxEVT_BUTTON, &DeckPanelList::OnDeleteDeck, this);
+	this->Bind(wxEVT_PAINT, &DeckPanelList::OnPaint, this);
+	this->Bind(wxEVT_SIZE, &DeckPanelList::OnSize, this);
+	this->Bind(wxEVT_ERASE_BACKGROUND, [](wxEraseEvent&) {});
 
 	this->LoadDecks();
+}
+
+void DeckPanelList::OnSize(wxSizeEvent& event) {
+	this->Refresh();
+	event.Skip();
+}
+
+void DeckPanelList::OnPaint(wxPaintEvent&) {
+	wxPaintDC dc(this);
+	wxGCDC gc(dc);
+	const wxSize size = this->GetClientSize();
+
+	wxColour outside = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW);
+	if (this->GetParent() != nullptr) {
+		outside = this->GetParent()->GetBackgroundColour();
+	}
+	const wxColour inside = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW);
+	const wxColour border = wxSystemSettings::GetColour(wxSYS_COLOUR_BTNSHADOW);
+
+	gc.SetPen(*wxTRANSPARENT_PEN);
+	gc.SetBrush(wxBrush(outside));
+	gc.DrawRectangle(0, 0, size.GetWidth(), size.GetHeight());
+
+	gc.SetPen(wxPen(border, 1));
+	gc.SetBrush(wxBrush(inside));
+	gc.DrawRoundedRectangle(1, 1, size.GetWidth() - 2, size.GetHeight() - 2, kCornerRadius);
 }
 
 void DeckPanelList::LoadDecks() {
