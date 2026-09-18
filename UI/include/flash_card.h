@@ -299,12 +299,19 @@ class FlashCard : public wxPanel {
 			gc.SetBrush(wxBrush(background));
 			gc.DrawRectangle(0, 0, size.GetWidth(), size.GetHeight());
 
-			if (!this->selected) {
-				return;
+			gc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_3DSHADOW), 1));
+			if (this->selected) {
+				gc.SetBrush(wxBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT)));
+			} else {
+				gc.SetBrush(*wxTRANSPARENT_BRUSH);
 			}
-
-			gc.SetBrush(wxBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT)));
-			gc.DrawRoundedRectangle(0, 0, size.GetWidth(), size.GetHeight(), this->FromDIP(kCornerRadius));
+			gc.DrawRoundedRectangle(
+				0,
+				0,
+				size.GetWidth() - 1,
+				size.GetHeight() - 1,
+				this->FromDIP(kCornerRadius)
+			);
 		}
 
 		void ApplyTextColours() {

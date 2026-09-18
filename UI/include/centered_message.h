@@ -41,10 +41,21 @@ inline int ShowCenteredMessage(
 	if (style & wxYES_NO) {
 		buttons->AddButton(new wxButton(&dialog, wxID_YES));
 		buttons->AddButton(new wxButton(&dialog, wxID_NO));
+		dialog.SetAffirmativeId(wxID_YES);
+		dialog.SetEscapeId(wxID_NO);
 	} else {
 		buttons->AddButton(new wxButton(&dialog, wxID_OK));
 	}
 	buttons->Realize();
+
+	dialog.Bind(wxEVT_BUTTON, [&dialog](wxCommandEvent& event) {
+		const int id = event.GetId();
+		if (id == wxID_OK || id == wxID_CANCEL || id == wxID_YES || id == wxID_NO) {
+			dialog.EndModal(id);
+			return;
+		}
+		event.Skip();
+	});
 
 	wxBoxSizer* root = new wxBoxSizer(wxVERTICAL);
 	root->Add(content, 1, wxEXPAND | wxALL, 16);

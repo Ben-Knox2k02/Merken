@@ -13,9 +13,11 @@ class IDeckRepository {
 		virtual std::optional<Deck> GetDeck(int deckId) = 0;
 		virtual int AddDeck(const Deck& deck) = 0;
 		virtual bool UpdateDeck(const Deck& deck) = 0;
+		virtual bool DeleteDeck(int deckId) = 0;
 
 		virtual int AddCard(const Card& card) = 0;
 		virtual bool UpdateCard(const Card& card) = 0;
+		virtual bool DeleteCard(int deckId, int cardId) = 0;
 };
 
 #endif
