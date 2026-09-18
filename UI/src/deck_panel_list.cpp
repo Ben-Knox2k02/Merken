@@ -6,6 +6,7 @@
 #include "../../Application/UseCases/Deck/GetDecks/get_decks_usecase.h"
 #include "../../Application/UseCases/Deck/CreateDeck/create_deck_usecase.h"
 #include "../../Application/UseCases/Deck/UpdateDeck/update_deck_usecase.h"
+#include "../../Application/UseCases/Deck/DeleteDeck/delete_deck_usecase.h"
 #include <wx/statline.h>
 #include <wx/dcgraph.h>
 
@@ -99,12 +100,13 @@ void DeckPanelList::LoadDecks() {
 	this->scroller->FitInside();
 	this->scroller->Layout();
 
-	if (previouslySelected != 0) {
+	if (previouslySelected != 0 && this->FindCard(previouslySelected) != nullptr) {
 		this->SelectDeck(previouslySelected, false);
 	} else if (firstDeckId != 0) {
-		this->SelectDeck(firstDeckId, false);
+		this->SelectDeck(firstDeckId, true);
 	} else {
 		this->selectedDeckId = 0;
+		this->NotifyDeckSelected(0);
 	}
 }
 
@@ -159,7 +161,6 @@ void DeckPanelList::RefreshSelection() {
 }
 
 void DeckPanelList::NotifyDeckSelected(int deckId) {
-	if (deckId == 0) { return; }
 	if (auto* frame = dynamic_cast<MainFrame*>(this->GetParent())) {
 		frame->OnDeckSelected(deckId);
 	}
@@ -235,5 +236,32 @@ void DeckPanelList::OnEditDeck(wxCommandEvent&) {
 }
 
 void DeckPanelList::OnDeleteDeck(wxCommandEvent&) {
-	ShowCenteredMessage(this, "Delete is not implemented yet.", "Delete Deck", wxOK | wxICON_INFORMATION);
+	const int deckId = this->GetSelectedDeckId();
+	if (deckId == 0) {
+		ShowCenteredMessage(this, "No deck selected.", "Delete Deck", wxOK | wxICON_WARNING);
+		return;
+	}
+
+	wxString name = "this deck";
+	if (DeckCardIcon* card = this->FindCard(deckId)) {
+		name = card->GetTitle();
+	}
+	const int confirmed = ShowCenteredMessage(
+		this,
+		"Delete \"" + name + "\" and all of its cards?",
+		"Delete Deck",
+		wxYES_NO | wxICON_QUESTION
+	);
+	if (confirmed != wxID_YES) { return; }
+
+	DeleteDeckRequest request;
+	request.deckId = deckId;
+
+	auto useCase = wxGetApp().GetInjector().create<DeleteDeckUseCase>();
+	if (!useCase.Execute(request)) {
+		ShowCenteredMessage(this, "Could not delete deck.", "Delete Deck", wxOK | wxICON_ERROR);
+		return;
+	}
+
+	this->LoadDecks();
 }
