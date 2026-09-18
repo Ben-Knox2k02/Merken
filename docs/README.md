@@ -34,6 +34,8 @@ Open work for each role is a checklist next to this file. Check items off when d
 
 ## Build, test, clean, uninstall
 
+Set up the compiler and wxWidgets first: [SETUP.md](SETUP.md). Windows app builds need MinGW-w64 `g++` on PATH and wxWidgets 3.2 from `build_wxWidgets.bat`.
+
 Run these from the repo root.
 
 | Step | Windows | macOS / Linux |
