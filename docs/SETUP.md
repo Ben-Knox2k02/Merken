@@ -54,12 +54,46 @@ Standalone MinGW-w64 (for example [WinLibs](https://winlibs.com/)) also works: p
 
 `build.bat` and `build_wxWidgets.bat` also look in common install folders. `test.bat` needs `g++` on PATH.
 
-### 2. Build wxWidgets
+### 2. Install and build wxWidgets
 
-The app links static MinGW wxWidgets 3.2 libraries (`libwxmsw32u_*.a`).
+`build.bat` links **static** MinGW wxWidgets **3.2** (`libwxmsw32u_*.a`). Pre-built Visual Studio binaries and wxWidgets 3.3 will not work. Do this after `g++` is on PATH.
 
-1. Download wxWidgets 3.2.x from [wxwidgets.org/downloads](https://www.wxwidgets.org/downloads/) and extract it to `C:\wxWidgets`, or set `WXWIN` to your extract folder.
-2. From the repo root, run `build_wxWidgets.bat`. Libraries land in `%WXWIN%\lib\gcc_lib` (default `C:\wxWidgets\lib\gcc_lib`).
+1. Download the **Windows source** archive `wxWidgets-3.2.x.zip` (or `.7z`) from [wxwidgets.org/downloads](https://www.wxwidgets.org/downloads/) or the [3.2 GitHub releases](https://github.com/wxWidgets/wxWidgets/releases).
+
+   Do **not** use the GitHub “Source code” zip (it is missing third-party sources). Do **not** use `wxMSW-*-Setup.exe` as an installed binary — it is sources only, and this project expects the unzipped tree.
+
+2. Extract so this file exists:
+
+   ```
+   C:\wxWidgets\build\msw\makefile.gcc
+   ```
+
+   If the zip created `C:\wxWidgets\wxWidgets-3.2.x\`, either move the inner folder’s contents up to `C:\wxWidgets` or set `WXWIN` to that inner folder. Avoid spaces in the path.
+
+   To use a different location (new terminal after this):
+
+   ```
+   setx WXWIN C:\path\to\wxWidgets
+   ```
+
+3. From the **Merken repo root** in Command Prompt or PowerShell (not an MSYS2 bash shell):
+
+   ```
+   build_wxWidgets.bat
+   ```
+
+   The first run takes several minutes. It uses `mingw32-make` from the MinGW-w64 toolchain. Success prints libraries in `C:\wxWidgets\lib\gcc_lib` (or `%WXWIN%\lib\gcc_lib`). Later runs skip if those libs are already there.
+
+4. Confirm these files exist:
+
+   ```
+   C:\wxWidgets\lib\gcc_lib\libwxmsw32u_core.a
+   C:\wxWidgets\lib\gcc_lib\libwxbase32u.a
+   C:\wxWidgets\lib\gcc_lib\libwxbase32u_net.a
+   C:\wxWidgets\lib\gcc_lib\mswu\wx\setup.h
+   ```
+
+If you change compiler (UCRT64 vs MINGW64, or a new MinGW), delete `%WXWIN%\lib\gcc_lib` and `%WXWIN%\build\msw\gcc_mswu` and run `build_wxWidgets.bat` again with the same `g++` you will use for `build.bat`.
 
 ### 3. Build Merken
 
@@ -83,7 +117,13 @@ test.bat
    xcode-select --install
    ```
 
-3. `./build.sh` installs `wxwidgets` via Homebrew if `wx-config` is missing. You can also run `brew install wxwidgets` yourself.
+3. Install wxWidgets 3.2 (provides `wx-config`):
+
+   ```
+   brew install wxwidgets
+   ```
+
+   `./build.sh` runs that Homebrew install for you if `wx-config` is missing.
 
 ```
 ./build.sh
@@ -103,7 +143,7 @@ sudo apt-get update
 sudo apt-get install -y build-essential pkg-config libwxgtk3.2-dev
 ```
 
-Then from the repo root:
+`libwxgtk3.2-dev` provides `wx-config`. Then from the repo root:
 
 ```
 ./build.sh
@@ -120,6 +160,10 @@ Then from the repo root:
 |---|---|
 | `g++ --version` | C++ compiler is on PATH |
 | `gcc --version` | C compiler (Windows app build compiles a `.c` file with `gcc`) |
+| `mingw32-make --version` | Make used by `build_wxWidgets.bat` (Windows) |
 | `wx-config --version` | wxWidgets (macOS / Linux) |
+| `dir C:\wxWidgets\lib\gcc_lib\libwxmsw32u_core.a` | wxWidgets static libs (Windows; use `%WXWIN%` if you set it) |
 
 If `g++ --version` fails on Windows after install, the `bin` folder is not on PATH for **this** terminal. Close it and open a new one.
+
+`test.bat` / `./test.sh` need `g++` only. The app build also needs wxWidgets (`build_wxWidgets.bat` on Windows, `wx-config` on macOS / Linux).
