@@ -17,13 +17,24 @@ class FlashCardTag : public wxPanel {
 			: wxPanel(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE),
 			  label(label),
 			  style(style) {
-			this->SetBackgroundStyle(wxBG_STYLE_PAINT);
-			wxClientDC dc(this);
-			const wxSize size = Measure(dc, this->label, this);
-			this->SetMinSize(size);
-			this->SetSize(size);
+			this->SetBackgroundStyle(wxBG_STYLE_TRANSPARENT);
+			this->FitToLabel();
 			this->Bind(wxEVT_PAINT, &FlashCardTag::OnPaint, this);
 			this->Bind(wxEVT_ERASE_BACKGROUND, [](wxEraseEvent&) {});
+		}
+
+		void FitToLabel() {
+			int textWidth = 0;
+			int textHeight = 0;
+			this->GetTextExtent(this->label, &textWidth, &textHeight);
+			const int pad = this->FromDIP(10);
+			this->fitted = wxSize(textWidth + pad * 2, this->FromDIP(22));
+			if (this->fitted.GetHeight() < textHeight + pad) {
+				this->fitted.SetHeight(textHeight + pad);
+			}
+			this->SetMinSize(this->fitted);
+			this->SetMaxSize(this->fitted);
+			this->SetSize(this->fitted);
 		}
 
 		static wxArrayString Split(const wxString& tags) {
@@ -69,10 +80,17 @@ class FlashCardTag : public wxPanel {
 	private:
 		wxString label;
 		Style style;
+		wxSize fitted;
 
 		void OnPaint(wxPaintEvent&) {
 			wxPaintDC dc(this);
-			Draw(dc, this->GetClientRect(), this->label, this->style);
+			dc.SetFont(this->GetFont());
+			wxSize size = this->fitted;
+			if (size.GetWidth() < 1 || size.GetHeight() < 1) {
+				this->FitToLabel();
+				size = this->fitted;
+			}
+			Draw(dc, wxRect(0, 0, size.GetWidth(), size.GetHeight()), this->label, this->style);
 		}
 
 		static bool IsDarkTheme() {

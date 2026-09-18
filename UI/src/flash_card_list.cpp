@@ -1,5 +1,4 @@
 #include "flash_card_list.h"
-#include "flash_card_tag.h"
 #include "card_dialog.h"
 #include "centered_message.h"
 #include "mainframe.h"
@@ -7,139 +6,27 @@
 #include "../../Application/UseCases/Deck/GetCards/get_cards_usecase.h"
 #include "../../Application/UseCases/Deck/CreateCard/create_card_usecase.h"
 #include "../../Application/UseCases/Deck/UpdateCard/update_card_usecase.h"
-#include <wx/filename.h>
-#include <wx/stdpaths.h>
-#include <wx/image.h>
-#include <wx/bmpbndl.h>
-#include <wx/vector.h>
-
-namespace {
-wxString CardIconPath() {
-	const wxString relative = "UI/assets/flash_card_icon.png";
-	wxFileName exe(wxStandardPaths::Get().GetExecutablePath());
-	const wxString candidates[] = {
-		wxGetCwd() + wxFileName::GetPathSeparator() + relative,
-		exe.GetPath() + wxFileName::GetPathSeparator() + relative,
-		exe.GetPath() + "/../../../" + relative
-	};
-	for (const wxString& candidate : candidates) {
-		wxFileName file(candidate);
-		file.MakeAbsolute();
-		if (file.FileExists()) {
-			return file.GetFullPath();
-		}
-	}
-	return relative;
-}
-
-bool IsDarkTheme() {
-	const wxColour bg = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW);
-	return (bg.Red() + bg.Green() + bg.Blue()) < 3 * 128;
-}
-
-class CenteredTextRenderer : public wxDataViewCustomRenderer {
-	public:
-		CenteredTextRenderer()
-			: wxDataViewCustomRenderer("string", wxDATAVIEW_CELL_INERT, wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL) {}
-
-		bool SetValue(const wxVariant& value) override {
-			this->text = value.GetString();
-			return true;
-		}
-
-		bool GetValue(wxVariant& value) const override {
-			value = this->text;
-			return true;
-		}
-
-		bool Render(wxRect cell, wxDC* dc, int state) override {
-			const int padX = this->GetView() != nullptr ? this->GetView()->FromDIP(10) : 10;
-			const wxSize extent = dc->GetTextExtent(this->text);
-			wxRect textRect = cell;
-			textRect.x += padX;
-			textRect.width -= padX * 2;
-			if (textRect.width < 0) {
-				textRect.width = 0;
-			}
-			textRect.y += (cell.GetHeight() - extent.GetHeight()) / 2;
-			textRect.height = extent.GetHeight();
-			this->RenderText(this->text, 0, textRect, dc, state);
-			return true;
-		}
-
-		wxSize GetSize() const override {
-			return wxSize(-1, -1);
-		}
-
-	private:
-		wxString text;
-};
-
-class TagBadgeRenderer : public wxDataViewCustomRenderer {
-	public:
-		TagBadgeRenderer()
-			: wxDataViewCustomRenderer("string", wxDATAVIEW_CELL_INERT, wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL) {}
-
-		bool SetValue(const wxVariant& value) override {
-			this->tags = FlashCardTag::Split(value.GetString());
-			return true;
-		}
-
-		bool GetValue(wxVariant& value) const override {
-			value = wxJoin(this->tags, ',');
-			return true;
-		}
-
-		bool Render(wxRect cell, wxDC* dc, int) override {
-			wxWindow* view = this->GetView();
-			const int padX = view != nullptr ? view->FromDIP(10) : 10;
-			const int gap = view != nullptr ? view->FromDIP(6) : 6;
-			int x = cell.GetX() + padX;
-			for (const wxString& tag : this->tags) {
-				const wxSize size = FlashCardTag::Measure(*dc, tag, view);
-				if (x + size.GetWidth() > cell.GetRight()) {
-					break;
-				}
-				const int y = cell.GetY() + (cell.GetHeight() - size.GetHeight()) / 2;
-				FlashCardTag::Draw(*dc, wxRect(x, y, size.GetWidth(), size.GetHeight()), tag, FlashCardTag::Style::Default);
-				x += size.GetWidth() + gap;
-			}
-			return true;
-		}
-
-		wxSize GetSize() const override {
-			return wxSize(-1, -1);
-		}
-
-	private:
-		wxArrayString tags;
-};
-}
+#include <wx/statline.h>
 
 wxDECLARE_APP(App);
 
 FlashCardList::FlashCardList(wxWindow* parent, int deckId)
 	: wxPanel(parent),
-	  deckId(deckId) {
-	this->cardIcon = this->LoadCardIcon();
-
+	  deckId(deckId),
+	  selectedCardId(0) {
 	this->rootSizer = new wxBoxSizer(wxVERTICAL);
 
 	this->header = new wxStaticText(this, wxID_ANY, "Cards in Deck");
 	this->header->SetFont(this->header->GetFont().Bold());
 	this->rootSizer->Add(this->header, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 10);
 
-	this->cardList = new wxDataViewCtrl(this, wxID_ANY);
-	this->cardList->AppendBitmapColumn(wxEmptyString, 0, wxDATAVIEW_CELL_INERT, this->FromDIP(56), wxALIGN_CENTER, 0);
-	this->cardList->AppendColumn(new wxDataViewColumn("Front", new CenteredTextRenderer(), 1, this->FromDIP(260), wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE));
-	this->cardList->AppendColumn(new wxDataViewColumn("Back", new CenteredTextRenderer(), 2, this->FromDIP(260), wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE));
-	this->cardList->AppendColumn(new wxDataViewColumn("Tags", new TagBadgeRenderer(), 3, this->FromDIP(220), wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE));
-	this->cardList->SetRowHeight(this->FromDIP(44));
+	this->scroller = new wxScrolledWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxVSCROLL);
+	this->scroller->SetScrollRate(0, 16);
+	this->scroller->ShowScrollbars(wxSHOW_SB_NEVER, wxSHOW_SB_DEFAULT);
 
-	this->cardViewModel = new wxDataViewListStore();
-	this->cardList->AssociateModel(this->cardViewModel);
-	this->cardViewModel->DecRef();
-	this->rootSizer->Add(this->cardList, 1, wxEXPAND | wxALL, 10);
+	this->listSizer = new wxBoxSizer(wxVERTICAL);
+	this->scroller->SetSizer(this->listSizer);
+	this->rootSizer->Add(this->scroller, 1, wxEXPAND | wxALL, 10);
 
 	this->buttonSizer = new wxBoxSizer(wxHORIZONTAL);
 	this->addButton = new wxButton(this, wxID_ANY, "Add");
@@ -152,47 +39,43 @@ FlashCardList::FlashCardList(wxWindow* parent, int deckId)
 	this->buttonSizer->Add(this->studyButton, 0);
 	this->rootSizer->Add(this->buttonSizer, 0, wxALIGN_CENTER | wxALL, 10);
 
-	this->SetSizer(this->rootSizer);
-	this->LoadCards();
+	wxBoxSizer* outerSizer = new wxBoxSizer(wxVERTICAL);
+	outerSizer->Add(this->rootSizer, 1, wxEXPAND | wxALL, kMargin);
+	this->SetSizer(outerSizer);
 
 	this->addButton->Bind(wxEVT_BUTTON, &FlashCardList::OnAdd, this);
 	this->editButton->Bind(wxEVT_BUTTON, &FlashCardList::OnEdit, this);
 	this->deleteButton->Bind(wxEVT_BUTTON, &FlashCardList::OnDelete, this);
 	this->studyButton->Bind(wxEVT_BUTTON, &FlashCardList::OnStudy, this);
+	this->Bind(wxEVT_PAINT, &FlashCardList::OnPaint, this);
+	this->Bind(wxEVT_SIZE, &FlashCardList::OnSize, this);
+
+	this->LoadCards();
 }
 
-wxBitmapBundle FlashCardList::LoadCardIcon() {
-	wxImage image;
-	if (!image.LoadFile(CardIconPath(), wxBITMAP_TYPE_PNG)) {
-		return wxBitmapBundle::FromBitmap(wxBitmap(24, 24));
+void FlashCardList::OnPaint(wxPaintEvent&) {
+	wxPaintDC dc(this);
+	const wxSize size = this->GetClientSize();
+	if (size.GetWidth() < 2 || size.GetHeight() < 2) {
+		return;
 	}
-	if (IsDarkTheme() && image.HasAlpha()) {
-		const int width = image.GetWidth();
-		const int height = image.GetHeight();
-		for (int y = 0; y < height; ++y) {
-			for (int x = 0; x < width; ++x) {
-				image.SetRGB(x, y, 255 - image.GetRed(x, y), 255 - image.GetGreen(x, y), 255 - image.GetBlue(x, y));
-			}
-		}
-	}
-
-	const int dip = 24;
-	wxVector<wxBitmap> bitmaps;
-	for (int scale = 1; scale <= 3; ++scale) {
-		wxImage scaled = image.Copy();
-		scaled.Rescale(dip * scale, dip * scale, wxIMAGE_QUALITY_HIGH);
-		bitmaps.push_back(wxBitmap(scaled));
-	}
-	return wxBitmapBundle::FromBitmaps(bitmaps);
+	const int margin = kMargin;
+	dc.SetBrush(*wxTRANSPARENT_BRUSH);
+	dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_3DSHADOW), 1));
+	dc.DrawRoundedRectangle(
+		margin,
+		margin,
+		size.GetWidth() - 2 * margin - 1,
+		size.GetHeight() - 2 * margin - 1,
+		kCornerRadius
+	);
 }
 
-void FlashCardList::AppendCard(int cardId, const wxString& front, const wxString& back, const wxString& tags) {
-	wxVector<wxVariant> row;
-	row.push_back(wxVariant(this->cardIcon));
-	row.push_back(wxVariant(front));
-	row.push_back(wxVariant(back));
-	row.push_back(wxVariant(tags));
-	this->cardViewModel->AppendItem(row, static_cast<wxUIntPtr>(cardId));
+void FlashCardList::OnSize(wxSizeEvent& event) {
+	this->scroller->Layout();
+	this->scroller->FitInside();
+	this->Refresh();
+	event.Skip();
 }
 
 void FlashCardList::SetDeck(int deckId) {
@@ -201,26 +84,82 @@ void FlashCardList::SetDeck(int deckId) {
 }
 
 void FlashCardList::LoadCards() {
-	this->cardViewModel->DeleteAllItems();
-	if (this->deckId == 0) { return; }
+	const int previouslySelected = this->GetSelectedCardId();
+	this->listSizer->Clear(true);
+	this->cards.clear();
+	this->cardIds.clear();
 
-	auto useCase = wxGetApp().GetInjector().create<GetCardsUseCase>();
-	GetCardsResponse response = useCase.Execute(GetCardsRequest{this->deckId});
-	for (const CardResponse& card : response.cards) {
-		this->AppendCard(card.cardId, wxString(card.front), wxString(card.back), wxString(card.tags));
+	if (this->deckId != 0) {
+		auto useCase = wxGetApp().GetInjector().create<GetCardsUseCase>();
+		GetCardsResponse response = useCase.Execute(GetCardsRequest{this->deckId});
+		for (const CardResponse& card : response.cards) {
+			this->AddCard(card.cardId, wxString(card.front), wxString(card.back), wxString(card.tags));
+		}
+	}
+
+	this->scroller->FitInside();
+	this->scroller->Layout();
+
+	if (previouslySelected != 0 && this->FindCard(previouslySelected) != nullptr) {
+		this->SelectCard(previouslySelected);
+	} else {
+		this->selectedCardId = 0;
+	}
+
+	this->CallAfter([this]() {
+		for (FlashCard* card : this->cards) {
+			card->RelayoutContents();
+		}
+		this->scroller->Layout();
+		this->scroller->FitInside();
+	});
+}
+
+void FlashCardList::AddCard(int cardId, const wxString& front, const wxString& back, const wxString& tags) {
+	if (!this->cards.empty()) {
+		wxStaticLine* separator = new wxStaticLine(this->scroller, wxID_ANY);
+		this->listSizer->Add(separator, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP | wxBOTTOM, 4);
+	}
+
+	FlashCard* card = new FlashCard(this->scroller, front, back, tags);
+	card->SetCursor(wxCURSOR_HAND);
+	this->listSizer->Add(card, 0, wxEXPAND);
+	this->cards.push_back(card);
+	this->cardIds.push_back(cardId);
+	this->BindClicks(card, cardId);
+}
+
+FlashCard* FlashCardList::FindCard(int cardId) const {
+	for (size_t i = 0; i < this->cardIds.size(); ++i) {
+		if (this->cardIds[i] == cardId) {
+			return this->cards[i];
+		}
+	}
+	return nullptr;
+}
+
+void FlashCardList::BindClicks(wxWindow* window, int cardId) {
+	window->Bind(wxEVT_LEFT_DOWN, [this, cardId](wxMouseEvent&) {
+		this->SelectCard(cardId);
+	});
+	for (wxWindow* child : window->GetChildren()) {
+		this->BindClicks(child, cardId);
 	}
 }
 
-int FlashCardList::GetSelectedRow() const {
-	wxDataViewItem item = this->cardList->GetSelection();
-	if (!item.IsOk()) { return -1; }
-	return static_cast<int>(this->cardViewModel->GetRow(item));
+int FlashCardList::GetSelectedCardId() const {
+	return this->selectedCardId;
 }
 
-int FlashCardList::GetSelectedCardId() const {
-	wxDataViewItem item = this->cardList->GetSelection();
-	if (!item.IsOk()) { return 0; }
-	return static_cast<int>(this->cardViewModel->GetItemData(item));
+void FlashCardList::SelectCard(int cardId) {
+	this->selectedCardId = cardId;
+	this->RefreshSelection();
+}
+
+void FlashCardList::RefreshSelection() {
+	for (size_t i = 0; i < this->cards.size(); ++i) {
+		this->cards[i]->SetSelected(this->cardIds[i] == this->selectedCardId);
+	}
 }
 
 void FlashCardList::OnAdd(wxCommandEvent&) {
@@ -262,17 +201,13 @@ void FlashCardList::OnEdit(wxCommandEvent&) {
 		return;
 	}
 
-	const int row = this->GetSelectedRow();
-	wxDataViewItem item = this->cardViewModel->GetItem(static_cast<unsigned int>(row));
-	wxVariant front, back, tags;
-	this->cardViewModel->GetValue(front, item, 1);
-	this->cardViewModel->GetValue(back, item, 2);
-	this->cardViewModel->GetValue(tags, item, 3);
+	FlashCard* card = this->FindCard(cardId);
+	if (card == nullptr) { return; }
 
 	CardDialog dialog(this, "Edit Card");
-	dialog.frontCtrl->SetValue(front.GetString());
-	dialog.backCtrl->SetValue(back.GetString());
-	dialog.tagCtrl->SetValue(tags.GetString());
+	dialog.frontCtrl->SetValue(card->GetFront());
+	dialog.backCtrl->SetValue(card->GetBack());
+	dialog.tagCtrl->SetValue(card->GetTags());
 	if (dialog.ShowModal() != wxID_OK) { return; }
 
 	const std::string newFront = dialog.frontCtrl->GetValue().ToStdString();
