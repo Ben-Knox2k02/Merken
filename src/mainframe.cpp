@@ -28,18 +28,28 @@ MainFrame::MainFrame(const wxString& title)
 	this->editMenu->Append(wxID_CUT, "Cut");
 	this->editMenu->Append(wxID_COPY, "Copy");
 	this->editMenu->Append(wxID_PASTE, "Paste");
+	
+	this->searchMenu = new wxMenu;
+	this->searchMenu->Append(wxID_FIND, "Find");
+	this->searchMenu->Append(wxID_REPLACE, "Replace");
 	 
-	this->studyMenu = new wxMenu;						
-	this->calendarMenu = new wxMenu;					
-	this->AIMenu = new wxMenu;							
+	this->viewMenu = new wxMenu;
+	this->viewMenu->Append(ID_CARDS, "Cards");
+	this->viewMenu->Append(ID_STUDY, "Study");
+	this->viewMenu->Append(ID_CALENDAR, "Calendar");
+	this->viewMenu->Append(ID_AI, "AI");
+	
+	this->toolsMenu = new wxMenu;
+	this->toolsMenu->Append(ID_SETTINGS, "Settings");
+	
 	this->helpMenu = new wxMenu;						
 	this->helpMenu->Append(wxID_ABOUT, "About");
 	 
 	this->menuBar->Append(fileMenu, "File");			// ATTACH MENUS
 	this->menuBar->Append(editMenu, "Edit");
-	this->menuBar->Append(studyMenu, "Study");
-	this->menuBar->Append(calendarMenu, "Calendar");
-	this->menuBar->Append(AIMenu, "AI");
+	this->menuBar->Append(searchMenu, "Search");
+	this->menuBar->Append(viewMenu, "View");
+	this->menuBar->Append(toolsMenu, "Tools");
 	this->menuBar->Append(helpMenu, "Help");
 	 
 	this->SetMenuBar(this->menuBar);					// ATTACH MENU BAR / STATUS BAR
@@ -61,15 +71,33 @@ MainFrame::MainFrame(const wxString& title)
 	
 	//========= BIND EVENT HANDLERS ==================================== BIND EVENT HANDLERS =================================
 	
-	this->Bind(wxEVT_MENU, &MainFrame::OnNew, this, wxID_NEW);					// MENU EVENTS
+	this->Bind(wxEVT_MENU, &MainFrame::OnNew, this, wxID_NEW);					// FILE
 	this->Bind(wxEVT_MENU, &MainFrame::OnOpen, this, wxID_OPEN);
 	this->Bind(wxEVT_MENU, &MainFrame::OnSave, this, wxID_SAVE);
-	this->Bind(wxEVT_MENU, &MainFrame::OnAbout, this, wxID_ABOUT);
 	this->Bind(wxEVT_MENU, &MainFrame::OnExit, this, wxID_EXIT);
-
-	this->Bind(wxEVT_SIZE, &MainFrame::OnWindowResized, this);					// WINDOW EVENTS
-	this->Bind(wxEVT_ENTER_WINDOW, &MainFrame::OnMouseEvent, this);
+	
+	this->Bind(wxEVT_MENU, &MainFrame::OnCut, this, wxID_CUT);					// EDIT
+	this->Bind(wxEVT_MENU, &MainFrame::OnCopy, this, wxID_COPY);
+	this->Bind(wxEVT_MENU, &MainFrame::OnPaste, this, wxID_PASTE);
+	
+	this->Bind(wxEVT_MENU, &MainFrame::OnFind, this, wxID_FIND);					// SEARCH
+	this->Bind(wxEVT_MENU, &MainFrame::OnReplace, this, wxID_REPLACE);
+	
+	this->Bind(wxEVT_MENU, &MainFrame::OnCards, this, ID_CARDS);					// VIEW
+	this->Bind(wxEVT_MENU, &MainFrame::OnStudy, this, ID_STUDY);
+	this->Bind(wxEVT_MENU, &MainFrame::OnCalendar, this, ID_CALENDAR);
+	this->Bind(wxEVT_MENU, &MainFrame::OnAI, this, ID_AI);
+	
+	this->Bind(wxEVT_MENU, &MainFrame::OnSettings, this, ID_SETTINGS);				// TOOLS
+	
+	this->Bind(wxEVT_MENU, &MainFrame::OnAbout, this, wxID_ABOUT);				// HELP
+		
+	this->Bind(wxEVT_KEY_DOWN, &MainFrame::OnKeyEvent, this);						// KEY EVENTS
+					
+	this->Bind(wxEVT_ENTER_WINDOW, &MainFrame::OnMouseEvent, this);				// MOUSE EVENTS
 	this->Bind(wxEVT_LEAVE_WINDOW, &MainFrame::OnMouseEvent, this);
+	
+	this->Bind(wxEVT_SIZE, &MainFrame::OnWindowResized, this);					// WINDOW EVENTS
 	this->Bind(wxEVT_CLOSE_WINDOW, &MainFrame::OnWindowClosed, this);
 }
 
@@ -92,22 +120,10 @@ void MainFrame::SwapCurrentPanel(wxPanel* newPanel) {
 	this->activePanel->SetSizer(sizer);
 	this->activePanel->Layout();
 	
-	this->currentPanel->Bind(wxEVT_KEY_DOWN, &MainFrame::OnKeyEvent, this);
-	
-	/*for(wxWindow* child : this->currentPanel->GetChildren()) {
-		child->Bind(wxEVT_LEFT_DOWN, &MainFrame::OnMouseEvent, this);
-        child->Bind(wxEVT_LEFT_UP, &MainFrame::OnMouseEvent, this);
-        child->Bind(wxEVT_RIGHT_DOWN, &MainFrame::OnMouseEvent, this);
-        child->Bind(wxEVT_RIGHT_UP, &MainFrame::OnMouseEvent, this);
-        child->Bind(wxEVT_MOTION, &MainFrame::OnMouseEvent, this);
-        child->Bind(wxEVT_MOUSEWHEEL, &MainFrame::OnMouseEvent, this);
-        child->Bind(wxEVT_KEY_DOWN, &MainFrame::OnKeyEvent, this);
-	} */
-	
 	this->currentPanel->SetFocus();
 }
 
-void MainFrame::OnNew(wxCommandEvent& event) {
+void MainFrame::OnNew(wxCommandEvent& event) {						// FILE
 	wxLogStatus("NEW");
 	event.Skip();
 }
@@ -122,38 +138,67 @@ void MainFrame::OnSave(wxCommandEvent& event) {
 	event.Skip();
 }
 
-void MainFrame::OnAbout(wxCommandEvent& event) {
+void MainFrame::OnExit(wxCommandEvent& event) {
+	wxLogStatus("EXIT");
+	Close(true);
+}
+
+void MainFrame::OnCut(wxCommandEvent& event) {						// EDIT
+	wxLogStatus("CUT");
+	event.Skip();
+}
+
+void MainFrame::OnCopy(wxCommandEvent& event) {
+	wxLogStatus("COPY");
+	event.Skip();
+}
+
+void MainFrame::OnPaste(wxCommandEvent& event) {
+	wxLogStatus("PASTE");
+	event.Skip();
+}
+
+void MainFrame::OnFind(wxCommandEvent& event) {						// SEARCH
+	wxLogStatus("FIND");
+	event.Skip();
+}
+
+void MainFrame::OnReplace(wxCommandEvent& event) {	
+	wxLogStatus("REPLACE");
+	event.Skip();
+}
+
+void MainFrame::OnCards(wxCommandEvent& event) {					// VIEW
+	wxLogStatus("CARDS");
+	event.Skip();
+}
+
+void MainFrame::OnStudy(wxCommandEvent& event) {
+	wxLogStatus("STUDY");
+	event.Skip();
+}
+
+void MainFrame::OnCalendar(wxCommandEvent& event) {
+	wxLogStatus("CALENDAR");
+	event.Skip();
+}
+
+void MainFrame::OnAI(wxCommandEvent& event) {
+	wxLogStatus("AI");
+	event.Skip();
+}
+
+void MainFrame::OnSettings(wxCommandEvent& event) {					// TOOLS
+	wxLogStatus("SETTINGS");
+	event.Skip();
+}
+
+void MainFrame::OnAbout(wxCommandEvent& event) {					// HELP
 	wxLogStatus("ABOUT");
 	event.Skip();
 }
 
-void MainFrame::OnExit(wxCommandEvent& event) {
-	wxLogStatus("EXIT");
-	event.Skip();
-}
-
-void MainFrame::OnInputEnter(wxCommandEvent& event) {
-	wxLogStatus("ENTER");
-	event.Skip();
-}
-
-void MainFrame::OnWindowResized(wxSizeEvent& event) {
-	wxLogStatus("WINDOW RESIZED");
-	wxSize size = event.GetSize();
-	
-	this->app.SetWindowWidth(size.GetWidth());
-	this->app.SetWindowHeight(size.GetHeight());
-	this->app.Print();
-	
-	event.Skip();
-}
-
-void MainFrame::OnWindowClosed(wxCloseEvent& event) {
-	wxLogStatus("WINDOW CLOSED");
-	event.Skip();
-}
-
-void MainFrame::OnMouseEvent(wxMouseEvent& event) {
+void MainFrame::OnMouseEvent(wxMouseEvent& event) {					// I/O
 	if(event.LeftDown()) {
 		//wxLogStatus("LMB DOWN");
 	}
@@ -192,3 +237,20 @@ void MainFrame::OnKeyEvent(wxKeyEvent& event) {
 	else { wxLogStatus("Key event %c", keyChar); }
 	event.Skip();
 }
+
+void MainFrame::OnWindowResized(wxSizeEvent& event) {				// WINDOW
+	wxLogStatus("WINDOW RESIZED");
+	wxSize size = event.GetSize();
+	
+	this->app.SetWindowWidth(size.GetWidth());
+	this->app.SetWindowHeight(size.GetHeight());
+	this->app.Print();
+	
+	event.Skip();
+}
+
+void MainFrame::OnWindowClosed(wxCloseEvent& event) {
+	wxLogStatus("WINDOW CLOSED");
+	Destroy();
+}
+
