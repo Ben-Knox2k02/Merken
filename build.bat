@@ -1,0 +1,84 @@
+@echo off
+setlocal enabledelayedexpansion
+
+rem === OUTPUT ==========================================================
+set OUT=Berken.exe
+echo Building %OUT%
+
+rem === PATHS ===========================================================
+set MINGW=C:\mingw-w64
+set WX=C:\wxWidgets
+set PATH=%MINGW%\bin;%PATH%
+
+rem === INCLUDE / LIB PATHS =============================================
+set INC=-I include -I %WX%\lib\gcc_lib\mswu -I %WX%\include
+set LIB=-L %WX%\lib\gcc_lib
+
+rem === WXWIDGETS LIBS ==================================================
+set WXLIBS= ^
+    -lwxmsw32u_core ^
+    -lwxbase32u ^
+    -lwxpng ^
+    -lwxjpeg ^
+    -lwxzlib ^
+    -lwxregexu ^
+    -lwxexpat
+
+rem === WINDOWS SYSTEM LIBS =============================================
+set WINLIBS= ^
+    -lshlwapi ^
+    -lversion ^
+    -lole32 ^
+    -lshell32 ^
+    -luuid ^
+    -luxtheme ^
+    -lgdi32 ^
+    -loleaut32 ^
+    -lcomdlg32 ^
+    -lcomctl32 ^
+    -loleacc ^
+    -lwinspool
+
+rem === ENSURE OBJ FOLDER ===============================================
+if not exist obj mkdir obj
+
+rem ==== ICON ============================================================
+echo Compiling icon resource...
+%MINGW%\bin\windres.exe resources\app.rc -O coff -o obj\app_icon.o
+
+rem === MANIFEST =========================================================
+echo Compiling manifest...
+echo 1 24 resources\app.manifest > resources\manifest.rc
+%MINGW%\bin\windres.exe resources\manifest.rc -O coff -o obj\manifest.o
+
+rem === INCREMENTAL + PARALLEL COMPILE ==================================
+echo Compiling sources...
+
+for %%f in (src\*.cpp) do (
+    start /B cmd /c %MINGW%\bin\g++.exe -pipe -O2 -c %%f %INC% -o obj\%%~nf.o
+)
+
+echo Waiting for compilation to finish...
+:waitloop
+tasklist | findstr /I "g++.exe" >nul
+if not errorlevel 1 (
+    timeout /t 1 >nul
+    goto waitloop
+)
+
+rem === WAIT FOR PARALLEL JOBS ==========================================
+echo Waiting for compilation jobs...
+:waitloop
+tasklist /FI "IMAGENAME eq g++.exe" | find /I "g++.exe" >nul
+if not errorlevel 1 (
+    timeout /T 1 >nul
+    goto waitloop
+)
+
+rem === LINK =============================================================
+echo Linking...
+%MINGW%\bin\g++.exe obj\*.o -o %OUT% %LIB% %WXLIBS% %WINLIBS%
+
+echo Build complete: %OUT%
+
+endlocal
