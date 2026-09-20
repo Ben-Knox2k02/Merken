@@ -14,6 +14,10 @@ class StudyPanel : public wxPanel {
 		
 		int deckID;
 		std::vector<Card> cards;
+		
+		wxPanel* topPanel;
+		wxPanel* midPanel;
+		wxPanel* bottomPanel;
 	
 		wxBoxSizer* rootSizer;
 		wxBoxSizer* topSizer;
