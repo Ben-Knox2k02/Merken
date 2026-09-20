@@ -2,15 +2,8 @@
 #define MAINFRAME_H
 
 #include "app.h"
+#include "data_structures.h"
 #include <wx/wx.h>
-
-enum {									// CUSTOM EVENT IDs
-	ID_CARDS = wxID_HIGHEST + 1,
-	ID_STUDY,
-	ID_CALENDAR,
-	ID_AI,
-	ID_SETTINGS,
-};
 
 class MainFrame : public wxFrame {
 	public:
@@ -23,6 +16,7 @@ class MainFrame : public wxFrame {
 		
 		wxBoxSizer* rootSizer;
 		
+		wxAcceleratorEntry shortcuts[8];			// KEYBOARD SHORTCUTS
 		wxMenuBar* menuBar;
 		wxMenu* fileMenu;
 		wxMenu* editMenu;
