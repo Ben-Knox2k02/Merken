@@ -1,18 +1,12 @@
 #ifndef CARD_LIST_PANEL_H
 #define CARD_LIST_PANEL_H
 
+#include "data_structures.h"
 #include "dialog.h"
 #include <vector>
 #include <wx/wx.h>
 #include <wx/dataview.h>
 #include <wx/dcbuffer.h>
-
-struct Card {
-	int ID;
-	wxString front;
-	wxString back;
-	std::vector<wxString> tags;
-};
 
 class CardListPanel : public wxPanel {
 	public:
