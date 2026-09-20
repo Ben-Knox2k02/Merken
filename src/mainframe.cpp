@@ -7,6 +7,7 @@
 #include <algorithm>
 #include "card_list_panel.h"
 #include "deck_panel.h"
+#include "study_panel.h"
 
 MainFrame::MainFrame(const wxString& title)
     : wxFrame(nullptr, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE),
@@ -15,53 +16,68 @@ MainFrame::MainFrame(const wxString& title)
 	//=========== INITIALIZATION ===================================== INITIALIZATION ================================
 	this->SetIcon(wxIcon("resources/app.ico", wxBITMAP_TYPE_ICO));
 	
-	this->menuBar = new wxMenuBar;						// INIT MENU BAR
+	this->menuBar = new wxMenuBar;										// INIT MENU BAR
 	 
-	this->fileMenu = new wxMenu;						// INIT MENUS
-	this->fileMenu->Append(wxID_NEW, "New");		
-	this->fileMenu->Append(wxID_OPEN, "Open");
-	this->fileMenu->Append(wxID_SAVE, "Save");
+	this->fileMenu = new wxMenu;										// FILE
+	this->fileMenu->Append(wxID_NEW, "&New\tCtrl+N");		
+	this->fileMenu->Append(wxID_OPEN, "&Open\tCtrl+O");
+	this->fileMenu->Append(wxID_SAVE, "&Save\tCtrl+S");
 	this->fileMenu->AppendSeparator();
-	this->fileMenu->Append(wxID_EXIT, "Exit");
+	this->fileMenu->Append(wxID_EXIT, "&Exit\tAlt+F4");
 	 
-	this->editMenu = new wxMenu;						
-	this->editMenu->Append(wxID_CUT, "Cut");
-	this->editMenu->Append(wxID_COPY, "Copy");
-	this->editMenu->Append(wxID_PASTE, "Paste");
+	this->editMenu = new wxMenu;										// EDIT						
+	this->editMenu->Append(wxID_CUT, "&Cut\tCtrl+X");
+	this->editMenu->Append(wxID_COPY, "&Copy\tCtrl+C");
+	this->editMenu->Append(wxID_PASTE, "&Paste\tCtrl+V");
 	
-	this->searchMenu = new wxMenu;
-	this->searchMenu->Append(wxID_FIND, "Find");
-	this->searchMenu->Append(wxID_REPLACE, "Replace");
+	this->searchMenu = new wxMenu;										// SEARCH
+	this->searchMenu->Append(wxID_FIND, "&Find\tCtrl+F");
+	this->searchMenu->Append(wxID_REPLACE, "&Replace\tCtrl+H");
 	 
-	this->viewMenu = new wxMenu;
+	this->viewMenu = new wxMenu;										// VIEW
 	this->viewMenu->Append(ID_CARDS, "Cards");
 	this->viewMenu->Append(ID_STUDY, "Study");
 	this->viewMenu->Append(ID_CALENDAR, "Calendar");
 	this->viewMenu->Append(ID_AI, "AI");
 	
-	this->toolsMenu = new wxMenu;
+	this->toolsMenu = new wxMenu;										// TOOLS
 	this->toolsMenu->Append(ID_SETTINGS, "Settings");
 	
-	this->helpMenu = new wxMenu;						
+	this->helpMenu = new wxMenu;										// HELP		
 	this->helpMenu->Append(wxID_ABOUT, "About");
 	 
-	this->menuBar->Append(fileMenu, "File");			// ATTACH MENUS
+	this->menuBar->Append(fileMenu, "File");							// ATTACH MENUS
 	this->menuBar->Append(editMenu, "Edit");
 	this->menuBar->Append(searchMenu, "Search");
 	this->menuBar->Append(viewMenu, "View");
 	this->menuBar->Append(toolsMenu, "Tools");
 	this->menuBar->Append(helpMenu, "Help");
+	
+	this->shortcuts[0].Set(wxACCEL_CTRL, (int)'N', wxID_NEW);			// KEYBOARD SHORTCUTS
+	this->shortcuts[1].Set(wxACCEL_CTRL, (int)'O', wxID_OPEN);
+	this->shortcuts[2].Set(wxACCEL_CTRL, (int)'S', wxID_SAVE);
+	
+	this->shortcuts[3].Set(wxACCEL_CTRL, (int)'X', wxID_CUT);
+	this->shortcuts[4].Set(wxACCEL_CTRL, (int)'C', wxID_COPY);
+	this->shortcuts[5].Set(wxACCEL_CTRL, (int)'V', wxID_PASTE);
+	
+	this->shortcuts[6].Set(wxACCEL_CTRL, (int)'F', wxID_FIND);
+	this->shortcuts[7].Set(wxACCEL_CTRL, (int)'H', wxID_REPLACE);
+	
+	wxAcceleratorTable accel(8, this->shortcuts);
+	this->SetAcceleratorTable(accel);
 	 
-	this->SetMenuBar(this->menuBar);					// ATTACH MENU BAR / STATUS BAR
+	this->SetMenuBar(this->menuBar);									// ATTACH MENU BAR / STATUS BAR
 	this->CreateStatusBar();
 	
 	this->rootSizer = new wxBoxSizer(wxHORIZONTAL);
 	
 	this->deckPanel = new DeckPanel(this);
-
+	
 	this->activePanel = new wxPanel(this, wxID_ANY);
 	this->activePanel->SetBackgroundColour(*wxWHITE);
-	this->SwapCurrentPanel(new CardListPanel(this->activePanel, 0));
+	//this->SwapCurrentPanel(new CardListPanel(this->activePanel, 0));
+	this->SwapCurrentPanel(new StudyPanel(this->activePanel, 0));
 	
 	this->rootSizer->Add(deckPanel, 0, wxEXPAND | wxALL, 0);
 	this->rootSizer->Add(activePanel, 1, wxEXPAND | wxALL, 0);
@@ -88,7 +104,7 @@ MainFrame::MainFrame(const wxString& title)
 	this->Bind(wxEVT_MENU, &MainFrame::OnCalendar, this, ID_CALENDAR);
 	this->Bind(wxEVT_MENU, &MainFrame::OnAI, this, ID_AI);
 	
-	this->Bind(wxEVT_MENU, &MainFrame::OnSettings, this, ID_SETTINGS);				// TOOLS
+	this->Bind(wxEVT_MENU, &MainFrame::OnSettings, this, ID_SETTINGS);			// TOOLS
 	
 	this->Bind(wxEVT_MENU, &MainFrame::OnAbout, this, wxID_ABOUT);				// HELP
 		
@@ -170,11 +186,13 @@ void MainFrame::OnReplace(wxCommandEvent& event) {
 
 void MainFrame::OnCards(wxCommandEvent& event) {					// VIEW
 	wxLogStatus("CARDS");
+	this->SwapCurrentPanel(new CardListPanel(this->activePanel, 0));
 	event.Skip();
 }
 
 void MainFrame::OnStudy(wxCommandEvent& event) {
 	wxLogStatus("STUDY");
+	this->SwapCurrentPanel(new StudyPanel(this->activePanel, 0));
 	event.Skip();
 }
 
@@ -223,7 +241,7 @@ void MainFrame::OnMouseEvent(wxMouseEvent& event) {					// I/O
 	event.Skip();
 }
 
-void MainFrame::OnKeyEvent(wxKeyEvent& event) {
+void MainFrame::OnKeyEvent(wxKeyEvent& event) {						
 	if(event.GetKeyCode() == WXK_TAB) {
 		wxWindow* window = (wxWindow*)event.GetEventObject();
 		window->Navigate();
@@ -249,7 +267,7 @@ void MainFrame::OnWindowResized(wxSizeEvent& event) {				// WINDOW
 	event.Skip();
 }
 
-void MainFrame::OnWindowClosed(wxCloseEvent& event) {
+void MainFrame::OnWindowClosed(wxCloseEvent& event) {				
 	wxLogStatus("WINDOW CLOSED");
 	Destroy();
 }
