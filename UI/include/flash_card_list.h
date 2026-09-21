@@ -42,6 +42,7 @@ class FlashCardList : public wxPanel {
 		void DeleteCard(int cardId);
 		FlashCard* FindCard(int cardId) const;
 		void UpdateDeckHeader();
+		void UpdateStudyButtons();
 		void WrapHeader();
 		void OnPaint(wxPaintEvent& event);
 		void OnSize(wxSizeEvent& event);
