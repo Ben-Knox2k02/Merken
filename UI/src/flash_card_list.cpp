@@ -135,6 +135,7 @@ void FlashCardList::LoadCards() {
 
 	this->scroller->FitInside();
 	this->scroller->Layout();
+	this->UpdateStudyButtons();
 
 	this->CallAfter([this]() {
 		this->lastHeaderWrap = 0;
@@ -172,6 +173,12 @@ void FlashCardList::UpdateDeckHeader() {
 	this->lastHeaderWrap = 0;
 	this->WrapHeader();
 	this->Layout();
+}
+
+void FlashCardList::UpdateStudyButtons() {
+	const bool canStudy = this->deckId != 0 && !this->cards.empty();
+	this->studyButton->Enable(canStudy);
+	this->aiStudyButton->Enable(canStudy);
 }
 
 void FlashCardList::WrapHeader() {
