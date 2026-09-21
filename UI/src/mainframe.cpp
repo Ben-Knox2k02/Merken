@@ -123,6 +123,7 @@ void MainFrame::ApplyMenuIcons() {
 	setIcon(ID_DELETE_DECK, "UI/assets/delete_icon.png");
 	setIcon(ID_STUDY_DECK, "UI/assets/study_icon.png");
 	setIcon(ID_AI_STUDY, "UI/assets/ai_study_icon.png");
+	setIcon(ID_CALENDAR, "UI/assets/calendar_icon.png");
 }
 
 void MainFrame::ReloadDecks() {
