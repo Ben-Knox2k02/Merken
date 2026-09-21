@@ -15,7 +15,6 @@ class StudyPanel : public wxPanel {
 
 		wxBoxSizer* rootSizer;
 		wxStaticText* header;
-		wxStaticText* promptLabel;
 		StudyCard* card;
 		wxStaticText* progressLabel;
 		wxGauge* progressBar;
