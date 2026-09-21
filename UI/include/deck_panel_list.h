@@ -33,7 +33,6 @@ class DeckPanelList : public wxPanel {
 		std::vector<int> cardIds;
 		int selectedDeckId;
 
-		static constexpr int kCornerRadius = 5;
 		static constexpr int kMinWidth = 320 * 2 / 3;
 
 		void AddDeckCard(int deckId, const wxString& name);

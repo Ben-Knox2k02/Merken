@@ -13,6 +13,7 @@
 #include "ai_study_panel.h"
 #include "settings_dialog.h"
 #include "centered_message.h"
+#include "theme.h"
 
 const int SCREEN_WIDTH = 1920;
 const int SCREEN_HEIGHT = 1080;
@@ -56,8 +57,8 @@ MainFrame::MainFrame(const wxString& title) : wxFrame(nullptr, wxID_ANY, title, 
 	this->menuBar->Append(AIMenu, "AI");
 	this->menuBar->Append(helpMenu, "Help");
 	 
-	this->SetMenuBar(this->menuBar);					// ATTACH MENU BAR / STATUS BAR
-	this->CreateStatusBar();
+	this->SetMenuBar(this->menuBar);
+	this->SetBackgroundColour(Theme::Get().color.window);
 	
 	this->rootSizer = new wxBoxSizer(wxHORIZONTAL);
 	this->currentPanel = nullptr;
@@ -66,12 +67,15 @@ MainFrame::MainFrame(const wxString& title) : wxFrame(nullptr, wxID_ANY, title, 
 	this->deckPanelList = new DeckPanelList(this);
 
 	this->activePanel = new wxPanel(this, wxID_ANY);
+	this->activePanel->SetBackgroundColour(Theme::Get().color.window);
 	this->flashCardList = new FlashCardList(this->activePanel, 0);
 	this->SwapCurrentPanel(this->flashCardList);
 	this->OnDeckSelected(this->deckPanelList->GetSelectedDeckId());
-	
-	this->rootSizer->Add(this->deckPanelList, 0, wxEXPAND | wxALL, 10);
-	this->rootSizer->Add(activePanel, 1, wxEXPAND | wxALL, 0);
+
+	const int pad = Theme::Get().size.panelPad;
+	this->rootSizer->Add(this->deckPanelList, 0, wxEXPAND | wxTOP | wxBOTTOM | wxLEFT, pad);
+	this->rootSizer->AddSpacer(Theme::Get().space.md);
+	this->rootSizer->Add(this->activePanel, 1, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, pad);
 	
 	this->SetSizer(this->rootSizer);
 	this->Layout();
@@ -88,11 +92,6 @@ MainFrame::MainFrame(const wxString& title) : wxFrame(nullptr, wxID_ANY, title, 
 	this->Bind(wxEVT_MENU, &MainFrame::OnAiStudy, this, ID_AI_STUDY);
 	this->Bind(wxEVT_MENU, &MainFrame::OnAbout, this, wxID_ABOUT);
 	this->Bind(wxEVT_MENU, &MainFrame::OnExit, this, wxID_EXIT);
-
-	this->Bind(wxEVT_SIZE, &MainFrame::OnWindowResized, this);					// WINDOW EVENTS
-	this->Bind(wxEVT_ENTER_WINDOW, &MainFrame::OnMouseEvent, this);
-	this->Bind(wxEVT_LEAVE_WINDOW, &MainFrame::OnMouseEvent, this);
-	this->Bind(wxEVT_CLOSE_WINDOW, &MainFrame::OnWindowClosed, this);
 }
 
 void MainFrame::OnDeckSelected(int deckId) {
@@ -153,17 +152,14 @@ void MainFrame::ShowAiStudy() {
 }
 
 void MainFrame::OnNew(wxCommandEvent& event) {
-	wxLogStatus("NEW");
 	event.Skip();
 }
 
 void MainFrame::OnOpen(wxCommandEvent& event) {
-	wxLogStatus("OPEN");
 	event.Skip();
 }
 
 void MainFrame::OnSave(wxCommandEvent& event) {
-	wxLogStatus("SAVE");
 	event.Skip();
 }
 
@@ -189,66 +185,9 @@ void MainFrame::OnAiStudy(wxCommandEvent&) {
 }
 
 void MainFrame::OnAbout(wxCommandEvent& event) {
-	wxLogStatus("ABOUT");
 	event.Skip();
 }
 
 void MainFrame::OnExit(wxCommandEvent& event) {
-	wxLogStatus("EXIT");
-	event.Skip();
-}
-
-void MainFrame::OnInputEnter(wxCommandEvent& event) {
-	wxLogStatus("ENTER");
-	event.Skip();
-}
-
-void MainFrame::OnWindowResized(wxSizeEvent& event) {
-	wxLogStatus("WINDOW RESIZED");
-	event.Skip();
-}
-
-void MainFrame::OnWindowClosed(wxCloseEvent& event) {
-	wxLogStatus("WINDOW CLOSED");
-	event.Skip();
-}
-
-void MainFrame::OnMouseEvent(wxMouseEvent& event) {
-	if(event.LeftDown()) {
-		//wxLogStatus("LMB DOWN");
-	}
-	if(event.LeftUp()) {
-		//wxLogStatus("LMB UP");
-	}
-	if(event.RightDown()) {
-		//wxLogStatus("RMB DOWN");
-	}
-	if(event.RightUp()) {
-		//wxLogStatus("RMB UP");
-	}
-	if(event.Dragging()) {
-		//wxLogStatus("DRAGGING");
-	}
-	if(event.Moving()) {
-		//wxLogStatus("MOVING");
-	}
-	if(event.GetWheelRotation() != 0) {
-		//wxLogStatus("SCROLL WHEEL");
-	}
-	event.Skip();
-}
-
-void MainFrame::OnKeyEvent(wxKeyEvent& event) {
-	if(event.GetKeyCode() == WXK_TAB) {
-		wxWindow* window = (wxWindow*)event.GetEventObject();
-		window->Navigate();
-	}
-	
-	wxChar keyChar = event.GetUnicodeKey();
-	if(keyChar == WXK_NONE) {
-		int keyCode = event.GetKeyCode();
-		wxLogStatus("Key event %c", keyCode);
-	}
-	else { wxLogStatus("Key event %c", keyChar); }
 	event.Skip();
 }

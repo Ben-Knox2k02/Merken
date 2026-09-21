@@ -6,6 +6,7 @@
 #include <random>
 #include <wx/wx.h>
 #include <wx/dcgraph.h>
+#include "theme.h"
 
 class DeckCardInitials : public wxPanel {
 	public:
@@ -33,7 +34,6 @@ class DeckCardInitials : public wxPanel {
 		}
 
 	private:
-		static constexpr int kCornerRadius = 5;
 		static constexpr int kMinSide = 32 * 2 / 3;
 
 		wxString initials;
@@ -108,7 +108,7 @@ class DeckCardInitials : public wxPanel {
 		}
 
 		void FitToInitials() {
-			const int pad = this->FromDIP(4);
+			const int pad = this->FromDIP(Theme::Get().space.xs);
 			const wxSize extent = this->GetTextExtent("WWW");
 			const int side = std::max({
 				extent.GetWidth() + pad * 2,
@@ -129,22 +129,16 @@ class DeckCardInitials : public wxPanel {
 				return;
 			}
 
-			wxColour background = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW);
-			if (this->GetParent() != nullptr) {
-				background = this->GetParent()->GetBackgroundColour();
-			}
-			gc.SetPen(*wxTRANSPARENT_PEN);
-			gc.SetBrush(wxBrush(background));
-			gc.DrawRectangle(0, 0, size.GetWidth(), size.GetHeight());
+			Theme::Get().FillCanvas(gc, this, size);
 
-			gc.SetPen(wxPen(BorderFor(this->fill), 1));
+			gc.SetPen(wxPen(BorderFor(this->fill), Theme::Get().stroke.hairline));
 			gc.SetBrush(wxBrush(this->fill));
 			gc.DrawRoundedRectangle(
 				0,
 				0,
 				size.GetWidth() - 1,
 				size.GetHeight() - 1,
-				this->FromDIP(kCornerRadius)
+				this->FromDIP(Theme::Get().radius.sm)
 			);
 
 			gc.SetFont(this->GetFont());
@@ -188,11 +182,11 @@ class DeckCard : public wxPanel {
 			titleCol->AddStretchSpacer(1);
 
 			wxBoxSizer* titleRow = new wxBoxSizer(wxHORIZONTAL);
-			titleRow->Add(this->initialsBox, 0, wxALIGN_CENTER_VERTICAL | wxLEFT, 10);
-			titleRow->Add(titleCol, 1, wxEXPAND | wxLEFT | wxRIGHT, 10);
+			titleRow->Add(this->initialsBox, 0, wxALIGN_CENTER_VERTICAL | wxLEFT, Theme::Get().space.lg);
+			titleRow->Add(titleCol, 1, wxEXPAND | wxLEFT | wxRIGHT, Theme::Get().space.lg);
 
 			wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
-			mainSizer->Add(titleRow, 0, wxEXPAND | wxTOP | wxBOTTOM, 6);
+			mainSizer->Add(titleRow, 0, wxEXPAND | wxTOP | wxBOTTOM, Theme::Get().space.sm);
 			this->SetSizer(mainSizer);
 
 			this->Bind(wxEVT_PAINT, &DeckCard::OnPaint, this);
@@ -216,8 +210,6 @@ class DeckCard : public wxPanel {
 		}
 
 	private:
-		static constexpr int kCornerRadius = 5;
-
 		DeckCardInitials* initialsBox;
 		wxStaticText* titleCtrl;
 		bool selected;
@@ -228,31 +220,25 @@ class DeckCard : public wxPanel {
 		}
 
 		void ApplyTextColours() {
-			const wxColour text = wxSystemSettings::GetColour(
-				this->selected ? wxSYS_COLOUR_HIGHLIGHTTEXT : wxSYS_COLOUR_WINDOWTEXT
-			);
-			this->titleCtrl->SetForegroundColour(text);
+			this->titleCtrl->SetForegroundColour(Theme::Get().LabelOn(this->selected));
 		}
 
 		void OnPaint(wxPaintEvent&) {
 			wxPaintDC dc(this);
 			wxGCDC gc(dc);
 			const wxSize size = this->GetClientSize();
-			wxColour background = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW);
-			if (this->GetParent() != nullptr) {
-				background = this->GetParent()->GetBackgroundColour();
-			}
-
-			gc.SetPen(*wxTRANSPARENT_PEN);
-			gc.SetBrush(wxBrush(background));
-			gc.DrawRectangle(0, 0, size.GetWidth(), size.GetHeight());
-
+			const Theme& theme = Theme::Get();
+			theme.FillCanvas(gc, this, size);
 			if (!this->selected) {
 				return;
 			}
-
-			gc.SetBrush(wxBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT)));
-			gc.DrawRoundedRectangle(0, 0, size.GetWidth(), size.GetHeight(), kCornerRadius);
+			theme.DrawRounded(
+				gc,
+				wxRect(0, 0, size.GetWidth(), size.GetHeight()),
+				this->FromDIP(theme.radius.row),
+				theme.color.selectedFill,
+				theme.color.selectedFill
+			);
 		}
 };
 

@@ -2,7 +2,9 @@
 #include "card_dialog.h"
 #include "centered_message.h"
 #include "mainframe.h"
+#include "theme.h"
 #include "app.h"
+#include <wx/dcgraph.h>
 #include "../../Application/UseCases/Deck/GetCards/get_cards_usecase.h"
 #include "../../Application/UseCases/Deck/GetDecks/get_decks_usecase.h"
 #include "../../Application/UseCases/Deck/CreateCard/create_card_usecase.h"
@@ -14,8 +16,9 @@ wxDECLARE_APP(App);
 FlashCardList::FlashCardList(wxWindow* parent, int deckId)
 	: wxPanel(parent),
 	  deckId(deckId),
-	  selectedCardId(0),
 	  lastHeaderWrap(0) {
+	this->SetBackgroundStyle(wxBG_STYLE_PAINT);
+	this->SetBackgroundColour(Theme::Get().color.window);
 	this->rootSizer = new wxBoxSizer(wxVERTICAL);
 
 	this->header = new wxStaticText(this, wxID_ANY, "");
@@ -23,74 +26,60 @@ FlashCardList::FlashCardList(wxWindow* parent, int deckId)
 	titleFont.MakeBold();
 	titleFont.SetPointSize(titleFont.GetPointSize() + 3);
 	this->header->SetFont(titleFont);
+	this->header->SetForegroundColour(Theme::Get().color.label);
 	this->header->SetBackgroundStyle(wxBG_STYLE_TRANSPARENT);
 	this->header->SetMinSize(wxSize(0, -1));
 
 	this->description = new wxStaticText(this, wxID_ANY, "");
-	this->description->SetForegroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT));
+	this->description->SetForegroundColour(Theme::Get().color.secondaryLabel);
 	this->description->SetBackgroundStyle(wxBG_STYLE_TRANSPARENT);
 	this->description->SetMinSize(wxSize(0, -1));
 	this->description->Hide();
 
+	const int pad = Theme::Get().size.panelPad;
 	wxBoxSizer* titleBlock = new wxBoxSizer(wxVERTICAL);
 	titleBlock->Add(this->header, 0, wxEXPAND);
-	titleBlock->Add(this->description, 0, wxEXPAND | wxTOP, 4);
-	this->rootSizer->Add(titleBlock, 0, wxEXPAND | wxALL, 10);
+	titleBlock->Add(this->description, 0, wxEXPAND | wxTOP, Theme::Get().space.xs);
+
+	this->headerButtonSizer = new wxBoxSizer(wxHORIZONTAL);
+	this->addButton = new wxButton(this, wxID_ANY, "Add");
+	this->studyButton = new wxButton(this, wxID_ANY, "Study Deck");
+	this->headerButtonSizer->Add(this->addButton, 0, wxRIGHT, Theme::Get().space.xs);
+	this->headerButtonSizer->Add(this->studyButton, 0);
+
+	wxBoxSizer* headerRow = new wxBoxSizer(wxHORIZONTAL);
+	headerRow->Add(titleBlock, 1, wxALIGN_CENTER_VERTICAL | wxRIGHT, Theme::Get().space.md);
+	headerRow->Add(this->headerButtonSizer, 0, wxALIGN_CENTER_VERTICAL);
+	this->rootSizer->Add(headerRow, 0, wxEXPAND | wxALL, pad);
 
 	this->scroller = new wxScrolledWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxVSCROLL);
 	this->scroller->SetScrollRate(0, 16);
 	this->scroller->ShowScrollbars(wxSHOW_SB_NEVER, wxSHOW_SB_DEFAULT);
+	this->scroller->SetBackgroundColour(Theme::Get().color.window);
 
-	const int gap = this->FromDIP(8);
+	const int gap = this->FromDIP(Theme::Get().size.listGap);
 	this->listSizer = new wxFlexGridSizer(2, gap, gap);
 	this->listSizer->AddGrowableCol(0, 1);
 	this->listSizer->AddGrowableCol(1, 1);
 	this->listSizer->SetFlexibleDirection(wxHORIZONTAL);
 	this->listSizer->SetNonFlexibleGrowMode(wxFLEX_GROWMODE_NONE);
 	this->scroller->SetSizer(this->listSizer);
-	this->rootSizer->Add(this->scroller, 1, wxEXPAND | wxALL, 10);
-
-	this->buttonSizer = new wxBoxSizer(wxHORIZONTAL);
-	this->addButton = new wxButton(this, wxID_ANY, "Add");
-	this->editButton = new wxButton(this, wxID_ANY, "Edit");
-	this->deleteButton = new wxButton(this, wxID_ANY, "Delete");
-	this->studyButton = new wxButton(this, wxID_ANY, "Study Deck");
-	this->buttonSizer->Add(this->addButton, 0, wxRIGHT, 5);
-	this->buttonSizer->Add(this->editButton, 0, wxRIGHT, 5);
-	this->buttonSizer->Add(this->deleteButton, 0, wxRIGHT, 5);
-	this->buttonSizer->Add(this->studyButton, 0);
-	this->rootSizer->Add(this->buttonSizer, 0, wxALIGN_CENTER | wxALL, 10);
-
-	wxBoxSizer* outerSizer = new wxBoxSizer(wxVERTICAL);
-	outerSizer->Add(this->rootSizer, 1, wxEXPAND | wxALL, kMargin);
-	this->SetSizer(outerSizer);
+	this->rootSizer->Add(this->scroller, 1, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, pad);
+	this->SetSizer(this->rootSizer);
 
 	this->addButton->Bind(wxEVT_BUTTON, &FlashCardList::OnAdd, this);
-	this->editButton->Bind(wxEVT_BUTTON, &FlashCardList::OnEdit, this);
-	this->deleteButton->Bind(wxEVT_BUTTON, &FlashCardList::OnDelete, this);
 	this->studyButton->Bind(wxEVT_BUTTON, &FlashCardList::OnStudy, this);
 	this->Bind(wxEVT_PAINT, &FlashCardList::OnPaint, this);
 	this->Bind(wxEVT_SIZE, &FlashCardList::OnSize, this);
+	this->Bind(wxEVT_ERASE_BACKGROUND, [](wxEraseEvent&) {});
 
 	this->LoadCards();
 }
 
 void FlashCardList::OnPaint(wxPaintEvent&) {
 	wxPaintDC dc(this);
-	const wxSize size = this->GetClientSize();
-	if (size.GetWidth() < 2 || size.GetHeight() < 2) {
-		return;
-	}
-	const int margin = kMargin;
-	dc.SetBrush(*wxTRANSPARENT_BRUSH);
-	dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_3DSHADOW), 1));
-	dc.DrawRoundedRectangle(
-		margin,
-		margin,
-		size.GetWidth() - 2 * margin - 1,
-		size.GetHeight() - 2 * margin - 1,
-		kCornerRadius
-	);
+	wxGCDC gc(dc);
+	Theme::Get().FillCanvas(gc, this, this->GetClientSize());
 }
 
 void FlashCardList::OnSize(wxSizeEvent& event) {
@@ -111,7 +100,6 @@ void FlashCardList::SetDeck(int deckId) {
 }
 
 void FlashCardList::LoadCards() {
-	const int previouslySelected = this->GetSelectedCardId();
 	this->listSizer->Clear(true);
 	this->cards.clear();
 	this->cardIds.clear();
@@ -128,12 +116,6 @@ void FlashCardList::LoadCards() {
 
 	this->scroller->FitInside();
 	this->scroller->Layout();
-
-	if (previouslySelected != 0 && this->FindCard(previouslySelected) != nullptr) {
-		this->SelectCard(previouslySelected);
-	} else {
-		this->selectedCardId = 0;
-	}
 
 	this->CallAfter([this]() {
 		this->lastHeaderWrap = 0;
@@ -174,13 +156,15 @@ void FlashCardList::UpdateDeckHeader() {
 }
 
 void FlashCardList::WrapHeader() {
-	const int wrapWidth = this->GetClientSize().GetWidth() - 2 * kMargin - 20;
-	if (wrapWidth < this->FromDIP(40)) {
+	const int pad = Theme::Get().size.panelPad;
+	const int buttons = this->headerButtonSizer != nullptr ? this->headerButtonSizer->GetMinSize().GetWidth() : 0;
+	const int wrapWidth = this->GetClientSize().GetWidth() - 2 * pad - buttons - Theme::Get().space.md;
+	if (wrapWidth < this->FromDIP(Theme::Get().size.minWrap)) {
 		return;
 	}
 	if (this->lastHeaderWrap != 0 &&
-		wrapWidth >= this->lastHeaderWrap - this->FromDIP(8) &&
-		wrapWidth <= this->lastHeaderWrap + this->FromDIP(8)) {
+		wrapWidth >= this->lastHeaderWrap - this->FromDIP(Theme::Get().size.wrapDeadband) &&
+		wrapWidth <= this->lastHeaderWrap + this->FromDIP(Theme::Get().size.wrapDeadband)) {
 		return;
 	}
 	this->lastHeaderWrap = wrapWidth;
@@ -193,14 +177,23 @@ void FlashCardList::WrapHeader() {
 }
 
 void FlashCardList::AddCard(int cardId, const wxString& front, const wxString& back, const wxString& tags) {
-	FlashCard* card = new FlashCard(this->scroller, front, back, tags);
-	card->SetCursor(wxCURSOR_HAND);
+	const int number = static_cast<int>(this->cards.size()) + 1;
+	FlashCard* card = new FlashCard(this->scroller, number, front, back, tags);
 	// Unwrapped text would otherwise set a large min width and make the columns unequal.
 	card->SetMinSize(wxSize(0, -1));
-	this->listSizer->Add(card, 0, wxEXPAND);
+	card->SetOnEdit([this, cardId]() {
+		this->EditCard(cardId);
+	});
+	card->SetOnDelete([this, cardId]() {
+		this->DeleteCard(cardId);
+	});
+	// Keep the card at its content height. wxFlexGridSizer rows are as tall as
+	// the taller card; wxEXPAND on the card itself would stretch neighbors.
+	wxBoxSizer* cell = new wxBoxSizer(wxVERTICAL);
+	cell->Add(card, 0, wxEXPAND);
+	this->listSizer->Add(cell, 0, wxEXPAND);
 	this->cards.push_back(card);
 	this->cardIds.push_back(cardId);
-	this->BindClicks(card, cardId);
 }
 
 FlashCard* FlashCardList::FindCard(int cardId) const {
@@ -210,30 +203,6 @@ FlashCard* FlashCardList::FindCard(int cardId) const {
 		}
 	}
 	return nullptr;
-}
-
-void FlashCardList::BindClicks(wxWindow* window, int cardId) {
-	window->Bind(wxEVT_LEFT_DOWN, [this, cardId](wxMouseEvent&) {
-		this->SelectCard(cardId);
-	});
-	for (wxWindow* child : window->GetChildren()) {
-		this->BindClicks(child, cardId);
-	}
-}
-
-int FlashCardList::GetSelectedCardId() const {
-	return this->selectedCardId;
-}
-
-void FlashCardList::SelectCard(int cardId) {
-	this->selectedCardId = cardId;
-	this->RefreshSelection();
-}
-
-void FlashCardList::RefreshSelection() {
-	for (size_t i = 0; i < this->cards.size(); ++i) {
-		this->cards[i]->SetSelected(this->cardIds[i] == this->selectedCardId);
-	}
 }
 
 void FlashCardList::OnAdd(wxCommandEvent&) {
@@ -268,13 +237,7 @@ void FlashCardList::OnAdd(wxCommandEvent&) {
 	this->LoadCards();
 }
 
-void FlashCardList::OnEdit(wxCommandEvent&) {
-	const int cardId = this->GetSelectedCardId();
-	if (cardId == 0) {
-		ShowCenteredMessage(this, "No card selected.", "Edit Card", wxOK | wxICON_WARNING);
-		return;
-	}
-
+void FlashCardList::EditCard(int cardId) {
 	FlashCard* card = this->FindCard(cardId);
 	if (card == nullptr) { return; }
 
@@ -307,12 +270,7 @@ void FlashCardList::OnEdit(wxCommandEvent&) {
 	this->LoadCards();
 }
 
-void FlashCardList::OnDelete(wxCommandEvent&) {
-	const int cardId = this->GetSelectedCardId();
-	if (cardId == 0) {
-		ShowCenteredMessage(this, "No card selected.", "Delete Card", wxOK | wxICON_WARNING);
-		return;
-	}
+void FlashCardList::DeleteCard(int cardId) {
 	if (this->deckId == 0) {
 		ShowCenteredMessage(this, "Select a deck first.", "Delete Card", wxOK | wxICON_WARNING);
 		return;
