@@ -15,11 +15,12 @@ class IconButton : public wxBitmapButton {
 		IconButton(
 			wxWindow* parent,
 			const wxString& imagePath,
-			const wxString& tooltip = wxEmptyString
+			const wxString& tooltip = wxEmptyString,
+			bool invert = false
 		) : wxBitmapButton(
 				parent,
 				wxID_ANY,
-				LoadIconBundle(imagePath, kIconSize),
+				LoadIconBundle(imagePath, kIconSize, invert || IsDarkTheme()),
 				wxDefaultPosition,
 				wxDefaultSize,
 				wxBU_AUTODRAW
@@ -31,6 +32,18 @@ class IconButton : public wxBitmapButton {
 			const int padX = this->FromDIP(24);
 			const int width = this->FromDIP(kIconSize) + padX * 2;
 			this->SetMinSize(wxSize(width, height));
+		}
+
+		static wxBitmapBundle LoadIconBundle(const wxString& path, int dipSize, bool invert) {
+			wxImage image;
+			if (!image.LoadFile(ResolveAssetPath(path), wxBITMAP_TYPE_PNG)) {
+				return wxBitmapBundle::FromBitmap(wxBitmap(dipSize, dipSize));
+			}
+			wxVector<wxBitmap> bitmaps;
+			bitmaps.push_back(wxBitmap(ScaledIcon(image, dipSize, invert)));
+			bitmaps.push_back(wxBitmap(ScaledIcon(image, dipSize * 2, invert)));
+			bitmaps.push_back(wxBitmap(ScaledIcon(image, dipSize * 3, invert)));
+			return wxBitmapBundle::FromBitmaps(bitmaps);
 		}
 
 	private:
@@ -57,10 +70,10 @@ class IconButton : public wxBitmapButton {
 			return Theme::IsDarkAppearance();
 		}
 
-		static wxImage ScaledIcon(const wxImage& source, int pixels) {
+		static wxImage ScaledIcon(const wxImage& source, int pixels, bool invert) {
 			wxImage scaled = source.Copy();
 			scaled.Rescale(pixels, pixels, wxIMAGE_QUALITY_HIGH);
-			if (IsDarkTheme() && scaled.HasAlpha()) {
+			if (invert && scaled.HasAlpha()) {
 				const int width = scaled.GetWidth();
 				const int height = scaled.GetHeight();
 				for (int y = 0; y < height; ++y) {
@@ -76,18 +89,6 @@ class IconButton : public wxBitmapButton {
 				}
 			}
 			return scaled;
-		}
-
-		static wxBitmapBundle LoadIconBundle(const wxString& path, int dipSize) {
-			wxImage image;
-			if (!image.LoadFile(ResolveAssetPath(path), wxBITMAP_TYPE_PNG)) {
-				return wxBitmapBundle::FromBitmap(wxBitmap(dipSize, dipSize));
-			}
-			wxVector<wxBitmap> bitmaps;
-			bitmaps.push_back(wxBitmap(ScaledIcon(image, dipSize)));
-			bitmaps.push_back(wxBitmap(ScaledIcon(image, dipSize * 2)));
-			bitmaps.push_back(wxBitmap(ScaledIcon(image, dipSize * 3)));
-			return wxBitmapBundle::FromBitmaps(bitmaps);
 		}
 };
 

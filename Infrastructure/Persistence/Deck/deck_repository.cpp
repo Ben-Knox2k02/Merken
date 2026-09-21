@@ -15,6 +15,7 @@ std::vector<Deck> DeckRepository::GetDecks() {
 			result.GetString(2).ToStdString(),
 			result.GetString(3).ToStdString()
 		);
+		this->LoadCards(decks.back());
 	}
 
 	return decks;

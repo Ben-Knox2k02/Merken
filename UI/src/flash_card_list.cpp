@@ -235,6 +235,9 @@ void FlashCardList::OnAdd(wxCommandEvent&) {
 	}
 
 	this->LoadCards();
+	if (auto* frame = dynamic_cast<MainFrame*>(wxGetTopLevelParent(this))) {
+		frame->ReloadDecks();
+	}
 }
 
 void FlashCardList::EditCard(int cardId) {
@@ -295,6 +298,9 @@ void FlashCardList::DeleteCard(int cardId) {
 	}
 
 	this->LoadCards();
+	if (auto* frame = dynamic_cast<MainFrame*>(wxGetTopLevelParent(this))) {
+		frame->ReloadDecks();
+	}
 }
 
 void FlashCardList::OnStudy(wxCommandEvent&) {

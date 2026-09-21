@@ -193,8 +193,8 @@ inline Theme::Theme() {
 		this->color.separator = Hex(0xD5DEE2);
 		this->color.border = Hex(0xD0D9DD);
 		this->color.borderStrong = Hex(0xB7C4CA);
-		this->color.selected = this->color.primary;
-		this->color.selectedFill = this->color.primary;
+		this->color.selected = this->color.accent;
+		this->color.selectedFill = this->color.accent;
 		this->color.tagFill = Hex(0xE8EEF1);
 		this->color.tagLabel = Hex(0x0B2937);
 		this->color.tagBorder = Hex(0xD0D9DD);
@@ -288,16 +288,14 @@ inline void Theme::DrawCard(wxGCDC& gc, wxWindow* window, const wxRect& rect, bo
 
 inline void Theme::DrawPanel(wxGCDC& gc, wxWindow* window, const wxSize& client) const {
 	this->FillCanvas(gc, window, client);
-	const int inset = Dip(window, this->elevation.card.blur);
-	const int radius = Dip(window, this->radius.lg);
-	const wxRect rect(
-		inset,
-		inset,
-		client.GetWidth() - 2 * inset - 1,
-		client.GetHeight() - 2 * inset - 1
+	const int radius = Dip(window, this->radius.md);
+	this->DrawRounded(
+		gc,
+		wxRect(0, 0, client.GetWidth() - 1, client.GetHeight() - 1),
+		radius,
+		this->color.primary,
+		this->color.primary
 	);
-	this->DrawShadow(gc, rect, radius, this->elevation.raised);
-	this->DrawRounded(gc, rect, radius, this->color.card, this->color.card);
 }
 
 inline void Theme::DrawWell(wxGCDC& gc, wxWindow* window, const wxRect& rect) const {
