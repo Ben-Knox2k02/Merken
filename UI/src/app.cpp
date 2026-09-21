@@ -15,7 +15,8 @@ bool App::OnInit() {
 	this->EnsureInjector();
 
 	MainFrame* mainFrame = new MainFrame("Merken");
-	mainFrame->SetClientSize(1000, 800);
+	const wxSize initialSize = mainFrame->FromDIP(wxSize(1366, 768));
+	mainFrame->SetClientSize(initialSize);
 	mainFrame->Center();
 	mainFrame->Show();
 	return true;
