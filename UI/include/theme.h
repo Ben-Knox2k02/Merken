@@ -139,8 +139,7 @@ inline wxColour Theme::Hex(unsigned int rgb, unsigned char alpha) {
 }
 
 inline bool Theme::IsDarkAppearance() {
-	const wxColour bg = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW);
-	return (bg.Red() + bg.Green() + bg.Blue()) < 3 * 128;
+	return wxSystemSettings::GetAppearance().IsDark();
 }
 
 inline int Theme::Dip(const wxWindow* window, int value) {

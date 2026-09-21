@@ -68,6 +68,21 @@ DeckPanelList::DeckPanelList(wxWindow* parent)
 	this->LoadDecks();
 }
 
+void DeckPanelList::ApplyTheme() {
+	const Theme& theme = Theme::Get();
+	this->SetBackgroundColour(theme.color.primary);
+	this->header->SetForegroundColour(theme.color.onPrimary);
+	this->header->SetBackgroundColour(theme.color.primary);
+	this->scroller->SetBackgroundColour(theme.color.primary);
+	this->addDeckButton->ApplyTheme();
+	this->editDeckButton->ApplyTheme();
+	this->deleteDeckButton->ApplyTheme();
+	for (DeckCard* card : this->cards) {
+		card->ApplyTheme();
+	}
+	this->Refresh();
+}
+
 void DeckPanelList::OnSize(wxSizeEvent& event) {
 	this->Refresh();
 	event.Skip();

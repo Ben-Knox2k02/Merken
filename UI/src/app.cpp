@@ -10,6 +10,7 @@ void App::EnsureInjector() {
 bool App::OnInit() {
 	this->SetAppName("Merken");
 	this->SetAppDisplayName("Merken");
+	this->SetAppearance(Appearance::System);
 	wxInitAllImageHandlers();
 	this->EnsureInjector();
 

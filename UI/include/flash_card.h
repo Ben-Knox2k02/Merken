@@ -200,6 +200,16 @@ class FlashCard : public wxPanel {
 			this->onDelete = std::move(handler);
 		}
 
+		void ApplyTheme() {
+			this->ApplyTextColours();
+			this->editButton->ApplyTheme();
+			this->deleteButton->ApplyTheme();
+			this->Refresh();
+			this->frontWell->Refresh();
+			this->backWell->Refresh();
+			this->RelayoutTags();
+		}
+
 	private:
 		wxString front;
 		wxString back;

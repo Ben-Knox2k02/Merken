@@ -53,6 +53,10 @@ class DeckCard : public wxPanel {
 
 		void SetSelected(bool selected) {
 			this->selected = selected;
+			this->ApplyTheme();
+		}
+
+		void ApplyTheme() {
 			this->icon->SetBitmap(this->IconBundle());
 			this->ApplyTextColours();
 			this->Refresh();
