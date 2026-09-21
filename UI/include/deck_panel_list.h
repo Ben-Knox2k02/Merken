@@ -3,7 +3,8 @@
 
 #include <wx/wx.h>
 #include <vector>
-#include "deck_card_icon.h"
+#include "deck_card.h"
+#include "icon_button.h"
 
 class DeckPanelList : public wxPanel {
 	public:
@@ -14,9 +15,9 @@ class DeckPanelList : public wxPanel {
 		wxStaticText* header;
 		wxScrolledWindow* scroller;
 		wxBoxSizer* listSizer;
-		wxButton* addDeckButton;
-		wxButton* editDeckButton;
-		wxButton* deleteDeckButton;
+		IconButton* addDeckButton;
+		IconButton* editDeckButton;
+		IconButton* deleteDeckButton;
 
 		void LoadDecks();
 		int GetSelectedDeckId() const;
@@ -28,16 +29,17 @@ class DeckPanelList : public wxPanel {
 		void OnDeleteDeck(wxCommandEvent& event);
 
 	private:
-		std::vector<DeckCardIcon*> cards;
+		std::vector<DeckCard*> cards;
 		std::vector<int> cardIds;
 		int selectedDeckId;
 
 		static constexpr int kCornerRadius = 5;
+		static constexpr int kMinWidth = 320 * 2 / 3;
 
-		void AddDeckCard(int deckId, const wxString& name, const wxString& description);
+		void AddDeckCard(int deckId, const wxString& name);
 		void BindClicks(wxWindow* window, int deckId);
 		void RefreshSelection();
-		DeckCardIcon* FindCard(int deckId) const;
+		DeckCard* FindCard(int deckId) const;
 		void OnPaint(wxPaintEvent& event);
 		void OnSize(wxSizeEvent& event);
 };
