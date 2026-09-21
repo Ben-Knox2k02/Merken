@@ -34,6 +34,7 @@ class MainFrame : public wxFrame {
 		wxMenu* AIMenu;
 		wxMenu* helpMenu;
 
+		void ApplyTheme();
 		void SwapCurrentPanel(wxPanel* newPanel);
 		void ReloadDecks();
 		void OnDeckSelected(int deckId);
@@ -53,6 +54,7 @@ class MainFrame : public wxFrame {
 		void OnAiStudy(wxCommandEvent& event);
 		void OnAbout(wxCommandEvent& event);
 		void OnExit(wxCommandEvent& event);
+		void OnSysColourChanged(wxSysColourChangedEvent& event);
 };
 
 #endif

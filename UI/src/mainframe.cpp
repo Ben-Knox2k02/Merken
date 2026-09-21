@@ -92,6 +92,7 @@ MainFrame::MainFrame(const wxString& title) : wxFrame(nullptr, wxID_ANY, title, 
 	this->Bind(wxEVT_MENU, &MainFrame::OnAiStudy, this, ID_AI_STUDY);
 	this->Bind(wxEVT_MENU, &MainFrame::OnAbout, this, wxID_ABOUT);
 	this->Bind(wxEVT_MENU, &MainFrame::OnExit, this, wxID_EXIT);
+	this->Bind(wxEVT_SYS_COLOUR_CHANGED, &MainFrame::OnSysColourChanged, this);
 }
 
 void MainFrame::OnDeckSelected(int deckId) {
@@ -105,6 +106,30 @@ void MainFrame::ReloadDecks() {
 	if (this->deckPanelList != nullptr) {
 		this->deckPanelList->LoadDecks();
 	}
+}
+
+void MainFrame::ApplyTheme() {
+	const Theme& theme = Theme::Get();
+	this->SetBackgroundColour(theme.color.window);
+	if (this->activePanel != nullptr) {
+		this->activePanel->SetBackgroundColour(theme.color.window);
+	}
+	if (this->deckPanelList != nullptr) {
+		this->deckPanelList->ApplyTheme();
+	}
+	if (this->flashCardList != nullptr) {
+		this->flashCardList->ApplyTheme();
+	}
+	if (this->currentPanel != nullptr && this->currentPanel != this->flashCardList) {
+		this->currentPanel->SetBackgroundColour(theme.color.window);
+		this->currentPanel->Refresh();
+	}
+	this->Refresh();
+}
+
+void MainFrame::OnSysColourChanged(wxSysColourChangedEvent& event) {
+	this->ApplyTheme();
+	event.Skip();
 }
 
 void MainFrame::SwapCurrentPanel(wxPanel* newPanel) {
