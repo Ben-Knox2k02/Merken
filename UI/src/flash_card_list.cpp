@@ -4,6 +4,7 @@
 #include "mainframe.h"
 #include "app.h"
 #include "../../Application/UseCases/Deck/GetCards/get_cards_usecase.h"
+#include "../../Application/UseCases/Deck/GetDecks/get_decks_usecase.h"
 #include "../../Application/UseCases/Deck/CreateCard/create_card_usecase.h"
 #include "../../Application/UseCases/Deck/UpdateCard/update_card_usecase.h"
 #include "../../Application/UseCases/Deck/DeleteCard/delete_card_usecase.h"
@@ -13,18 +14,39 @@ wxDECLARE_APP(App);
 FlashCardList::FlashCardList(wxWindow* parent, int deckId)
 	: wxPanel(parent),
 	  deckId(deckId),
-	  selectedCardId(0) {
+	  selectedCardId(0),
+	  lastHeaderWrap(0) {
 	this->rootSizer = new wxBoxSizer(wxVERTICAL);
 
-	this->header = new wxStaticText(this, wxID_ANY, "Cards in Deck");
-	this->header->SetFont(this->header->GetFont().Bold());
-	this->rootSizer->Add(this->header, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 10);
+	this->header = new wxStaticText(this, wxID_ANY, "");
+	wxFont titleFont = this->header->GetFont();
+	titleFont.MakeBold();
+	titleFont.SetPointSize(titleFont.GetPointSize() + 3);
+	this->header->SetFont(titleFont);
+	this->header->SetBackgroundStyle(wxBG_STYLE_TRANSPARENT);
+	this->header->SetMinSize(wxSize(0, -1));
+
+	this->description = new wxStaticText(this, wxID_ANY, "");
+	this->description->SetForegroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT));
+	this->description->SetBackgroundStyle(wxBG_STYLE_TRANSPARENT);
+	this->description->SetMinSize(wxSize(0, -1));
+	this->description->Hide();
+
+	wxBoxSizer* titleBlock = new wxBoxSizer(wxVERTICAL);
+	titleBlock->Add(this->header, 0, wxEXPAND);
+	titleBlock->Add(this->description, 0, wxEXPAND | wxTOP, 4);
+	this->rootSizer->Add(titleBlock, 0, wxEXPAND | wxALL, 10);
 
 	this->scroller = new wxScrolledWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxVSCROLL);
 	this->scroller->SetScrollRate(0, 16);
 	this->scroller->ShowScrollbars(wxSHOW_SB_NEVER, wxSHOW_SB_DEFAULT);
 
-	this->listSizer = new wxBoxSizer(wxVERTICAL);
+	const int gap = this->FromDIP(8);
+	this->listSizer = new wxFlexGridSizer(2, gap, gap);
+	this->listSizer->AddGrowableCol(0, 1);
+	this->listSizer->AddGrowableCol(1, 1);
+	this->listSizer->SetFlexibleDirection(wxHORIZONTAL);
+	this->listSizer->SetNonFlexibleGrowMode(wxFLEX_GROWMODE_NONE);
 	this->scroller->SetSizer(this->listSizer);
 	this->rootSizer->Add(this->scroller, 1, wxEXPAND | wxALL, 10);
 
@@ -72,6 +94,11 @@ void FlashCardList::OnPaint(wxPaintEvent&) {
 }
 
 void FlashCardList::OnSize(wxSizeEvent& event) {
+	const int previousWrap = this->lastHeaderWrap;
+	this->WrapHeader();
+	if (this->lastHeaderWrap != previousWrap) {
+		this->Layout();
+	}
 	this->scroller->Layout();
 	this->scroller->FitInside();
 	this->Refresh();
@@ -88,6 +115,8 @@ void FlashCardList::LoadCards() {
 	this->listSizer->Clear(true);
 	this->cards.clear();
 	this->cardIds.clear();
+
+	this->UpdateDeckHeader();
 
 	if (this->deckId != 0) {
 		auto useCase = wxGetApp().GetInjector().create<GetCardsUseCase>();
@@ -107,6 +136,9 @@ void FlashCardList::LoadCards() {
 	}
 
 	this->CallAfter([this]() {
+		this->lastHeaderWrap = 0;
+		this->WrapHeader();
+		this->Layout();
 		for (FlashCard* card : this->cards) {
 			card->RelayoutContents();
 		}
@@ -115,11 +147,57 @@ void FlashCardList::LoadCards() {
 	});
 }
 
+void FlashCardList::UpdateDeckHeader() {
+	this->deckName = wxEmptyString;
+	this->deckDescription = wxEmptyString;
+
+	if (this->deckId != 0) {
+		auto useCase = wxGetApp().GetInjector().create<GetDecksUseCase>();
+		GetDecksResponse response = useCase.Execute();
+		for (const DeckResponse& deck : response.decks) {
+			if (deck.deckId == this->deckId) {
+				this->deckName = wxString(deck.name);
+				this->deckDescription = wxString(deck.description);
+				this->deckDescription.Trim(true).Trim(false);
+				break;
+			}
+		}
+	}
+
+	this->header->SetLabel(this->deckName);
+	this->header->Show(!this->deckName.IsEmpty());
+	this->description->SetLabel(this->deckDescription);
+	this->description->Show(!this->deckDescription.IsEmpty());
+	this->lastHeaderWrap = 0;
+	this->WrapHeader();
+	this->Layout();
+}
+
+void FlashCardList::WrapHeader() {
+	const int wrapWidth = this->GetClientSize().GetWidth() - 2 * kMargin - 20;
+	if (wrapWidth < this->FromDIP(40)) {
+		return;
+	}
+	if (this->lastHeaderWrap != 0 &&
+		wrapWidth >= this->lastHeaderWrap - this->FromDIP(8) &&
+		wrapWidth <= this->lastHeaderWrap + this->FromDIP(8)) {
+		return;
+	}
+	this->lastHeaderWrap = wrapWidth;
+	this->header->SetLabel(this->deckName);
+	this->header->Wrap(wrapWidth);
+	if (this->description->IsShown()) {
+		this->description->SetLabel(this->deckDescription);
+		this->description->Wrap(wrapWidth);
+	}
+}
+
 void FlashCardList::AddCard(int cardId, const wxString& front, const wxString& back, const wxString& tags) {
 	FlashCard* card = new FlashCard(this->scroller, front, back, tags);
 	card->SetCursor(wxCURSOR_HAND);
-	const int topGap = this->cards.empty() ? 0 : this->FromDIP(8);
-	this->listSizer->Add(card, 0, wxEXPAND | wxTOP, topGap);
+	// Unwrapped text would otherwise set a large min width and make the columns unequal.
+	card->SetMinSize(wxSize(0, -1));
+	this->listSizer->Add(card, 0, wxEXPAND);
 	this->cards.push_back(card);
 	this->cardIds.push_back(cardId);
 	this->BindClicks(card, cardId);

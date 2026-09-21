@@ -7,7 +7,6 @@
 #include "../../Application/UseCases/Deck/CreateDeck/create_deck_usecase.h"
 #include "../../Application/UseCases/Deck/UpdateDeck/update_deck_usecase.h"
 #include "../../Application/UseCases/Deck/DeleteDeck/delete_deck_usecase.h"
-#include <wx/statline.h>
 #include <wx/dcgraph.h>
 
 wxDECLARE_APP(App);
@@ -16,7 +15,7 @@ DeckPanelList::DeckPanelList(wxWindow* parent)
 	: wxPanel(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE),
 	  selectedDeckId(0) {
 	this->SetBackgroundStyle(wxBG_STYLE_PAINT);
-	this->SetMinSize(wxSize(320, -1));
+	this->SetMinSize(wxSize(kMinWidth, -1));
 
 	this->rootSizer = new wxBoxSizer(wxVERTICAL);
 
@@ -32,14 +31,16 @@ DeckPanelList::DeckPanelList(wxWindow* parent)
 	this->scroller->SetSizer(this->listSizer);
 	this->rootSizer->Add(this->scroller, 1, wxEXPAND | wxALL, 10);
 
-	this->addDeckButton = new wxButton(this, wxID_ANY, "Add");
-	this->editDeckButton = new wxButton(this, wxID_ANY, "Edit");
-	this->deleteDeckButton = new wxButton(this, wxID_ANY, "Delete");
+	this->addDeckButton = new IconButton(this, "UI/assets/add_icon.png", "Add");
+	this->editDeckButton = new IconButton(this, "UI/assets/edit_icon.png", "Edit");
+	this->deleteDeckButton = new IconButton(this, "UI/assets/delete_icon.png", "Delete");
 
 	this->buttonSizer = new wxBoxSizer(wxHORIZONTAL);
-	this->buttonSizer->Add(this->addDeckButton, 1, wxRIGHT, 5);
-	this->buttonSizer->Add(this->editDeckButton, 1, wxRIGHT, 5);
-	this->buttonSizer->Add(this->deleteDeckButton, 1);
+	this->buttonSizer->Add(this->addDeckButton, 1, wxEXPAND);
+	this->buttonSizer->AddSpacer(5);
+	this->buttonSizer->Add(this->editDeckButton, 1, wxEXPAND);
+	this->buttonSizer->AddSpacer(5);
+	this->buttonSizer->Add(this->deleteDeckButton, 1, wxEXPAND);
 	this->rootSizer->Add(this->buttonSizer, 0, wxEXPAND | wxALL, 10);
 
 	this->SetSizer(this->rootSizer);
@@ -91,7 +92,7 @@ void DeckPanelList::LoadDecks() {
 
 	int firstDeckId = 0;
 	for (const DeckResponse& deck : response.decks) {
-		this->AddDeckCard(deck.deckId, wxString(deck.name), wxString(deck.description));
+		this->AddDeckCard(deck.deckId, wxString(deck.name));
 		if (firstDeckId == 0) {
 			firstDeckId = deck.deckId;
 		}
@@ -110,13 +111,8 @@ void DeckPanelList::LoadDecks() {
 	}
 }
 
-void DeckPanelList::AddDeckCard(int deckId, const wxString& name, const wxString& description) {
-	if (!this->cards.empty()) {
-		wxStaticLine* separator = new wxStaticLine(this->scroller, wxID_ANY);
-		this->listSizer->Add(separator, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP | wxBOTTOM, 4);
-	}
-
-	DeckCardIcon* card = new DeckCardIcon(this->scroller, name, description);
+void DeckPanelList::AddDeckCard(int deckId, const wxString& name) {
+	DeckCard* card = new DeckCard(this->scroller, name);
 	card->SetCursor(wxCURSOR_HAND);
 	this->listSizer->Add(card, 0, wxEXPAND);
 	this->cards.push_back(card);
@@ -124,7 +120,7 @@ void DeckPanelList::AddDeckCard(int deckId, const wxString& name, const wxString
 	this->BindClicks(card, deckId);
 }
 
-DeckCardIcon* DeckPanelList::FindCard(int deckId) const {
+DeckCard* DeckPanelList::FindCard(int deckId) const {
 	for (size_t i = 0; i < this->cardIds.size(); ++i) {
 		if (this->cardIds[i] == deckId) {
 			return this->cards[i];
@@ -232,7 +228,7 @@ void DeckPanelList::OnEditDeck(wxCommandEvent&) {
 	}
 
 	this->LoadDecks();
-	this->SelectDeck(deckId, false);
+	this->SelectDeck(deckId, true);
 }
 
 void DeckPanelList::OnDeleteDeck(wxCommandEvent&) {
@@ -243,7 +239,7 @@ void DeckPanelList::OnDeleteDeck(wxCommandEvent&) {
 	}
 
 	wxString name = "this deck";
-	if (DeckCardIcon* card = this->FindCard(deckId)) {
+	if (DeckCard* card = this->FindCard(deckId)) {
 		name = card->GetTitle();
 	}
 	const int confirmed = ShowCenteredMessage(
