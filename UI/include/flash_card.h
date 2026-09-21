@@ -6,6 +6,7 @@
 #include <wx/dcgraph.h>
 #include <wx/gbsizer.h>
 #include <wx/statline.h>
+#include <wx/tokenzr.h>
 #include <wx/wrapsizer.h>
 #include "flash_card_tag.h"
 #include "flash_card_number.h"
@@ -28,7 +29,7 @@ class FlashCardWell : public wxPanel {
 		void AddPadded(wxWindow* child, int proportion, int padX, int padY) {
 			wxBoxSizer* row = new wxBoxSizer(wxHORIZONTAL);
 			row->Add(child, 1, wxEXPAND | wxTOP | wxBOTTOM, padY);
-			this->inner->Add(row, proportion, wxEXPAND | wxLEFT | wxRIGHT, padX);
+			this->inner->Add(row, 0, wxEXPAND | wxLEFT | wxRIGHT, padX);
 		}
 
 		void AddPadded(wxSizer* child, int proportion, int padX, int padY) {
@@ -79,12 +80,12 @@ class FlashCard : public wxPanel {
 			this->frontWell = new FlashCardWell(this);
 			this->frontWell->SetMinSize(wxSize(0, -1));
 			this->frontCtrl = this->MakeBody(this->frontWell, TruncateSentences(front));
-			this->frontWell->AddPadded(this->frontCtrl, 1, padX, padY);
+			this->frontWell->AddPadded(this->frontCtrl, 0, padX, padY);
 
 			this->backWell = new FlashCardWell(this);
 			this->backWell->SetMinSize(wxSize(0, -1));
 			this->backCtrl = this->MakeBody(this->backWell, TruncateSentences(back));
-			this->backWell->AddPadded(this->backCtrl, 1, padX, padY);
+			this->backWell->AddPadded(this->backCtrl, 0, padX, padY);
 
 			this->tagHost = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE);
 			this->tagHost->SetBackgroundStyle(wxBG_STYLE_TRANSPARENT);
@@ -138,7 +139,7 @@ class FlashCard : public wxPanel {
 
 			const int pad = this->FromDIP(Theme::Get().size.cardPad);
 			wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
-			mainSizer->Add(grid, 1, wxEXPAND | wxALL, pad);
+			mainSizer->Add(grid, 0, wxEXPAND | wxALL, pad);
 			this->SetSizer(mainSizer);
 
 			this->Bind(wxEVT_PAINT, &FlashCard::OnPaint, this);
@@ -150,6 +151,7 @@ class FlashCard : public wxPanel {
 		}
 
 		void RelayoutContents() {
+			this->Layout();
 			this->WrapFields();
 			this->RelayoutTags();
 			this->Layout();
@@ -324,26 +326,81 @@ class FlashCard : public wxPanel {
 			return cardW - 2 * pad - numberW - hgap - captionW - colGap - wellPad;
 		}
 
-		bool WrapField(wxStaticText* ctrl, const wxString& display, int& lastWrap) {
-			const int wrapWidth = this->FieldWrapWidth();
+		wxString WrapToWidth(wxWindow* win, const wxString& text, int width) const {
+			wxString result;
+			wxStringTokenizer paragraphs(text, "\n", wxTOKEN_RET_EMPTY);
+			bool firstParagraph = true;
+			while (paragraphs.HasMoreTokens()) {
+				const wxString paragraph = paragraphs.GetNextToken();
+				wxString line;
+				wxStringTokenizer words(paragraph, " \t");
+				while (words.HasMoreTokens()) {
+					const wxString word = words.GetNextToken();
+					if (word.empty()) {
+						continue;
+					}
+					const wxString trial = line.empty() ? word : line + " " + word;
+					if (!line.empty() && win->GetTextExtent(trial).GetWidth() > width) {
+						if (!result.empty() || !firstParagraph) {
+							result += "\n";
+						}
+						result += line;
+						line = word;
+						firstParagraph = false;
+					} else {
+						line = trial;
+					}
+				}
+				if (!line.empty()) {
+					if (!result.empty() || !firstParagraph) {
+						result += "\n";
+					}
+					result += line;
+					firstParagraph = false;
+				}
+			}
+			return result.empty() ? text : result;
+		}
+
+		int LabelHeight(wxWindow* win, const wxString& wrapped) const {
+			const int lineH = win->GetTextExtent("Ag").GetHeight();
+			if (wrapped.empty()) {
+				return lineH;
+			}
+			int lines = 1;
+			for (size_t i = 0; i < wrapped.length(); ++i) {
+				if (wrapped[i] == '\n') {
+					++lines;
+				}
+			}
+			return lines * lineH;
+		}
+
+		bool WrapField(wxStaticText* ctrl, FlashCardWell* well, const wxString& display, int& lastWrap) {
+			int wrapWidth = well->GetClientSize().GetWidth() - 2 * this->FromDIP(Theme::Get().size.wellPadX);
+			if (wrapWidth < this->FromDIP(20)) {
+				wrapWidth = this->FieldWrapWidth();
+			}
 			if (wrapWidth < this->FromDIP(20)) {
 				return false;
 			}
-			const int deadband = this->FromDIP(Theme::Get().size.wrapDeadband);
-			if (lastWrap != 0 && wrapWidth >= lastWrap - deadband && wrapWidth <= lastWrap + deadband) {
+			if (lastWrap == wrapWidth) {
 				return false;
 			}
 			lastWrap = wrapWidth;
-			ctrl->SetLabel(display);
-			ctrl->Wrap(wrapWidth);
+			const wxString wrapped = this->WrapToWidth(ctrl, display, wrapWidth);
+			ctrl->SetLabel(wrapped);
+			const int textH = this->LabelHeight(ctrl, wrapped);
+			ctrl->SetMinSize(wxSize(0, textH));
 			ctrl->InvalidateBestSize();
-			ctrl->SetMinSize(wxSize(0, ctrl->GetBestSize().GetHeight()));
+			const int padY = this->FromDIP(Theme::Get().size.wellPadY);
+			well->SetMinSize(wxSize(0, textH + 2 * padY));
 			return true;
 		}
 
 		void WrapFields() {
-			this->WrapField(this->frontCtrl, TruncateSentences(this->front), this->lastFrontWrap);
-			this->WrapField(this->backCtrl, TruncateSentences(this->back), this->lastBackWrap);
+			this->WrapField(this->frontCtrl, this->frontWell, TruncateSentences(this->front), this->lastFrontWrap);
+			this->WrapField(this->backCtrl, this->backWell, TruncateSentences(this->back), this->lastBackWrap);
 		}
 
 		void RelayoutTags() {
