@@ -9,6 +9,7 @@
 #include "../../Application/UseCases/Deck/UpdateDeck/update_deck_usecase.h"
 #include "../../Application/UseCases/Deck/DeleteDeck/delete_deck_usecase.h"
 #include <wx/dcgraph.h>
+#include <wx/statline.h>
 
 wxDECLARE_APP(App);
 
@@ -16,36 +17,42 @@ DeckPanelList::DeckPanelList(wxWindow* parent)
 	: wxPanel(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE),
 	  selectedDeckId(0) {
 	this->SetBackgroundStyle(wxBG_STYLE_PAINT);
-	this->SetBackgroundColour(Theme::Get().color.card);
+	this->SetBackgroundColour(Theme::Get().color.primary);
 	this->SetMinSize(wxSize(kMinWidth, -1));
 
 	this->rootSizer = new wxBoxSizer(wxVERTICAL);
 
-	const int pad = Theme::Get().size.panelPad;
+	const int pad = Theme::Get().size.cardPad;
 	this->header = new wxStaticText(this, wxID_ANY, "Decks");
 	this->header->SetFont(this->header->GetFont().Bold());
-	this->header->SetForegroundColour(Theme::Get().color.secondaryLabel);
-	this->header->SetBackgroundColour(Theme::Get().color.card);
-	this->rootSizer->Add(this->header, 0, wxALIGN_LEFT | wxALL, pad);
+	this->header->SetForegroundColour(Theme::Get().color.onPrimary);
+	this->header->SetBackgroundColour(Theme::Get().color.primary);
+	this->rootSizer->Add(this->header, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, pad);
 
 	this->scroller = new wxScrolledWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxVSCROLL);
 	this->scroller->SetScrollRate(0, 16);
 	this->scroller->ShowScrollbars(wxSHOW_SB_NEVER, wxSHOW_SB_DEFAULT);
-	this->scroller->SetBackgroundColour(Theme::Get().color.card);
+	this->scroller->SetBackgroundColour(Theme::Get().color.primary);
 
 	this->listSizer = new wxBoxSizer(wxVERTICAL);
 	this->scroller->SetSizer(this->listSizer);
-	this->rootSizer->Add(this->scroller, 1, wxEXPAND | wxALL, pad);
+	this->rootSizer->Add(this->scroller, 1, wxEXPAND | wxLEFT | wxRIGHT, pad);
 
-	this->addDeckButton = new IconButton(this, "UI/assets/add_icon.png", "Add");
-	this->editDeckButton = new IconButton(this, "UI/assets/edit_icon.png", "Edit");
-	this->deleteDeckButton = new IconButton(this, "UI/assets/delete_icon.png", "Delete");
+	wxStaticLine* rule = new wxStaticLine(this);
+	this->rootSizer->Add(rule, 0, wxEXPAND | wxLEFT | wxRIGHT, pad);
 
-	this->buttonSizer = new wxBoxSizer(wxHORIZONTAL);
+	this->addDeckButton = new IconButton(this, "UI/assets/add_icon.png", "Add", true);
+	this->editDeckButton = new IconButton(this, "UI/assets/edit_icon.png", "Edit", true);
+	this->deleteDeckButton = new IconButton(this, "UI/assets/delete_icon.png", "Delete", true);
+
+	this->buttonSizer = new wxFlexGridSizer(1, 3, 0, Theme::Get().space.xs);
+	this->buttonSizer->AddGrowableCol(0, 1);
+	this->buttonSizer->AddGrowableCol(1, 1);
+	this->buttonSizer->AddGrowableCol(2, 1);
+	this->buttonSizer->SetFlexibleDirection(wxHORIZONTAL);
+	this->buttonSizer->SetNonFlexibleGrowMode(wxFLEX_GROWMODE_NONE);
 	this->buttonSizer->Add(this->addDeckButton, 1, wxEXPAND);
-	this->buttonSizer->AddSpacer(Theme::Get().space.xs);
 	this->buttonSizer->Add(this->editDeckButton, 1, wxEXPAND);
-	this->buttonSizer->AddSpacer(Theme::Get().space.xs);
 	this->buttonSizer->Add(this->deleteDeckButton, 1, wxEXPAND);
 	this->rootSizer->Add(this->buttonSizer, 0, wxEXPAND | wxALL, pad);
 
@@ -83,7 +90,7 @@ void DeckPanelList::LoadDecks() {
 
 	int firstDeckId = 0;
 	for (const DeckResponse& deck : response.decks) {
-		this->AddDeckCard(deck.deckId, wxString(deck.name));
+		this->AddDeckCard(deck.deckId, wxString(deck.name), deck.cardCount);
 		if (firstDeckId == 0) {
 			firstDeckId = deck.deckId;
 		}
@@ -102,8 +109,8 @@ void DeckPanelList::LoadDecks() {
 	}
 }
 
-void DeckPanelList::AddDeckCard(int deckId, const wxString& name) {
-	DeckCard* card = new DeckCard(this->scroller, name);
+void DeckPanelList::AddDeckCard(int deckId, const wxString& name, int cardCount) {
+	DeckCard* card = new DeckCard(this->scroller, name, cardCount);
 	card->SetCursor(wxCURSOR_HAND);
 	this->listSizer->Add(card, 0, wxEXPAND);
 	this->cards.push_back(card);

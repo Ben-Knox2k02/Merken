@@ -101,6 +101,12 @@ void MainFrame::OnDeckSelected(int deckId) {
 	}
 }
 
+void MainFrame::ReloadDecks() {
+	if (this->deckPanelList != nullptr) {
+		this->deckPanelList->LoadDecks();
+	}
+}
+
 void MainFrame::SwapCurrentPanel(wxPanel* newPanel) {
 	if (this->currentPanel != nullptr && this->currentPanel != newPanel) {
 		if (this->currentPanel == this->flashCardList) {
