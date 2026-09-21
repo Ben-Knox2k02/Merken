@@ -58,11 +58,11 @@ FlashCardList::FlashCardList(wxWindow* parent, int deckId)
 	this->scroller->SetBackgroundColour(Theme::Get().color.window);
 
 	const int gap = this->FromDIP(Theme::Get().size.listGap);
-	this->listSizer = new wxFlexGridSizer(2, gap, gap);
-	this->listSizer->AddGrowableCol(0, 1);
-	this->listSizer->AddGrowableCol(1, 1);
-	this->listSizer->SetFlexibleDirection(wxHORIZONTAL);
-	this->listSizer->SetNonFlexibleGrowMode(wxFLEX_GROWMODE_NONE);
+	this->leftCol = new wxBoxSizer(wxVERTICAL);
+	this->rightCol = new wxBoxSizer(wxVERTICAL);
+	this->listSizer = new wxBoxSizer(wxHORIZONTAL);
+	this->listSizer->Add(this->leftCol, 1, wxEXPAND | wxRIGHT, gap / 2);
+	this->listSizer->Add(this->rightCol, 1, wxEXPAND | wxLEFT, gap / 2);
 	this->scroller->SetSizer(this->listSizer);
 	this->rootSizer->Add(this->scroller, 1, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, pad);
 	this->SetSizer(this->rootSizer);
@@ -100,7 +100,8 @@ void FlashCardList::SetDeck(int deckId) {
 }
 
 void FlashCardList::LoadCards() {
-	this->listSizer->Clear(true);
+	this->leftCol->Clear(true);
+	this->rightCol->Clear(true);
 	this->cards.clear();
 	this->cardIds.clear();
 
@@ -187,11 +188,9 @@ void FlashCardList::AddCard(int cardId, const wxString& front, const wxString& b
 	card->SetOnDelete([this, cardId]() {
 		this->DeleteCard(cardId);
 	});
-	// Keep the card at its content height. wxFlexGridSizer rows are as tall as
-	// the taller card; wxEXPAND on the card itself would stretch neighbors.
-	wxBoxSizer* cell = new wxBoxSizer(wxVERTICAL);
-	cell->Add(card, 0, wxEXPAND);
-	this->listSizer->Add(cell, 0, wxEXPAND);
+	const int gap = this->FromDIP(Theme::Get().size.listGap);
+	wxBoxSizer* column = this->cards.size() % 2 == 0 ? this->leftCol : this->rightCol;
+	column->Add(card, 0, wxEXPAND | wxBOTTOM, gap);
 	this->cards.push_back(card);
 	this->cardIds.push_back(cardId);
 }
