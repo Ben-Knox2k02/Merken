@@ -8,6 +8,8 @@ class FlashCardList;
 
 enum {
 	ID_SETTINGS = wxID_HIGHEST + 1,
+	ID_EDIT_DECK,
+	ID_DELETE_DECK,
 	ID_STUDY_DECK,
 	ID_TODAYS_PROGRESS,
 	ID_CALENDAR,
@@ -31,7 +33,6 @@ class MainFrame : public wxFrame {
 		wxMenu* editMenu;
 		wxMenu* studyMenu;
 		wxMenu* calendarMenu;
-		wxMenu* AIMenu;
 		wxMenu* helpMenu;
 
 		void ApplyTheme();
@@ -44,9 +45,11 @@ class MainFrame : public wxFrame {
 		void ShowCalendar();
 		void ShowAiStudy();
 
-		void OnNew(wxCommandEvent& event);
-		void OnOpen(wxCommandEvent& event);
-		void OnSave(wxCommandEvent& event);
+		void UpdateDeckMenus();
+		void ApplyMenuIcons();
+		void OnAddDeck(wxCommandEvent& event);
+		void OnEditDeck(wxCommandEvent& event);
+		void OnDeleteDeck(wxCommandEvent& event);
 		void OnSettings(wxCommandEvent& event);
 		void OnStudyDeck(wxCommandEvent& event);
 		void OnTodaysProgress(wxCommandEvent& event);
