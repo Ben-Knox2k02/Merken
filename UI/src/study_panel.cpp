@@ -7,6 +7,8 @@
 #include "../../Application/UseCases/Deck/ReviewCard/review_card_usecase.h"
 #include <wx/dcgraph.h>
 #include <wx/tokenzr.h>
+#include <algorithm>
+#include <cmath>
 
 wxDECLARE_APP(App);
 
@@ -84,7 +86,9 @@ class StudyCard : public wxPanel {
 			: wxPanel(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE),
 			  side(StudyCardSide::Neutral),
 			  lastWrap(-1),
-			  wrapping(false) {
+			  wrapping(false),
+			  hinge(1),
+			  hingeFullWidth(0) {
 			this->SetBackgroundStyle(wxBG_STYLE_PAINT);
 
 			const Theme& theme = Theme::Get();
@@ -94,7 +98,7 @@ class StudyCard : public wxPanel {
 				"Front",
 				wxDefaultPosition,
 				wxDefaultSize,
-				wxALIGN_CENTRE_HORIZONTAL
+				wxALIGN_LEFT
 			);
 			this->caption->SetBackgroundStyle(wxBG_STYLE_COLOUR);
 			this->caption->SetBackgroundColour(theme.color.card);
@@ -109,7 +113,7 @@ class StudyCard : public wxPanel {
 				wxEmptyString,
 				wxDefaultPosition,
 				wxDefaultSize,
-				wxALIGN_CENTRE_HORIZONTAL
+				wxALIGN_LEFT
 			);
 			this->text->SetBackgroundStyle(wxBG_STYLE_COLOUR);
 			this->text->SetBackgroundColour(theme.color.card);
@@ -121,7 +125,7 @@ class StudyCard : public wxPanel {
 
 			const int pad = this->FromDIP(theme.size.cardPad);
 			this->sizer = new wxBoxSizer(wxVERTICAL);
-			this->sizer->Add(this->caption, 0, wxALIGN_CENTER_HORIZONTAL | wxTOP | wxLEFT | wxRIGHT, pad);
+			this->sizer->Add(this->caption, 0, wxEXPAND | wxTOP | wxLEFT | wxRIGHT, pad);
 			this->sizer->AddStretchSpacer(1);
 			this->sizer->Add(this->text, 0, wxEXPAND | wxLEFT | wxRIGHT, pad);
 			this->sizer->AddStretchSpacer(1);
@@ -134,12 +138,27 @@ class StudyCard : public wxPanel {
 		}
 
 		void SetText(const wxString& value, StudyCardSide side = StudyCardSide::Neutral) {
+			this->hinge = 1;
 			this->side = side;
 			this->raw = value;
 			this->lastWrap = -1;
 			this->ApplyColours();
 			this->Rewrap();
-			this->Layout();
+			this->ShowFace();
+			this->Refresh();
+		}
+
+		void SetHinge(double reveal, int fullWidth) {
+			this->hinge = std::clamp(reveal, 0.0, 1.0);
+			this->hingeFullWidth = std::max(fullWidth, 1);
+			if (this->hinge >= 0.999) {
+				this->hinge = 1;
+				this->lastWrap = -1;
+				this->ShowFace();
+				this->Rewrap();
+			} else {
+				this->HideFace();
+			}
 			this->Refresh();
 		}
 
@@ -151,6 +170,61 @@ class StudyCard : public wxPanel {
 		StudyCardSide side;
 		int lastWrap;
 		bool wrapping;
+		double hinge;
+		int hingeFullWidth;
+
+		void HideFace() {
+			this->sizer->Show(this->caption, false);
+			this->sizer->Show(this->text, false);
+		}
+
+		void ShowFace() {
+			this->sizer->Show(this->text, true);
+			this->sizer->Show(this->caption, this->side != StudyCardSide::Neutral);
+			this->Layout();
+		}
+
+		void DrawFace(wxGCDC& gc, int pageWidth, int pageHeight) {
+			const Theme& theme = Theme::Get();
+			const wxColour fill = this->FillColour();
+			theme.DrawRounded(
+				gc,
+				wxRect(0, 0, pageWidth - 1, pageHeight - 1),
+				theme.Dip(this, theme.radius.md),
+				fill,
+				fill
+			);
+		}
+
+		void DrawHinge(wxGCDC& gc, const wxSize& size) {
+			const Theme& theme = Theme::Get();
+			theme.FillCanvas(gc, this, size);
+			const int pageWidth = this->hingeFullWidth;
+			const int pageHeight = size.GetHeight();
+			if (pageWidth < 2 || pageHeight < 2) {
+				return;
+			}
+			wxGraphicsContext* g = gc.GetGraphicsContext();
+			if (g == nullptr) {
+				return;
+			}
+
+			const double angle = (1.0 - this->hinge) * 3.141592653589793 / 2.0;
+			const double cosine = std::max(0.02, std::cos(angle));
+			const double sine = std::sin(angle);
+			g->PushState();
+			g->Translate(0, pageHeight / 2.0);
+			g->Scale(cosine, 1.0 - sine * 0.14);
+			g->Translate(0, -pageHeight / 2.0);
+			this->DrawFace(gc, pageWidth, pageHeight);
+			const int shade = static_cast<int>(sine * 150.0);
+			if (shade > 0) {
+				g->SetPen(*wxTRANSPARENT_PEN);
+				g->SetBrush(wxBrush(wxColour(0, 0, 0, shade)));
+				g->DrawRectangle(0, 0, pageWidth, pageHeight);
+			}
+			g->PopState();
+		}
 
 		wxColour FillColour() const {
 			const Theme& theme = Theme::Get();
@@ -210,6 +284,10 @@ class StudyCard : public wxPanel {
 		}
 
 		void OnSize(wxSizeEvent& event) {
+			if (this->hinge < 0.999) {
+				event.Skip();
+				return;
+			}
 			if (!this->wrapping) {
 				this->wrapping = true;
 				this->Rewrap();
@@ -226,6 +304,10 @@ class StudyCard : public wxPanel {
 				return;
 			}
 			const Theme& theme = Theme::Get();
+			if (this->hinge < 0.999) {
+				this->DrawHinge(gc, size);
+				return;
+			}
 			const wxColour fill = this->FillColour();
 			theme.FillCanvas(gc, this, size);
 			theme.DrawRounded(
@@ -242,7 +324,13 @@ StudyPanel::StudyPanel(wxWindow* parent, int deckId)
 	: wxPanel(parent),
 	  deckId(deckId),
 	  startingCount(0),
-	  answerVisible(false) {
+	  answerVisible(false),
+	  pageTimer(this),
+	  pageLead(nullptr),
+	  pageGap(nullptr),
+	  pageTail(nullptr),
+	  pageElapsed(-1),
+	  spreading(false) {
 	this->rootSizer = new wxBoxSizer(wxVERTICAL);
 
 	const Theme& theme = Theme::Get();
@@ -254,10 +342,14 @@ StudyPanel::StudyPanel(wxWindow* parent, int deckId)
 	this->rootSizer->Add(this->header, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 10);
 
 	this->card = new StudyCard(this);
+	this->backCard = new StudyCard(this);
+	this->backCard->Hide();
 	wxBoxSizer* cardRow = new wxBoxSizer(wxHORIZONTAL);
-	cardRow->AddStretchSpacer(1);
-	cardRow->Add(this->card, 2, wxEXPAND | wxTOP | wxBOTTOM, theme.space.xxl);
-	cardRow->AddStretchSpacer(1);
+	this->pageLead = cardRow->AddSpacer(0);
+	cardRow->Add(this->card, 0, wxEXPAND | wxTOP | wxBOTTOM, theme.space.xxl);
+	this->pageGap = cardRow->AddSpacer(0);
+	cardRow->Add(this->backCard, 0, wxEXPAND | wxTOP | wxBOTTOM, theme.space.xxl);
+	this->pageTail = cardRow->AddSpacer(0);
 	this->rootSizer->Add(cardRow, 1, wxEXPAND);
 
 	this->summaryLabel = new wxStaticText(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE_HORIZONTAL);
@@ -291,8 +383,91 @@ StudyPanel::StudyPanel(wxWindow* parent, int deckId)
 	this->rememberedButton->Bind(wxEVT_BUTTON, &StudyPanel::OnRemembered, this);
 	this->forgotButton->Bind(wxEVT_BUTTON, &StudyPanel::OnForgot, this);
 	this->backButton->Bind(wxEVT_BUTTON, &StudyPanel::OnBack, this);
+	this->Bind(wxEVT_TIMER, &StudyPanel::OnPageTick, this, this->pageTimer.GetId());
+	this->Bind(wxEVT_SIZE, [this](wxSizeEvent& event) {
+		this->ApplySpread();
+		event.Skip();
+	});
 
 	this->StartStudy();
+}
+
+void StudyPanel::ClosePage() {
+	this->pageTimer.Stop();
+	this->pageElapsed = -1;
+	this->ApplySpread();
+}
+
+void StudyPanel::ApplySpread() {
+	if (this->spreading || this->card == nullptr || this->backCard == nullptr) {
+		return;
+	}
+	const int row = this->GetClientSize().GetWidth();
+	if (row < 2) {
+		return;
+	}
+	this->spreading = true;
+
+	constexpr int kSlideMs = 280;
+	constexpr int kFlipMs = 520;
+	double slide = 0;
+	double flip = 0;
+	if (this->pageElapsed >= 0) {
+		if (this->pageElapsed <= kSlideMs) {
+			const double t = this->pageElapsed / static_cast<double>(kSlideMs);
+			slide = 1.0 - (1.0 - t) * (1.0 - t);
+		} else {
+			slide = 1;
+			const double t = std::min(1.0, (this->pageElapsed - kSlideMs) / static_cast<double>(kFlipMs));
+			flip = t;
+		}
+	}
+
+	const int gutterFull = Theme::Get().space.xxl;
+	const int cardW = std::max(1, (row / 2) * 2 / 3);
+	const int centeredLead = std::max(0, (row - cardW) / 2);
+	const int slideDistance = cardW / 2 + gutterFull;
+	const int lead = std::max(0, centeredLead - static_cast<int>(slideDistance * slide));
+	const int gap = static_cast<int>(gutterFull * slide);
+	const double angle = (1.0 - flip) * 3.141592653589793 / 2.0;
+	const int backW = flip <= 0.001 ? 0 : std::max(1, static_cast<int>(cardW * std::cos(angle)));
+	const int tail = std::max(0, row - lead - cardW - gap - backW);
+
+	this->card->SetMinSize(wxSize(cardW, -1));
+	this->card->SetMaxSize(wxSize(cardW, -1));
+	this->backCard->SetMinSize(wxSize(std::max(backW, 0), -1));
+	this->backCard->SetMaxSize(wxSize(std::max(backW, 1), -1));
+	if (this->pageLead != nullptr) {
+		this->pageLead->AssignSpacer(lead, 0);
+	}
+	if (this->pageGap != nullptr) {
+		this->pageGap->AssignSpacer(gap, 0);
+	}
+	if (this->pageTail != nullptr) {
+		this->pageTail->AssignSpacer(tail, 0);
+	}
+	if (backW < 2) {
+		this->backCard->Hide();
+	} else {
+		this->backCard->Show();
+		this->backCard->SetHinge(flip, cardW);
+	}
+	this->Layout();
+	this->spreading = false;
+}
+
+void StudyPanel::OnPageTick(wxTimerEvent&) {
+	constexpr int kPageMs = 280 + 520;
+	this->pageElapsed += 16;
+	if (this->pageElapsed >= kPageMs) {
+		this->pageElapsed = kPageMs;
+		this->pageTimer.Stop();
+		this->ApplySpread();
+		this->rememberedButton->Enable();
+		this->forgotButton->Enable();
+		return;
+	}
+	this->ApplySpread();
 }
 
 void StudyPanel::StartStudy() {
@@ -316,6 +491,7 @@ void StudyPanel::UpdateProgress() {
 }
 
 void StudyPanel::ShowNothingDue() {
+	this->ClosePage();
 	this->card->SetText("Nothing due today");
 	this->summaryLabel->Hide();
 	this->showAnswerButton->Hide();
@@ -328,6 +504,7 @@ void StudyPanel::ShowNothingDue() {
 }
 
 void StudyPanel::ShowSummary(const ReviewCardResponse& lastReview) {
+	this->ClosePage();
 	this->card->SetText("Session complete");
 	this->summaryLabel->SetLabel(wxString::Format(
 		"Cards reviewed: %d\nCards correct: %d\nRetention: %s",
@@ -357,6 +534,7 @@ void StudyPanel::ShowCurrentCard() {
 	}
 
 	this->answerVisible = false;
+	this->ClosePage();
 	this->card->SetText(wxString(this->dueCards.front().front), StudyCardSide::Front);
 	this->summaryLabel->Hide();
 	this->showAnswerButton->Show();
@@ -407,11 +585,11 @@ void StudyPanel::OnShowAnswer(wxCommandEvent&) {
 		return;
 	}
 	this->answerVisible = true;
-	this->card->SetText(wxString(this->dueCards.front().back), StudyCardSide::Back);
 	this->showAnswerButton->Disable();
-	this->rememberedButton->Enable();
-	this->forgotButton->Enable();
-	this->Layout();
+	this->backCard->SetText(wxString(this->dueCards.front().back), StudyCardSide::Back);
+	this->pageElapsed = 0;
+	this->pageTimer.Start(16);
+	this->ApplySpread();
 }
 
 void StudyPanel::OnRemembered(wxCommandEvent&) {
