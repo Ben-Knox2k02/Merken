@@ -121,11 +121,11 @@ class StudyCard : public wxPanel {
 			this->text->SetForegroundColour(theme.color.label);
 			this->text->SetMinSize(wxSize(0, -1));
 			wxFont font = this->text->GetFont();
-			font.SetPointSize(font.GetPointSize() + 6);
+			font.SetPointSize(font.GetPointSize() + 3);
 			font.SetWeight(wxFONTWEIGHT_NORMAL);
 			this->text->SetFont(font);
 
-			const int pad = this->FromDIP(theme.size.cardPad);
+			const int pad = this->ContentPad();
 			this->sizer = new wxBoxSizer(wxVERTICAL);
 			this->sizer->Add(this->caption, 0, wxEXPAND | wxTOP | wxLEFT | wxRIGHT, pad);
 			this->sizer->AddStretchSpacer(1);
@@ -174,6 +174,10 @@ class StudyCard : public wxPanel {
 		bool wrapping;
 		double hinge;
 		int hingeFullWidth;
+
+		int ContentPad() const {
+			return this->FromDIP(Theme::Get().size.cardPad + 12);
+		}
 
 		void HideFace() {
 			this->sizer->Show(this->caption, false);
@@ -261,7 +265,7 @@ class StudyCard : public wxPanel {
 		}
 
 		void Rewrap() {
-			const int pad = this->FromDIP(Theme::Get().size.cardPad);
+			const int pad = this->ContentPad();
 			int wrapWidth = this->GetClientSize().GetWidth() - 2 * pad;
 			const int minWrap = this->FromDIP(Theme::Get().size.minWrap);
 			if (wrapWidth < minWrap) {
