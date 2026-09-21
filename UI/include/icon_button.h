@@ -8,6 +8,7 @@
 #include <wx/image.h>
 #include <wx/bmpbndl.h>
 #include <wx/vector.h>
+#include "theme.h"
 
 class IconButton : public wxBitmapButton {
 	public:
@@ -27,7 +28,9 @@ class IconButton : public wxBitmapButton {
 				this->SetToolTip(tooltip);
 			}
 			const int height = wxButton::GetDefaultSize(parent).GetHeight();
-			this->SetMinSize(wxSize(0, height));
+			const int padX = this->FromDIP(24);
+			const int width = this->FromDIP(kIconSize) + padX * 2;
+			this->SetMinSize(wxSize(width, height));
 		}
 
 	private:
@@ -51,8 +54,7 @@ class IconButton : public wxBitmapButton {
 		}
 
 		static bool IsDarkTheme() {
-			const wxColour bg = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW);
-			return (bg.Red() + bg.Green() + bg.Blue()) < 3 * 128;
+			return Theme::IsDarkAppearance();
 		}
 
 		static wxImage ScaledIcon(const wxImage& source, int pixels) {

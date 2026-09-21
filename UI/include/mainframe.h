@@ -52,12 +52,6 @@ class MainFrame : public wxFrame {
 		void OnAiStudy(wxCommandEvent& event);
 		void OnAbout(wxCommandEvent& event);
 		void OnExit(wxCommandEvent& event);
-		void OnInputEnter(wxCommandEvent& event);
-
-		void OnWindowResized(wxSizeEvent& event);
-		void OnWindowClosed(wxCloseEvent& event);
-		void OnMouseEvent(wxMouseEvent& event);
-		void OnKeyEvent(wxKeyEvent& event);
 };
 
 #endif

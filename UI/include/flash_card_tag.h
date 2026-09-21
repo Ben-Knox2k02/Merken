@@ -3,6 +3,7 @@
 
 #include <wx/wx.h>
 #include <wx/tokenzr.h>
+#include "theme.h"
 
 class FlashCardTag : public wxPanel {
 	public:
@@ -27,8 +28,8 @@ class FlashCardTag : public wxPanel {
 			int textWidth = 0;
 			int textHeight = 0;
 			this->GetTextExtent(this->label, &textWidth, &textHeight);
-			const int pad = this->FromDIP(10);
-			this->fitted = wxSize(textWidth + pad * 2, this->FromDIP(22));
+			const int pad = this->FromDIP(Theme::Get().size.chipPad);
+			this->fitted = wxSize(textWidth + pad * 2, this->FromDIP(Theme::Get().size.chipHeight));
 			if (this->fitted.GetHeight() < textHeight + pad) {
 				this->fitted.SetHeight(textHeight + pad);
 			}
@@ -51,8 +52,8 @@ class FlashCardTag : public wxPanel {
 		}
 
 		static wxSize Measure(wxDC& dc, const wxString& label, wxWindow* scaleWindow) {
-			const int padX = scaleWindow != nullptr ? scaleWindow->FromDIP(10) : 10;
-			const int height = scaleWindow != nullptr ? scaleWindow->FromDIP(22) : 22;
+			const int padX = scaleWindow != nullptr ? scaleWindow->FromDIP(Theme::Get().size.chipPad) : Theme::Get().size.chipPad;
+			const int height = scaleWindow != nullptr ? scaleWindow->FromDIP(Theme::Get().size.chipHeight) : Theme::Get().size.chipHeight;
 			const wxSize text = dc.GetTextExtent(label);
 			return wxSize(text.GetWidth() + padX * 2, height);
 		}
@@ -93,43 +94,38 @@ class FlashCardTag : public wxPanel {
 			Draw(dc, wxRect(0, 0, size.GetWidth(), size.GetHeight()), this->label, this->style);
 		}
 
-		static bool IsDarkTheme() {
-			const wxColour bg = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW);
-			return (bg.Red() + bg.Green() + bg.Blue()) < 3 * 128;
-		}
-
 		static wxColour FillColour(Style style) {
-			const bool dark = IsDarkTheme();
+			const Theme& theme = Theme::Get();
 			switch (style) {
 				case Style::Secondary:
-					return dark ? wxColour(63, 63, 70) : wxColour(39, 39, 42);
+					return theme.color.fill;
 				case Style::Destructive:
-					return dark ? wxColour(69, 26, 26) : wxColour(254, 226, 226);
+					return theme.dark ? wxColour(69, 26, 26) : wxColour(254, 226, 226);
 				case Style::Outline:
 					return wxColour(0, 0, 0, 0);
 				case Style::Default:
 				default:
-					return dark ? wxColour(228, 228, 231) : wxColour(244, 244, 245);
+					return theme.color.tagFill;
 			}
 		}
 
 		static wxColour TextColour(Style style) {
-			const bool dark = IsDarkTheme();
+			const Theme& theme = Theme::Get();
 			switch (style) {
 				case Style::Secondary:
-					return dark ? wxColour(250, 250, 250) : wxColour(250, 250, 250);
+					return theme.color.label;
 				case Style::Destructive:
-					return dark ? wxColour(252, 165, 165) : wxColour(185, 28, 28);
+					return theme.color.destructive;
 				case Style::Outline:
-					return wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT);
+					return theme.color.label;
 				case Style::Default:
 				default:
-					return dark ? wxColour(24, 24, 27) : wxColour(24, 24, 27);
+					return theme.color.tagLabel;
 			}
 		}
 
 		static wxColour BorderColour(Style style) {
-			return IsDarkTheme() ? wxColour(82, 82, 91) : wxColour(24, 24, 27);
+			return style == Style::Outline ? Theme::Get().color.borderStrong : Theme::Get().color.tagBorder;
 		}
 };
 
