@@ -23,6 +23,25 @@ class DeckDialog : public wxDialog {
 	
 		wxTextCtrl* nameCtrl;
 		wxTextCtrl* descriptionCtrl;
+};
+
+class EventDialog : public wxDialog {
+	public:
+		EventDialog(wxWindow* parent);
+		
+		wxBoxSizer* rootSizer;
+		
+		wxStaticText* titleText;
+		wxStaticText* dateText;
+		wxStaticText* locationText;
+		wxStaticText* descriptionText;
+		wxStaticText* reminderText;
+		
+		wxTextCtrl* titleCtrl;
+		wxTextCtrl* dateCtrl;
+		wxTextCtrl* locationCtrl;
+		wxTextCtrl* descriptionCtrl;
+		wxTextCtrl* reminderCtrl;
 		
 };
 
