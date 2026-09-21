@@ -105,6 +105,7 @@ class StudyCard : public wxPanel {
 			this->caption->SetForegroundColour(theme.color.label);
 			wxFont captionFont = this->caption->GetFont();
 			captionFont.SetPointSize(captionFont.GetPointSize() + 3);
+			captionFont.SetWeight(wxFONTWEIGHT_NORMAL);
 			this->caption->SetFont(captionFont);
 
 			this->text = new wxStaticText(
@@ -121,6 +122,7 @@ class StudyCard : public wxPanel {
 			this->text->SetMinSize(wxSize(0, -1));
 			wxFont font = this->text->GetFont();
 			font.SetPointSize(font.GetPointSize() + 6);
+			font.SetWeight(wxFONTWEIGHT_NORMAL);
 			this->text->SetFont(font);
 
 			const int pad = this->FromDIP(theme.size.cardPad);

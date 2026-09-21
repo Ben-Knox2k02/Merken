@@ -23,7 +23,7 @@
 const int SCREEN_WIDTH = 1920;
 const int SCREEN_HEIGHT = 1080;
 
-MainFrame::MainFrame(const wxString& title) : wxFrame(nullptr, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE), selectedDeckId(0) {
+MainFrame::MainFrame(const wxString& title) : wxFrame(nullptr, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE), selectedDeckId(0), studying(false) {
 	//=========== INITIALIZE WIDGETS ===================================== INITIALIZE WIDGETS ================================
 	
 	this->menuBar = new wxMenuBar;						// MENU BAR
@@ -117,10 +117,24 @@ void MainFrame::OnDeckSelected(int deckId) {
 	}
 }
 
+void MainFrame::SetStudying(bool active) {
+	this->studying = active;
+	if (this->deckPanelList != nullptr) {
+		this->deckPanelList->Enable(!active);
+	}
+	this->UpdateDeckMenus();
+}
+
 void MainFrame::UpdateDeckMenus() {
-	const bool hasDeck = this->selectedDeckId != 0;
+	const bool hasDeck = this->selectedDeckId != 0 && !this->studying;
+	this->fileMenu->Enable(wxID_NEW, !this->studying);
 	this->fileMenu->Enable(ID_EDIT_DECK, hasDeck);
 	this->fileMenu->Enable(ID_DELETE_DECK, hasDeck);
+	this->fileMenu->Enable(ID_SETTINGS, !this->studying);
+	this->studyMenu->Enable(ID_STUDY_DECK, !this->studying);
+	this->studyMenu->Enable(ID_AI_STUDY, !this->studying);
+	this->studyMenu->Enable(ID_TODAYS_PROGRESS, !this->studying);
+	this->calendarMenu->Enable(ID_CALENDAR, !this->studying);
 }
 
 void MainFrame::ApplyMenuIcons() {
@@ -216,6 +230,7 @@ void MainFrame::SwapCurrentPanel(wxPanel* newPanel) {
 }
 
 void MainFrame::ShowCardList() {
+	this->SetStudying(false);
 	this->flashCardList = new FlashCardList(this->activePanel, this->selectedDeckId);
 	this->SwapCurrentPanel(this->flashCardList);
 }
@@ -226,6 +241,7 @@ void MainFrame::ShowStudyDeck() {
 		return;
 	}
 	this->SwapCurrentPanel(new StudyPanel(this->activePanel, this->selectedDeckId));
+	this->SetStudying(true);
 }
 
 void MainFrame::ShowTodaysProgress() {
@@ -242,6 +258,7 @@ void MainFrame::ShowAiStudy() {
 		return;
 	}
 	this->SwapCurrentPanel(new AiStudyPanel(this->activePanel, this->selectedDeckId));
+	this->SetStudying(true);
 }
 
 void MainFrame::OnAddDeck(wxCommandEvent& event) {
