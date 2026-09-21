@@ -15,6 +15,10 @@
 #include "centered_message.h"
 #include "theme.h"
 #include "icon_button.h"
+#ifdef __WXOSX__
+#include <objc/message.h>
+#include <objc/runtime.h>
+#endif
 
 const int SCREEN_WIDTH = 1920;
 const int SCREEN_HEIGHT = 1080;
@@ -73,9 +77,19 @@ MainFrame::MainFrame(const wxString& title) : wxFrame(nullptr, wxID_ANY, title, 
 	this->UpdateDeckMenus();
 
 	const int pad = Theme::Get().size.panelPad;
-	this->rootSizer->Add(this->deckPanelList, 0, wxEXPAND | wxTOP | wxBOTTOM | wxLEFT, pad);
+	const int titleGap = this->ExtendUnderTitleBar();
+
+	wxBoxSizer* deckColumn = new wxBoxSizer(wxVERTICAL);
+	deckColumn->AddSpacer(titleGap);
+	deckColumn->Add(this->deckPanelList, 1, wxEXPAND | wxTOP | wxLEFT | wxBOTTOM, pad);
+
+	wxBoxSizer* contentColumn = new wxBoxSizer(wxVERTICAL);
+	contentColumn->AddSpacer(titleGap);
+	contentColumn->Add(this->activePanel, 1, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, pad);
+
+	this->rootSizer->Add(deckColumn, 0, wxEXPAND);
 	this->rootSizer->AddSpacer(Theme::Get().space.md);
-	this->rootSizer->Add(this->activePanel, 1, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, pad);
+	this->rootSizer->Add(contentColumn, 1, wxEXPAND);
 	
 	this->SetSizer(this->rootSizer);
 	this->Layout();
@@ -131,6 +145,28 @@ void MainFrame::ReloadDecks() {
 		this->selectedDeckId = this->deckPanelList->GetSelectedDeckId();
 		this->UpdateDeckMenus();
 	}
+}
+
+int MainFrame::ExtendUnderTitleBar() {
+#ifdef __WXOSX__
+	id window = reinterpret_cast<id>(this->GetWXWindow());
+	if (window == nullptr) {
+		return 0;
+	}
+
+	using VoidBool = void (*)(id, SEL, bool);
+	using VoidLong = void (*)(id, SEL, long);
+	using GetMask = unsigned long (*)(id, SEL);
+	using SetMask = void (*)(id, SEL, unsigned long);
+	reinterpret_cast<VoidBool>(objc_msgSend)(window, sel_registerName("setTitlebarAppearsTransparent:"), true);
+	reinterpret_cast<VoidLong>(objc_msgSend)(window, sel_registerName("setTitleVisibility:"), 1L);
+	const unsigned long fullSizeContent = 1UL << 15;
+	unsigned long mask = reinterpret_cast<GetMask>(objc_msgSend)(window, sel_registerName("styleMask"));
+	reinterpret_cast<SetMask>(objc_msgSend)(window, sel_registerName("setStyleMask:"), mask | fullSizeContent);
+	return this->FromDIP(28);
+#else
+	return 0;
+#endif
 }
 
 void MainFrame::ApplyTheme() {

@@ -36,6 +36,7 @@ class MainFrame : public wxFrame {
 		wxMenu* helpMenu;
 
 		void ApplyTheme();
+		int ExtendUnderTitleBar();
 		void SwapCurrentPanel(wxPanel* newPanel);
 		void ReloadDecks();
 		void OnDeckSelected(int deckId);
