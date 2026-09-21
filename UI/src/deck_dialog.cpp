@@ -1,4 +1,5 @@
 #include "deck_dialog.h"
+#include "theme.h"
 
 DeckDialog::DeckDialog(wxWindow* parent, const wxString& title)
 	: wxDialog(
@@ -34,6 +35,7 @@ DeckDialog::DeckDialog(wxWindow* parent, const wxString& title)
 	this->SetSizer(this->rootSizer);
 	this->SetMinSize(wxSize(480, 320));
 	this->SetSize(wxSize(520, 360));
+	Theme::Get().StyleDialog(this);
 	this->Layout();
 	this->CentreOnParent();
 }

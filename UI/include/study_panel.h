@@ -7,6 +7,8 @@
 #include "../../Application/UseCases/Deck/GetCards/card_response.h"
 #include "../../Application/UseCases/Deck/ReviewCard/review_card_response.h"
 
+class StudyCard;
+
 class StudyPanel : public wxPanel {
 	public:
 		StudyPanel(wxWindow* parent, int deckId);
@@ -14,7 +16,7 @@ class StudyPanel : public wxPanel {
 		wxBoxSizer* rootSizer;
 		wxStaticText* header;
 		wxStaticText* promptLabel;
-		wxStaticText* cardText;
+		StudyCard* card;
 		wxStaticText* progressLabel;
 		wxGauge* progressBar;
 		wxStaticText* todayLabel;
