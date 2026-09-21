@@ -343,7 +343,9 @@ StudyPanel::StudyPanel(wxWindow* parent, int deckId)
 	this->SetBackgroundColour(theme.color.window);
 
 	this->header = new wxStaticText(this, wxID_ANY, "Study");
-	this->header->SetFont(this->header->GetFont().Bold());
+	wxFont titleFont = this->header->GetFont();
+	titleFont.SetPointSize(titleFont.GetPointSize() + 3);
+	this->header->SetFont(titleFont);
 	this->header->SetForegroundColour(theme.color.label);
 	this->rootSizer->Add(this->header, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 10);
 
