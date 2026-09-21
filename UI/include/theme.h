@@ -43,6 +43,9 @@ class Theme {
 			wxColour tagLabel;
 			wxColour tagBorder;
 
+			wxColour studyFront;
+			wxColour studyBack;
+
 			wxColour shadow;
 		};
 
@@ -124,6 +127,7 @@ class Theme {
 		void DrawPanel(wxGCDC& gc, wxWindow* window, const wxSize& client) const;
 		void DrawWell(wxGCDC& gc, wxWindow* window, const wxRect& rect) const;
 		void DrawBadge(wxGCDC& gc, wxWindow* window, const wxRect& rect) const;
+		void StyleDialog(wxWindow* window) const;
 
 	private:
 		Theme();
@@ -198,6 +202,9 @@ inline Theme::Theme() {
 		this->color.tagLabel = Hex(0x0B2937);
 		this->color.tagBorder = Hex(0xD0D9DD);
 	}
+
+	this->color.studyFront = this->color.card;
+	this->color.studyBack = this->dark ? Hex(0x1A5A72) : Hex(0xD7F0F8);
 }
 
 inline const Theme& Theme::Get() {
@@ -303,6 +310,32 @@ inline void Theme::DrawWell(wxGCDC& gc, wxWindow* window, const wxRect& rect) co
 
 inline void Theme::DrawBadge(wxGCDC& gc, wxWindow* window, const wxRect& rect) const {
 	this->DrawRounded(gc, rect, Dip(window, this->radius.xs), this->color.fill, wxColour(0, 0, 0, 0));
+}
+
+inline void Theme::StyleDialog(wxWindow* root) const {
+	if (root == nullptr) {
+		return;
+	}
+
+	root->CallForEachChild([this](wxWindow* window) {
+		if (dynamic_cast<wxButton*>(window) != nullptr) {
+			return;
+		}
+
+		if (wxTextCtrl* field = dynamic_cast<wxTextCtrl*>(window)) {
+			field->SetBackgroundColour(this->color.card);
+			field->SetForegroundColour(this->color.label);
+			wxTextAttr attr;
+			attr.SetTextColour(this->color.label);
+			attr.SetBackgroundColour(this->color.card);
+			field->SetDefaultStyle(attr);
+			return;
+		}
+
+		window->SetBackgroundColour(this->color.window);
+		window->SetForegroundColour(this->color.label);
+	});
+	root->Refresh();
 }
 
 #endif

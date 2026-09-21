@@ -1,5 +1,6 @@
 #include "settings_dialog.h"
 #include "centered_message.h"
+#include "theme.h"
 #include "app.h"
 #include "../../Application/UseCases/SaveAppSettings/save_app_settings_usecase.h"
 
@@ -41,6 +42,7 @@ SettingsDialog::SettingsDialog(wxWindow* parent)
 	this->SetSizer(this->rootSizer);
 	this->SetMinSize(wxSize(480, 200));
 	this->SetSize(wxSize(520, 220));
+	Theme::Get().StyleDialog(this);
 	this->Layout();
 	this->CentreOnParent();
 

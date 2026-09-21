@@ -15,7 +15,6 @@
 #include "centered_message.h"
 #include "theme.h"
 #include "icon_button.h"
-#include <wx/aboutdlg.h>
 
 const int SCREEN_WIDTH = 1920;
 const int SCREEN_HEIGHT = 1080;
@@ -249,13 +248,55 @@ void MainFrame::OnAiStudy(wxCommandEvent&) {
 }
 
 void MainFrame::OnAbout(wxCommandEvent&) {
-	wxAboutDialogInfo info;
-	info.SetName("Merken");
-	info.SetDescription(
+	wxDialog dialog(
+		this,
+		wxID_ANY,
+		"About Merken",
+		wxDefaultPosition,
+		wxDefaultSize,
+		wxDEFAULT_DIALOG_STYLE
+	);
+
+	wxStaticText* name = new wxStaticText(&dialog, wxID_ANY, "Merken");
+	wxFont nameFont = name->GetFont();
+	nameFont.SetPointSize(nameFont.GetPointSize() + 3);
+	name->SetFont(nameFont);
+
+	wxStaticText* description = new wxStaticText(
+		&dialog,
+		wxID_ANY,
 		"Merken is a flash-card study app. Create decks, add cards, and review them "
 		"with spaced practice or AI-guided study sessions."
 	);
-	wxAboutBox(info, this);
+	description->Wrap(360);
+
+	wxStdDialogButtonSizer* buttons = new wxStdDialogButtonSizer();
+	buttons->AddButton(new wxButton(&dialog, wxID_OK));
+	buttons->Realize();
+
+	dialog.Bind(wxEVT_BUTTON, [&dialog](wxCommandEvent& event) {
+		const int id = event.GetId();
+		if (id == wxID_OK || id == wxID_CANCEL) {
+			dialog.EndModal(id);
+			return;
+		}
+		event.Skip();
+	});
+
+	const Theme& theme = Theme::Get();
+	wxBoxSizer* root = new wxBoxSizer(wxVERTICAL);
+	root->Add(name, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, 16);
+	root->Add(description, 0, wxEXPAND | wxALL, 16);
+	root->Add(buttons, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 16);
+
+	dialog.SetSizer(root);
+	dialog.SetMinSize(wxSize(420, 160));
+	theme.StyleDialog(&dialog);
+	description->SetForegroundColour(theme.color.secondaryLabel);
+	dialog.Fit();
+	dialog.Layout();
+	dialog.CentreOnParent();
+	dialog.ShowModal();
 }
 
 void MainFrame::OnExit(wxCommandEvent& event) {
