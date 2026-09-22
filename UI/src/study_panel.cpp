@@ -8,6 +8,7 @@
 #include <wx/dcgraph.h>
 #include <wx/tokenzr.h>
 #include <algorithm>
+#include <cmath>
 
 wxDECLARE_APP(App);
 
@@ -65,6 +66,96 @@ enum class StudyCardSide {
 	Back
 };
 
+class SessionDonut : public wxPanel {
+	public:
+		SessionDonut(wxWindow* parent)
+			: wxPanel(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE),
+			  reviewed(0),
+			  correct(0),
+			  fill(Theme::Get().color.card) {
+			this->SetBackgroundStyle(wxBG_STYLE_PAINT);
+			const int size = this->FromDIP(200);
+			this->SetMinSize(wxSize(size, size));
+			this->Bind(wxEVT_PAINT, &SessionDonut::OnPaint, this);
+			this->Bind(wxEVT_ERASE_BACKGROUND, [](wxEraseEvent&) {});
+		}
+
+		void SetFill(const wxColour& colour) {
+			this->fill = colour;
+			this->Refresh();
+		}
+
+		void SetStats(int reviewedCount, int correctCount) {
+			this->reviewed = reviewedCount;
+			this->correct = correctCount;
+			this->Refresh();
+		}
+
+	private:
+		int reviewed;
+		int correct;
+		wxColour fill;
+
+		void OnPaint(wxPaintEvent&) {
+			wxPaintDC dc(this);
+			wxGCDC gc(dc);
+			wxGraphicsContext* g = gc.GetGraphicsContext();
+			const wxSize size = this->GetClientSize();
+			if (g == nullptr || size.GetWidth() < 4 || size.GetHeight() < 4) {
+				return;
+			}
+
+			g->SetPen(*wxTRANSPARENT_PEN);
+			g->SetBrush(wxBrush(this->fill));
+			g->DrawRectangle(0, 0, size.GetWidth(), size.GetHeight());
+
+			const double thickness = this->FromDIP(16);
+			const double radius = std::min(size.GetWidth(), size.GetHeight()) / 2.0 - thickness;
+			if (radius < thickness) {
+				return;
+			}
+			const double cx = size.GetWidth() / 2.0;
+			const double cy = size.GetHeight() / 2.0;
+			constexpr double kPi = 3.141592653589793;
+			const double start = -kPi / 2.0;
+			const Theme& theme = Theme::Get();
+
+			auto strokeArc = [&](const wxColour& colour, double from, double to) {
+				wxGraphicsPath path = g->CreatePath();
+				path.AddArc(cx, cy, radius, from, to, true);
+				g->SetPen(g->CreatePen(wxGraphicsPenInfo(colour).Width(thickness).Cap(wxCAP_BUTT)));
+				g->StrokePath(path);
+			};
+			auto strokeRing = [&](const wxColour& colour) {
+				strokeArc(colour, start, start + kPi);
+				strokeArc(colour, start + kPi, start + 2.0 * kPi);
+			};
+
+			strokeRing(theme.color.separator);
+			if (this->reviewed > 0 && this->correct > 0) {
+				const double sweep = (2.0 * kPi * this->correct) / this->reviewed;
+				if (this->correct >= this->reviewed) {
+					strokeRing(theme.color.success);
+				} else {
+					strokeArc(theme.color.success, start, start + sweep);
+				}
+			}
+
+			const int percent = this->reviewed > 0
+				? static_cast<int>(std::lround((100.0 * this->correct) / this->reviewed))
+				: 0;
+			wxFont font = this->GetFont();
+			font.SetPointSize(font.GetPointSize() + 3);
+			font.SetWeight(wxFONTWEIGHT_NORMAL);
+			g->SetFont(font, theme.color.label);
+			double textWidth = 0;
+			double textHeight = 0;
+			const wxString label = wxString::Format("%d%% Retention", percent);
+			g->GetTextExtent(label, &textWidth, &textHeight);
+			g->DrawText(label, cx - textWidth / 2.0, cy - textHeight / 2.0);
+		}
+};
+
 class StudyCard : public wxPanel {
 	public:
 		explicit StudyCard(wxWindow* parent)
@@ -118,8 +209,41 @@ class StudyCard : public wxPanel {
 			this->sizer->Add(this->caption, 0, wxEXPAND | wxTOP | wxLEFT | wxRIGHT, pad);
 			this->sizer->AddStretchSpacer(1);
 			this->sizer->Add(this->textHost, 0, wxALIGN_CENTER_HORIZONTAL);
+			this->notice = new wxStaticText(
+				this,
+				wxID_ANY,
+				wxEmptyString,
+				wxDefaultPosition,
+				wxDefaultSize,
+				wxALIGN_CENTRE_HORIZONTAL
+			);
+			this->notice->SetFont(font);
+			this->notice->SetForegroundColour(theme.color.label);
+			this->notice->SetBackgroundColour(theme.color.card);
+			this->sizer->Add(this->notice, 0, wxEXPAND | wxLEFT | wxRIGHT, pad);
 			this->sizer->AddStretchSpacer(1);
+
+			this->sessionTitle = new wxStaticText(
+				this,
+				wxID_ANY,
+				"Session Complete",
+				wxDefaultPosition,
+				wxDefaultSize,
+				wxALIGN_CENTRE_HORIZONTAL
+			);
+			wxFont sessionFont = this->sessionTitle->GetFont();
+			sessionFont.SetPointSize(sessionFont.GetPointSize() + 3);
+			sessionFont.SetWeight(wxFONTWEIGHT_NORMAL);
+			this->sessionTitle->SetFont(sessionFont);
+			this->sessionTitle->SetForegroundColour(theme.color.label);
+			this->sessionTitle->SetBackgroundColour(theme.color.card);
+			this->donut = new SessionDonut(this);
+			this->sizer->Insert(0, this->sessionTitle, 0, wxALIGN_CENTER_HORIZONTAL | wxTOP | wxLEFT | wxRIGHT, pad);
+			this->sizer->Insert(5, this->donut, 0, wxALIGN_CENTER_HORIZONTAL | wxTOP | wxBOTTOM, pad);
 			this->sizer->Show(this->caption, false);
+			this->sizer->Show(this->notice, false);
+			this->sizer->Show(this->sessionTitle, false);
+			this->sizer->Show(this->donut, false);
 			this->SetSizer(this->sizer);
 
 			this->Bind(wxEVT_PAINT, &StudyCard::OnPaint, this);
@@ -127,7 +251,41 @@ class StudyCard : public wxPanel {
 			this->Bind(wxEVT_ERASE_BACKGROUND, [](wxEraseEvent&) {});
 		}
 
+		void ShowSummary(int reviewed, int correct) {
+			this->side = StudyCardSide::Neutral;
+			this->ApplyColours();
+			this->sizer->Show(this->caption, false);
+			this->sizer->Show(this->textHost, false);
+			this->sizer->Show(this->notice, false);
+			this->sizer->Show(this->sessionTitle, true);
+			this->sizer->Show(this->donut, true);
+			this->sessionTitle->SetBackgroundColour(this->FillColour());
+			this->sessionTitle->SetForegroundColour(Theme::Get().color.label);
+			this->donut->SetFill(this->FillColour());
+			this->donut->SetStats(reviewed, correct);
+			this->Layout();
+			this->Refresh();
+		}
+
+		void ShowNotice(const wxString& value) {
+			this->side = StudyCardSide::Neutral;
+			this->ApplyColours();
+			this->sizer->Show(this->caption, false);
+			this->sizer->Show(this->textHost, false);
+			this->sizer->Show(this->sessionTitle, false);
+			this->sizer->Show(this->donut, false);
+			this->notice->SetLabel(value);
+			this->notice->SetBackgroundColour(this->FillColour());
+			this->notice->SetForegroundColour(Theme::Get().color.label);
+			this->sizer->Show(this->notice, true);
+			this->Layout();
+			this->Refresh();
+		}
+
 		void SetText(const wxString& value, StudyCardSide side = StudyCardSide::Neutral) {
+			this->sizer->Show(this->sessionTitle, false);
+			this->sizer->Show(this->donut, false);
+			this->sizer->Show(this->notice, false);
 			this->visualScale = 1;
 			this->side = side;
 			this->raw = value;
@@ -170,6 +328,9 @@ class StudyCard : public wxPanel {
 		wxStaticText* caption;
 		wxPanel* textHost;
 		wxStaticText* text;
+		wxStaticText* notice;
+		wxStaticText* sessionTitle;
+		SessionDonut* donut;
 		int baseWidth;
 		wxString raw;
 		StudyCardSide side;
@@ -517,7 +678,7 @@ void StudyPanel::UpdateProgress() {
 
 void StudyPanel::ShowNothingDue() {
 	this->ClosePage();
-	this->card->SetText("Nothing due today");
+	this->card->ShowNotice("Nothing due today");
 	this->summaryLabel->Hide();
 	this->showAnswerButton->Hide();
 	this->rememberedButton->Hide();
@@ -530,14 +691,8 @@ void StudyPanel::ShowNothingDue() {
 
 void StudyPanel::ShowSummary(const ReviewCardResponse& lastReview) {
 	this->ClosePage();
-	this->card->SetText("Session complete");
-	this->summaryLabel->SetLabel(wxString::Format(
-		"Cards reviewed: %d\nCards correct: %d\nRetention: %s",
-		lastReview.cardsReviewed,
-		lastReview.cardsCorrect,
-		FormatPercent(lastReview.retentionRate)
-	));
-	this->summaryLabel->Show();
+	this->card->ShowSummary(lastReview.cardsReviewed, lastReview.cardsCorrect);
+	this->summaryLabel->Hide();
 	this->showAnswerButton->Hide();
 	this->rememberedButton->Hide();
 	this->forgotButton->Hide();
