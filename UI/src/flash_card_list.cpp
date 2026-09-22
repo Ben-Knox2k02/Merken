@@ -137,7 +137,19 @@ FlashCardList::FlashCardList(wxWindow* parent, int deckId)
 	this->listSizer->Add(this->leftCol, 1, wxEXPAND | wxRIGHT, gap / 2);
 	this->listSizer->Add(this->rightCol, 1, wxEXPAND | wxLEFT, gap / 2);
 	this->scroller->SetSizer(this->listSizer);
+
+	this->emptyPanel = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE);
+	this->emptyPanel->SetBackgroundColour(Theme::Get().color.window);
+	this->emptyMessage = new wxStaticText(this->emptyPanel, wxID_ANY, "No flash cards yet");
+	this->emptyMessage->SetForegroundColour(Theme::Get().color.secondaryLabel);
+	wxBoxSizer* emptySizer = new wxBoxSizer(wxVERTICAL);
+	emptySizer->AddStretchSpacer(1);
+	emptySizer->Add(this->emptyMessage, 0, wxALIGN_CENTER_HORIZONTAL);
+	emptySizer->AddStretchSpacer(1);
+	this->emptyPanel->SetSizer(emptySizer);
+
 	this->rootSizer->Add(this->scroller, 1, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, pad);
+	this->rootSizer->Add(this->emptyPanel, 1, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, pad);
 	this->SetSizer(this->rootSizer);
 
 	this->addButton->Bind(wxEVT_BUTTON, &FlashCardList::OnAdd, this);
@@ -176,6 +188,12 @@ void FlashCardList::ApplyTheme() {
 	this->header->SetForegroundColour(theme.color.label);
 	this->description->SetForegroundColour(theme.color.secondaryLabel);
 	this->scroller->SetBackgroundColour(theme.color.window);
+	if (this->emptyPanel != nullptr) {
+		this->emptyPanel->SetBackgroundColour(theme.color.window);
+	}
+	if (this->emptyMessage != nullptr) {
+		this->emptyMessage->SetForegroundColour(theme.color.secondaryLabel);
+	}
 	this->addButton->SetBitmap(IconButton::LoadIconBundle("UI/assets/add_icon.png", 16, invert), wxLEFT);
 	this->studyButton->SetBitmap(IconButton::LoadIconBundle("UI/assets/study_icon.png", 16, invert), wxLEFT);
 	this->aiStudyButton->SetBitmap(IconButton::LoadIconBundle("UI/assets/ai_study_icon.png", 16, invert), wxLEFT);
@@ -208,6 +226,7 @@ void FlashCardList::LoadCards() {
 
 	this->scroller->FitInside();
 	this->scroller->Layout();
+	this->ShowEmptyState(this->cards.empty());
 	this->UpdateStudyButtons();
 
 	this->CallAfter([this]() {
@@ -247,6 +266,14 @@ void FlashCardList::UpdateDeckHeader() {
 	this->lastHeaderWrap = 0;
 	this->lastDescWrap = 0;
 	this->WrapHeader();
+	this->Layout();
+}
+
+void FlashCardList::ShowEmptyState(bool empty) {
+	if (this->rootSizer != nullptr) {
+		this->rootSizer->Show(this->scroller, !empty);
+		this->rootSizer->Show(this->emptyPanel, empty);
+	}
 	this->Layout();
 }
 
