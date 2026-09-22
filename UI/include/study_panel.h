@@ -45,9 +45,7 @@ class StudyPanel : public wxPanel {
 		int startingCount;
 		bool answerVisible;
 		wxTimer pageTimer;
-		wxSizerItem* pageLead;
-		wxSizerItem* pageGap;
-		wxSizerItem* pageTail;
+		wxPanel* cardHost;
 		int pageElapsed;
 		bool spreading;
 
