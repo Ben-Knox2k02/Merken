@@ -10,8 +10,6 @@ struct GetUserProfileResponse {
 	std::string headerName;
 	std::string initials;
 	std::string note;
-	std::string imagePath;
-	bool hasImage;
 	std::string startDate;
 	std::optional<int> dailyGoal;
 	bool usesAiStudy;

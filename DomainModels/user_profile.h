@@ -20,14 +20,12 @@ class UserProfile {
 			const Date& startDate,
 			const std::string& displayName = "",
 			const std::string& note = "",
-			const std::string& imagePath = "",
 			std::optional<int> dailyGoal = std::nullopt,
 			bool usesAiStudy = false,
 			bool guideFinished = false
 		) : startDate(startDate),
 			displayName(displayName),
 			note(note),
-			imagePath(imagePath),
 			dailyGoal(dailyGoal),
 			usesAiStudy(usesAiStudy),
 			guideFinished(guideFinished) {}
@@ -35,12 +33,10 @@ class UserProfile {
 		const Date& GetStartDate() const { return this->startDate; }
 		const std::string& GetDisplayName() const { return this->displayName; }
 		const std::string& GetNote() const { return this->note; }
-		const std::string& GetImagePath() const { return this->imagePath; }
 		std::optional<int> GetDailyGoal() const { return this->dailyGoal; }
 		bool UsesAiStudy() const { return this->usesAiStudy; }
 		bool IsGuideFinished() const { return this->guideFinished; }
 
-		bool HasImage() const { return !this->imagePath.empty(); }
 		bool HasDailyGoal() const { return this->dailyGoal.has_value() && *this->dailyGoal > 0; }
 
 		std::string HeaderName() const {
@@ -100,8 +96,6 @@ class UserProfile {
 
 		void UpdateDisplayName(const std::string& newName) { this->displayName = newName; }
 		void UpdateNote(const std::string& newNote) { this->note = newNote; }
-		void SetImagePath(const std::string& path) { this->imagePath = path; }
-		void ClearImage() { this->imagePath.clear(); }
 		void SetUsesAiStudy(bool enabled) { this->usesAiStudy = enabled; }
 		void MarkGuideFinished() { this->guideFinished = true; }
 
@@ -136,7 +130,6 @@ class UserProfile {
 		Date startDate;
 		std::string displayName;
 		std::string note;
-		std::string imagePath;
 		std::optional<int> dailyGoal;
 		bool usesAiStudy;
 		bool guideFinished;

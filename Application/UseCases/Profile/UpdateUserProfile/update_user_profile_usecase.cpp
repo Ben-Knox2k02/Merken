@@ -8,7 +8,6 @@ bool UpdateUserProfileUseCase::Execute(const UpdateUserProfileRequest& request) 
 
 	existing->UpdateDisplayName(request.displayName);
 	existing->UpdateNote(request.note);
-	existing->SetImagePath(request.imagePath);
 	existing->SetDailyGoal(request.dailyGoal);
 	existing->SetUsesAiStudy(request.usesAiStudy);
 	return this->userProfileRepository.SaveUserProfile(*existing);

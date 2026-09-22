@@ -26,7 +26,6 @@ TEST_CASE("GetUserProfileUseCase creates a profile for today when none is stored
 	CHECK_FALSE(response.dailyGoal.has_value());
 	CHECK_FALSE(response.usesAiStudy);
 	CHECK_FALSE(response.guideFinished);
-	CHECK_FALSE(response.hasImage);
 	CHECK(profiles.saveCount == 1);
 	REQUIRE(profiles.profile.has_value());
 	CHECK(profiles.profile->GetStartDate() == TestDate());
@@ -34,7 +33,7 @@ TEST_CASE("GetUserProfileUseCase creates a profile for today when none is stored
 
 TEST_CASE("GetUserProfileUseCase returns the stored profile without saving again") {
 	FakeUserProfileRepository profiles;
-	profiles.profile = UserProfile(TestDate(), "Ada Lovelace", "Term", "/tmp/ada.png", 20, true, false);
+	profiles.profile = UserProfile(TestDate(), "Ada Lovelace", "Term", 20, true, false);
 	FakeDateProviderService dates(TestDate());
 	GetUserProfileUseCase useCase(profiles, dates);
 
@@ -45,8 +44,6 @@ TEST_CASE("GetUserProfileUseCase returns the stored profile without saving again
 	CHECK(response.headerName == "Ada Lovelace");
 	CHECK(response.initials == "AL");
 	CHECK(response.note == "Term");
-	CHECK(response.imagePath == "/tmp/ada.png");
-	CHECK(response.hasImage);
 	CHECK(response.dailyGoal == 20);
 	CHECK(response.usesAiStudy);
 	CHECK(profiles.saveCount == 0);

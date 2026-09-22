@@ -47,5 +47,8 @@ std::vector<std::string> DbScripts::GetScripts() const {
 				guide_finished INTEGER NOT NULL DEFAULT 0
 			);
 		)",
+		R"(
+			ALTER TABLE user_profile DROP COLUMN image_path;
+		)",
 	};
 }
