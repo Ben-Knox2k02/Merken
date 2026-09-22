@@ -14,6 +14,7 @@ struct GetUserProfileResponse {
 	std::optional<int> dailyGoal;
 	bool usesAiStudy;
 	bool guideFinished;
+	bool onboardingFinished;
 };
 
 #endif
