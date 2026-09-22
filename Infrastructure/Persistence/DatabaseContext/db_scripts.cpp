@@ -50,5 +50,8 @@ std::vector<std::string> DbScripts::GetScripts() const {
 		R"(
 			ALTER TABLE user_profile DROP COLUMN image_path;
 		)",
+		R"(
+			ALTER TABLE user_profile ADD COLUMN onboarding_finished INTEGER NOT NULL DEFAULT 0;
+		)",
 	};
 }

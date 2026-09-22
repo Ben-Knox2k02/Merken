@@ -11,7 +11,8 @@ GetUserProfileResponse MapProfile(const UserProfile& profile) {
 		profile.GetStartDate().ToIso(),
 		profile.GetDailyGoal(),
 		profile.UsesAiStudy(),
-		profile.IsGuideFinished()
+		profile.IsGuideFinished(),
+		profile.IsOnboardingFinished()
 	};
 }
 }

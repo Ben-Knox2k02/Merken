@@ -22,13 +22,15 @@ class UserProfile {
 			const std::string& note = "",
 			std::optional<int> dailyGoal = std::nullopt,
 			bool usesAiStudy = false,
-			bool guideFinished = false
+			bool guideFinished = false,
+			bool onboardingFinished = false
 		) : startDate(startDate),
 			displayName(displayName),
 			note(note),
 			dailyGoal(dailyGoal),
 			usesAiStudy(usesAiStudy),
-			guideFinished(guideFinished) {}
+			guideFinished(guideFinished),
+			onboardingFinished(onboardingFinished) {}
 
 		const Date& GetStartDate() const { return this->startDate; }
 		const std::string& GetDisplayName() const { return this->displayName; }
@@ -36,6 +38,7 @@ class UserProfile {
 		std::optional<int> GetDailyGoal() const { return this->dailyGoal; }
 		bool UsesAiStudy() const { return this->usesAiStudy; }
 		bool IsGuideFinished() const { return this->guideFinished; }
+		bool IsOnboardingFinished() const { return this->onboardingFinished; }
 
 		bool HasDailyGoal() const { return this->dailyGoal.has_value() && *this->dailyGoal > 0; }
 
@@ -98,6 +101,7 @@ class UserProfile {
 		void UpdateNote(const std::string& newNote) { this->note = newNote; }
 		void SetUsesAiStudy(bool enabled) { this->usesAiStudy = enabled; }
 		void MarkGuideFinished() { this->guideFinished = true; }
+		void MarkOnboardingFinished() { this->onboardingFinished = true; }
 
 		void SetDailyGoal(std::optional<int> goal) {
 			if (!goal.has_value() || *goal <= 0) {
@@ -133,6 +137,7 @@ class UserProfile {
 		std::optional<int> dailyGoal;
 		bool usesAiStudy;
 		bool guideFinished;
+		bool onboardingFinished;
 };
 
 #endif
