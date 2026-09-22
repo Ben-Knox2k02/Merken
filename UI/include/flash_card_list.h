@@ -28,6 +28,7 @@ class FlashCardList : public wxPanel {
 		void SetDeck(int deckId);
 		void LoadCards();
 		void ApplyTheme();
+		void RefreshGuide();
 
 		void OnAdd(wxCommandEvent& event);
 		void OnStudy(wxCommandEvent& event);

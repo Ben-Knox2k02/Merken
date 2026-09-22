@@ -3,11 +3,13 @@
 #include "centered_message.h"
 #include "mainframe.h"
 #include "theme.h"
+#include "guide_highlight.h"
 #include "app.h"
 #include "../../Application/UseCases/Deck/GetDecks/get_decks_usecase.h"
 #include "../../Application/UseCases/Deck/CreateDeck/create_deck_usecase.h"
 #include "../../Application/UseCases/Deck/UpdateDeck/update_deck_usecase.h"
 #include "../../Application/UseCases/Deck/DeleteDeck/delete_deck_usecase.h"
+#include "../../Application/UseCases/Profile/GetUserProfile/get_user_profile_usecase.h"
 #include <wx/dcgraph.h>
 #include <wx/statline.h>
 
@@ -83,6 +85,7 @@ void DeckPanelList::ApplyTheme() {
 	for (DeckCard* card : this->cards) {
 		card->ApplyTheme();
 	}
+	this->RefreshGuide();
 	this->Refresh();
 }
 
@@ -125,6 +128,18 @@ void DeckPanelList::LoadDecks() {
 		this->selectedDeckId = 0;
 		this->NotifyDeckSelected(0);
 	}
+	this->RefreshGuide();
+}
+
+void DeckPanelList::RefreshGuide() {
+	auto useCase = wxGetApp().GetInjector().create<GetUserProfileUseCase>();
+	GetUserProfileResponse profile = useCase.Execute();
+	const bool showAdd = profile.ok && !profile.guideFinished && this->cards.empty();
+	if (showAdd) {
+		GuideHighlight::Announce(this->addDeckButton, GuidePrompt::CreateDeck, "Let's create your first flash-card deck.");
+		return;
+	}
+	GuideHighlight::SetBorder(this->addDeckButton, false);
 }
 
 void DeckPanelList::AddDeckCard(int deckId, const wxString& name, int cardCount) {

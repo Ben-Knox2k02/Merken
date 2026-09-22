@@ -25,6 +25,7 @@ class OnboardingDialog : public wxDialog {
 		bool finished;
 
 		void ShowStep(Step step);
+		void ApplyChrome(Step step);
 		void Finish();
 		void OnWelcomeContinue(wxCommandEvent& event);
 		void OnNameContinue(wxCommandEvent& event);

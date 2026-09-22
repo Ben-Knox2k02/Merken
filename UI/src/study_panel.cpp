@@ -3,8 +3,11 @@
 #include "mainframe.h"
 #include "app.h"
 #include "theme.h"
+#include "guide_highlight.h"
 #include "../../Application/UseCases/Deck/StudyDeck/study_deck_usecase.h"
 #include "../../Application/UseCases/Deck/ReviewCard/review_card_usecase.h"
+#include "../../Application/UseCases/Profile/GetUserProfile/get_user_profile_usecase.h"
+#include "../../Application/UseCases/Profile/FinishGuide/finish_guide_usecase.h"
 #include <wx/dcgraph.h>
 #include <wx/tokenzr.h>
 #include <algorithm>
@@ -539,7 +542,8 @@ StudyPanel::StudyPanel(wxWindow* parent, int deckId)
 	  pageTimer(this),
 	  cardHost(nullptr),
 	  pageElapsed(-1),
-	  spreading(false) {
+	  spreading(false),
+	  guideReadyForBack(false) {
 	this->rootSizer = new wxBoxSizer(wxVERTICAL);
 
 	const Theme& theme = Theme::Get();
@@ -677,6 +681,7 @@ void StudyPanel::OnPageTick(wxTimerEvent&) {
 		this->ApplySpread();
 		this->rememberedButton->Enable();
 		this->forgotButton->Enable();
+		this->RefreshGuide();
 		return;
 	}
 	this->ApplySpread();
@@ -704,6 +709,7 @@ void StudyPanel::UpdateProgress() {
 
 void StudyPanel::ShowNothingDue() {
 	this->ClosePage();
+	this->guideReadyForBack = true;
 	this->card->ShowNotice("Nothing due today");
 	this->summaryLabel->Hide();
 	this->showAnswerButton->Hide();
@@ -713,6 +719,7 @@ void StudyPanel::ShowNothingDue() {
 	this->progressBar->Hide();
 	this->todayLabel->Hide();
 	this->Layout();
+	this->RefreshGuide();
 }
 
 void StudyPanel::ShowSummary(const ReviewCardResponse& lastReview) {
@@ -729,6 +736,7 @@ void StudyPanel::ShowSummary(const ReviewCardResponse& lastReview) {
 		FormatPercent(lastReview.retentionRate)
 	));
 	this->Layout();
+	this->RefreshGuide();
 }
 
 void StudyPanel::ShowCurrentCard() {
@@ -754,6 +762,7 @@ void StudyPanel::ShowCurrentCard() {
 	this->todayLabel->Show();
 	this->UpdateProgress();
 	this->Layout();
+	this->RefreshGuide();
 }
 
 void StudyPanel::Grade(bool remembered) {
@@ -779,6 +788,10 @@ void StudyPanel::Grade(bool remembered) {
 		FormatPercent(response.retentionRate)
 	));
 	this->dueCards.erase(this->dueCards.begin());
+	this->guideReadyForBack = true;
+	GuideHighlight::SetBorder(this->showAnswerButton, false);
+	GuideHighlight::SetBorder(this->rememberedButton, false);
+	GuideHighlight::SetBorder(this->forgotButton, false);
 	if (this->dueCards.empty()) {
 		this->ShowSummary(response);
 		return;
@@ -792,6 +805,7 @@ void StudyPanel::OnShowAnswer(wxCommandEvent&) {
 	}
 	this->answerVisible = true;
 	this->showAnswerButton->Disable();
+	GuideHighlight::SetBorder(this->showAnswerButton, false);
 	this->backCard->SetText(wxString(this->dueCards.front().back), StudyCardSide::Back);
 	this->pageElapsed = 0;
 	this->pageTimer.Start(16);
@@ -807,7 +821,66 @@ void StudyPanel::OnForgot(wxCommandEvent&) {
 }
 
 void StudyPanel::OnBack(wxCommandEvent&) {
-	if (auto* frame = dynamic_cast<MainFrame*>(wxGetTopLevelParent(this))) {
-		frame->ShowCardList();
+	auto* frame = dynamic_cast<MainFrame*>(wxGetTopLevelParent(this));
+	if (frame == nullptr) {
+		return;
 	}
+	const bool wish = this->guideReadyForBack && this->CompleteGuide();
+	frame->ShowCardList();
+	if (wish) {
+		ShowCenteredMessage(frame, "Happy learning! Your deck is ready whenever you are.", "Merken", wxOK | wxICON_INFORMATION);
+	}
+}
+
+void StudyPanel::RefreshGuide() {
+	auto useCase = wxGetApp().GetInjector().create<GetUserProfileUseCase>();
+	GetUserProfileResponse profile = useCase.Execute();
+	if (!profile.ok || profile.guideFinished) {
+		GuideHighlight::SetBorder(this->showAnswerButton, false);
+		GuideHighlight::SetBorder(this->rememberedButton, false);
+		GuideHighlight::SetBorder(this->forgotButton, false);
+		GuideHighlight::SetBorder(this->backButton, false);
+		return;
+	}
+	if (this->guideReadyForBack) {
+		GuideHighlight::SetBorder(this->showAnswerButton, false);
+		GuideHighlight::SetBorder(this->rememberedButton, false);
+		GuideHighlight::SetBorder(this->forgotButton, false);
+		GuideHighlight::Announce(this->backButton, GuidePrompt::Back, "Whenever you like, let's head back to your decks.");
+		return;
+	}
+	GuideHighlight::SetBorder(this->backButton, false);
+	if (!this->showAnswerButton->IsShown()) {
+		return;
+	}
+	if (!this->answerVisible) {
+		GuideHighlight::SetBorder(this->rememberedButton, false);
+		GuideHighlight::SetBorder(this->forgotButton, false);
+		GuideHighlight::Announce(this->showAnswerButton, GuidePrompt::ShowAnswer, "When you're ready, let's reveal the back.");
+		return;
+	}
+	GuideHighlight::SetBorder(this->showAnswerButton, false);
+	GuideHighlight::Announce(
+		this->rememberedButton,
+		GuidePrompt::Grade,
+		"If it stuck, mark it Remembered. If not, Forgot is just fine.",
+		this->forgotButton
+	);
+}
+
+bool StudyPanel::CompleteGuide() {
+	auto useCase = wxGetApp().GetInjector().create<GetUserProfileUseCase>();
+	GetUserProfileResponse profile = useCase.Execute();
+	if (!profile.ok || profile.guideFinished) {
+		return false;
+	}
+	auto finish = wxGetApp().GetInjector().create<FinishGuideUseCase>();
+	if (!finish.Execute()) {
+		return false;
+	}
+	GuideHighlight::SetBorder(this->showAnswerButton, false);
+	GuideHighlight::SetBorder(this->rememberedButton, false);
+	GuideHighlight::SetBorder(this->forgotButton, false);
+	GuideHighlight::SetBorder(this->backButton, false);
+	return true;
 }

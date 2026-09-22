@@ -3,6 +3,10 @@
 #include "theme.h"
 #include "app.h"
 #include "../../Application/UseCases/Profile/CompleteOnboarding/complete_onboarding_usecase.h"
+#ifdef __WXOSX__
+#include <objc/message.h>
+#include <objc/runtime.h>
+#endif
 
 wxDECLARE_APP(App);
 
@@ -36,8 +40,8 @@ OnboardingDialog::OnboardingDialog(wxWindow* parent)
 	: wxDialog(parent, wxID_ANY, "Merken", wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE),
 	  finished(false) {
 	this->welcomePanel = MakePage(this);
-	wxStaticText* welcomeTitle = MakeTitle(this->welcomePanel, "Merken", 10);
-	wxStaticText* welcomeBody = MakeBody(this->welcomePanel, "Merken is a flash-card study app.");
+	wxStaticText* welcomeTitle = MakeTitle(this->welcomePanel, "Welcome to Merken", 14);
+	wxStaticText* welcomeBody = MakeBody(this->welcomePanel, "Your companion flash-card study app.");
 	wxButton* continueButton = new wxButton(this->welcomePanel, wxID_ANY, "Continue");
 	continueButton->SetDefault();
 	wxBoxSizer* welcome = new wxBoxSizer(wxVERTICAL);
@@ -89,10 +93,8 @@ OnboardingDialog::OnboardingDialog(wxWindow* parent)
 	root->Add(this->goalPanel, 1, wxEXPAND | wxALL, 24);
 	this->SetSizer(root);
 	this->SetMinSize(this->FromDIP(wxSize(520, 360)));
-	this->SetSize(this->FromDIP(wxSize(560, 400)));
 	Theme::Get().StyleDialog(this);
 	this->ShowStep(Step::Welcome);
-	this->Centre();
 
 	continueButton->Bind(wxEVT_BUTTON, &OnboardingDialog::OnWelcomeContinue, this);
 	nameContinue->Bind(wxEVT_BUTTON, &OnboardingDialog::OnNameContinue, this);
@@ -102,13 +104,99 @@ OnboardingDialog::OnboardingDialog(wxWindow* parent)
 	goal30->Bind(wxEVT_BUTTON, &OnboardingDialog::OnGoalChosen, this);
 	goalSkip->Bind(wxEVT_BUTTON, &OnboardingDialog::OnGoalSkip, this);
 	this->Bind(wxEVT_CLOSE_WINDOW, &OnboardingDialog::OnClose, this);
+	this->Bind(wxEVT_SHOW, [this](wxShowEvent& event) {
+		event.Skip();
+		if (!event.IsShown()) {
+			return;
+		}
+		const Step step = this->goalPanel->IsShown()
+			? Step::Goal
+			: (this->namePanel->IsShown() ? Step::Name : Step::Welcome);
+		this->ApplyChrome(step);
+	});
 }
 
 void OnboardingDialog::ShowStep(Step step) {
 	this->welcomePanel->Show(step == Step::Welcome);
 	this->namePanel->Show(step == Step::Name);
 	this->goalPanel->Show(step == Step::Goal);
+	const bool roomy = step == Step::Welcome || step == Step::Name;
+	const wxSize size = roomy ? wxSize(800, 600) : wxSize(560, 400);
+	this->ApplyChrome(step);
+	this->SetSize(this->FromDIP(size));
 	this->Layout();
+	this->Centre();
+	this->ApplyChrome(step);
+}
+
+void OnboardingDialog::ApplyChrome(Step step) {
+	const bool titled = step == Step::Goal;
+	this->SetTitle(titled ? "Merken" : wxString());
+#ifdef __WXOSX__
+	id window = reinterpret_cast<id>(this->GetWXWindow());
+	if (window == nullptr) {
+		return;
+	}
+	using GetMask = unsigned long (*)(id, SEL);
+	using SetMask = void (*)(id, SEL, unsigned long);
+	using VoidBool = void (*)(id, SEL, bool);
+	static unsigned long titledMask = 0;
+	const unsigned long current = reinterpret_cast<GetMask>(objc_msgSend)(window, sel_registerName("styleMask"));
+	if (titledMask == 0 && current != 0) {
+		titledMask = current;
+	}
+	const unsigned long next = titled && titledMask != 0 ? titledMask : 0UL;
+	reinterpret_cast<SetMask>(objc_msgSend)(window, sel_registerName("setStyleMask:"), next);
+	reinterpret_cast<VoidBool>(objc_msgSend)(window, sel_registerName("setMovableByWindowBackground:"), !titled);
+
+	using VoidDouble = void (*)(id, SEL, double);
+	using VoidId = void (*)(id, SEL, id);
+	using VoidPtr = void (*)(id, SEL, void*);
+	using IdFn = id (*)(id, SEL);
+	using ColorFn = id (*)(id, SEL, double, double, double, double);
+	const Theme& theme = Theme::Get();
+	const int radius = titled ? 0 : Theme::Dip(this, theme.radius.sm);
+	this->SetBackgroundColour(theme.color.window);
+	id colorClass = reinterpret_cast<id>(objc_getClass("NSColor"));
+	id windowColor = titled
+		? reinterpret_cast<ColorFn>(objc_msgSend)(
+			colorClass,
+			sel_registerName("colorWithCalibratedRed:green:blue:alpha:"),
+			theme.color.window.Red() / 255.0,
+			theme.color.window.Green() / 255.0,
+			theme.color.window.Blue() / 255.0,
+			1.0
+		)
+		: reinterpret_cast<IdFn>(objc_msgSend)(colorClass, sel_registerName("clearColor"));
+	reinterpret_cast<VoidId>(objc_msgSend)(window, sel_registerName("setBackgroundColor:"), windowColor);
+	reinterpret_cast<VoidBool>(objc_msgSend)(window, sel_registerName("setOpaque:"), titled);
+
+	id content = reinterpret_cast<IdFn>(objc_msgSend)(window, sel_registerName("contentView"));
+	if (content == nullptr) {
+		return;
+	}
+	reinterpret_cast<VoidBool>(objc_msgSend)(content, sel_registerName("setWantsLayer:"), true);
+	id layer = reinterpret_cast<IdFn>(objc_msgSend)(content, sel_registerName("layer"));
+	if (layer == nullptr) {
+		return;
+	}
+	reinterpret_cast<VoidDouble>(objc_msgSend)(layer, sel_registerName("setCornerRadius:"), static_cast<double>(radius));
+	reinterpret_cast<VoidBool>(objc_msgSend)(layer, sel_registerName("setMasksToBounds:"), !titled);
+	if (!titled) {
+		id fill = reinterpret_cast<ColorFn>(objc_msgSend)(
+			colorClass,
+			sel_registerName("colorWithCalibratedRed:green:blue:alpha:"),
+			theme.color.window.Red() / 255.0,
+			theme.color.window.Green() / 255.0,
+			theme.color.window.Blue() / 255.0,
+			1.0
+		);
+		void* cgColor = reinterpret_cast<IdFn>(objc_msgSend)(fill, sel_registerName("CGColor"));
+		reinterpret_cast<VoidPtr>(objc_msgSend)(layer, sel_registerName("setBackgroundColor:"), cgColor);
+	}
+	using VoidFn = void (*)(id, SEL);
+	reinterpret_cast<VoidFn>(objc_msgSend)(window, sel_registerName("invalidateShadow"));
+#endif
 }
 
 void OnboardingDialog::Finish() {

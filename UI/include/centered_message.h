@@ -3,13 +3,66 @@
 
 #include <wx/wx.h>
 #include <wx/artprov.h>
+#include <wx/display.h>
 #include "theme.h"
+
+inline void PlaceClearOf(wxDialog& dialog, wxWindow* avoid, wxWindow* avoidAlso) {
+	if (avoid == nullptr) {
+		dialog.CentreOnParent();
+		return;
+	}
+
+	wxRect target = avoid->GetScreenRect();
+	if (avoidAlso != nullptr && avoidAlso->IsShown()) {
+		target.Union(avoidAlso->GetScreenRect());
+	}
+	const wxSize box = dialog.GetSize();
+	const int gap = avoid->FromDIP(16);
+	const wxRect screen = wxDisplay(avoid).GetClientArea();
+
+	auto clamp = [&](wxPoint pos) {
+		const int maxX = screen.GetRight() - box.GetWidth();
+		const int maxY = screen.GetBottom() - box.GetHeight();
+		if (pos.x < screen.GetLeft()) { pos.x = screen.GetLeft(); }
+		if (pos.y < screen.GetTop()) { pos.y = screen.GetTop(); }
+		if (pos.x > maxX) { pos.x = maxX; }
+		if (pos.y > maxY) { pos.y = maxY; }
+		return pos;
+	};
+	auto overlap = [&](wxPoint pos) {
+		const wxRect placed(pos, box);
+		const wxRect shared = placed.Intersect(target);
+		if (shared.IsEmpty()) {
+			return 0;
+		}
+		return shared.GetWidth() * shared.GetHeight();
+	};
+
+	const wxPoint candidates[] = {
+		clamp(wxPoint(target.GetLeft(), target.GetTop() - box.GetHeight() - gap)),
+		clamp(wxPoint(target.GetLeft(), target.GetBottom() + gap)),
+		clamp(wxPoint(target.GetRight() + gap, target.GetTop())),
+		clamp(wxPoint(target.GetLeft() - box.GetWidth() - gap, target.GetTop()))
+	};
+	wxPoint best = candidates[0];
+	int bestOverlap = overlap(best);
+	for (const wxPoint& candidate : candidates) {
+		const int area = overlap(candidate);
+		if (area < bestOverlap) {
+			best = candidate;
+			bestOverlap = area;
+		}
+	}
+	dialog.SetPosition(best);
+}
 
 inline int ShowCenteredMessage(
 	wxWindow* parent,
 	const wxString& message,
 	const wxString& caption,
-	long style = wxOK | wxICON_INFORMATION
+	long style = wxOK | wxICON_INFORMATION,
+	wxWindow* avoid = nullptr,
+	wxWindow* avoidAlso = nullptr
 ) {
 	wxWindow* owner = wxGetTopLevelParent(parent);
 	wxDialog dialog(
@@ -67,9 +120,8 @@ inline int ShowCenteredMessage(
 	Theme::Get().StyleDialog(&dialog);
 	dialog.Fit();
 	dialog.Layout();
-	dialog.CentreOnParent();
+	PlaceClearOf(dialog, avoid, avoidAlso);
 	return dialog.ShowModal();
 }
 
 #endif
-
