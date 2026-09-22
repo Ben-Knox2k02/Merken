@@ -200,9 +200,22 @@ class StudyCard : public wxPanel {
 			font.SetPointSize(font.GetPointSize() + 3);
 			font.SetWeight(wxFONTWEIGHT_NORMAL);
 			this->text->SetFont(font);
-			wxBoxSizer* textSizer = new wxBoxSizer(wxVERTICAL);
-			textSizer->Add(this->text, 1, wxEXPAND);
-			this->textHost->SetSizer(textSizer);
+			this->centeredText = new wxStaticText(
+				this->textHost,
+				wxID_ANY,
+				wxEmptyString,
+				wxDefaultPosition,
+				wxDefaultSize,
+				wxALIGN_CENTRE_HORIZONTAL
+			);
+			this->centeredText->SetBackgroundColour(theme.color.card);
+			this->centeredText->SetForegroundColour(theme.color.label);
+			this->centeredText->SetFont(font);
+			this->textSizer = new wxBoxSizer(wxVERTICAL);
+			this->textSizer->Add(this->text, 1, wxEXPAND);
+			this->textSizer->Add(this->centeredText, 1, wxEXPAND);
+			this->textSizer->Show(this->centeredText, false);
+			this->textHost->SetSizer(this->textSizer);
 
 			const int pad = this->ContentPad();
 			this->sizer = new wxBoxSizer(wxVERTICAL);
@@ -328,6 +341,8 @@ class StudyCard : public wxPanel {
 		wxStaticText* caption;
 		wxPanel* textHost;
 		wxStaticText* text;
+		wxStaticText* centeredText;
+		wxBoxSizer* textSizer;
 		wxStaticText* notice;
 		wxStaticText* sessionTitle;
 		SessionDonut* donut;
@@ -419,6 +434,8 @@ class StudyCard : public wxPanel {
 			this->textHost->SetBackgroundColour(fill);
 			this->text->SetBackgroundColour(fill);
 			this->text->SetForegroundColour(ink);
+			this->centeredText->SetBackgroundColour(fill);
+			this->centeredText->SetForegroundColour(ink);
 			this->caption->SetBackgroundColour(fill);
 			this->caption->SetForegroundColour(ink);
 			if (this->side == StudyCardSide::Back) {
@@ -441,21 +458,30 @@ class StudyCard : public wxPanel {
 			if (wrapWidth < minWrap) {
 				if (this->lastWrap != -1) {
 					this->text->SetLabel(this->raw);
-					this->text->SetMinSize(wxSize(0, -1));
-					this->text->InvalidateBestSize();
+					this->centeredText->SetLabel(this->raw);
 					this->lastWrap = -1;
 				}
+				this->ApplyBodyAlignment();
 				return;
 			}
-			if (this->lastWrap == wrapWidth) {
-				return;
+			if (this->lastWrap != wrapWidth) {
+				this->lastWrap = wrapWidth;
+				this->ApplyColours();
+				const wxString wrapped = WrapToWidth(this->text, this->raw, wrapWidth);
+				this->text->SetLabel(wrapped);
+				this->centeredText->SetLabel(wrapped);
+				this->text->InvalidateBestSize();
+				this->centeredText->InvalidateBestSize();
 			}
-			this->lastWrap = wrapWidth;
-			this->ApplyColours();
-			const wxString wrapped = WrapToWidth(this->text, this->raw, wrapWidth);
-			this->text->SetLabel(wrapped);
-			this->text->InvalidateBestSize();
+			this->ApplyBodyAlignment();
 			this->Layout();
+		}
+
+		void ApplyBodyAlignment() {
+			const bool center = (this->side == StudyCardSide::Front || this->side == StudyCardSide::Back)
+				&& this->raw.length() < 40;
+			this->textSizer->Show(this->text, !center);
+			this->textSizer->Show(this->centeredText, center);
 		}
 
 		void OnSize(wxSizeEvent& event) {
