@@ -48,10 +48,13 @@ class StudyPanel : public wxPanel {
 		wxPanel* cardHost;
 		int pageElapsed;
 		bool spreading;
+		bool guideReadyForBack;
 
 		void ApplySpread();
 		void ClosePage();
 		void OnPageTick(wxTimerEvent& event);
+		void RefreshGuide();
+		bool CompleteGuide();
 };
 
 #endif
