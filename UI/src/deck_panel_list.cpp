@@ -23,11 +23,14 @@ DeckPanelList::DeckPanelList(wxWindow* parent)
 	this->rootSizer = new wxBoxSizer(wxVERTICAL);
 
 	const int pad = Theme::Get().size.cardPad;
-	this->header = new wxStaticText(this, wxID_ANY, "Decks");
-	this->header->SetFont(this->header->GetFont().Bold());
-	this->header->SetForegroundColour(Theme::Get().color.onPrimary);
-	this->header->SetBackgroundColour(Theme::Get().color.primary);
-	this->rootSizer->Add(this->header, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, pad);
+	const int profileSpace = Theme::Get().space.xl;
+	this->rootSizer->AddSpacer(profileSpace);
+	this->profileHeader = new ProfileHeader(this);
+	this->rootSizer->Add(this->profileHeader, 0, wxEXPAND | wxLEFT | wxRIGHT, pad);
+	this->rootSizer->AddSpacer(profileSpace);
+	wxStaticLine* profileRule = new wxStaticLine(this);
+	this->rootSizer->Add(profileRule, 0, wxEXPAND | wxLEFT | wxRIGHT, pad);
+	this->rootSizer->AddSpacer(profileSpace);
 
 	this->scroller = new wxScrolledWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxVSCROLL);
 	this->scroller->SetScrollRate(0, 16);
@@ -40,6 +43,7 @@ DeckPanelList::DeckPanelList(wxWindow* parent)
 
 	wxStaticLine* rule = new wxStaticLine(this);
 	this->rootSizer->Add(rule, 0, wxEXPAND | wxLEFT | wxRIGHT, pad);
+	this->rootSizer->AddSpacer(Theme::Get().space.md);
 
 	this->addDeckButton = new IconButton(this, "UI/assets/add_icon.png", "Add", true);
 	this->editDeckButton = new IconButton(this, "UI/assets/edit_icon.png", "Edit", true);
@@ -54,7 +58,7 @@ DeckPanelList::DeckPanelList(wxWindow* parent)
 	this->buttonSizer->Add(this->addDeckButton, 1, wxEXPAND);
 	this->buttonSizer->Add(this->editDeckButton, 1, wxEXPAND);
 	this->buttonSizer->Add(this->deleteDeckButton, 1, wxEXPAND);
-	this->rootSizer->Add(this->buttonSizer, 0, wxEXPAND | wxALL, pad);
+	this->rootSizer->Add(this->buttonSizer, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, pad);
 
 	this->SetSizer(this->rootSizer);
 
@@ -71,8 +75,7 @@ DeckPanelList::DeckPanelList(wxWindow* parent)
 void DeckPanelList::ApplyTheme() {
 	const Theme& theme = Theme::Get();
 	this->SetBackgroundColour(theme.color.primary);
-	this->header->SetForegroundColour(theme.color.onPrimary);
-	this->header->SetBackgroundColour(theme.color.primary);
+	this->profileHeader->ApplyTheme();
 	this->scroller->SetBackgroundColour(theme.color.primary);
 	this->addDeckButton->ApplyTheme();
 	this->editDeckButton->ApplyTheme();

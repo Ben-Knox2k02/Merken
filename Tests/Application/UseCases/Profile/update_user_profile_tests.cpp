@@ -12,13 +12,12 @@ Date TestDate() {
 
 TEST_CASE("UpdateUserProfileUseCase saves editable fields and keeps the start date and guide flag") {
 	FakeUserProfileRepository profiles;
-	profiles.profile = UserProfile(TestDate(), "Ada", "Old", "", 10, false, true);
+	profiles.profile = UserProfile(TestDate(), "Ada", "Old", 10, false, true);
 	UpdateUserProfileUseCase useCase(profiles);
 
 	bool saved = useCase.Execute(UpdateUserProfileRequest{
 		"Ada Lovelace",
 		"Term",
-		"/tmp/ada.png",
 		30,
 		true
 	});
@@ -28,7 +27,6 @@ TEST_CASE("UpdateUserProfileUseCase saves editable fields and keeps the start da
 	REQUIRE(profiles.profile.has_value());
 	CHECK(profiles.profile->GetDisplayName() == "Ada Lovelace");
 	CHECK(profiles.profile->GetNote() == "Term");
-	CHECK(profiles.profile->GetImagePath() == "/tmp/ada.png");
 	CHECK(profiles.profile->GetDailyGoal() == 30);
 	CHECK(profiles.profile->UsesAiStudy());
 	CHECK(profiles.profile->GetStartDate() == TestDate());
@@ -37,12 +35,11 @@ TEST_CASE("UpdateUserProfileUseCase saves editable fields and keeps the start da
 
 TEST_CASE("UpdateUserProfileUseCase clears the daily goal when it is unset") {
 	FakeUserProfileRepository profiles;
-	profiles.profile = UserProfile(TestDate(), "Ada", "", "", 20, false, false);
+	profiles.profile = UserProfile(TestDate(), "Ada", "", 20, false, false);
 	UpdateUserProfileUseCase useCase(profiles);
 
 	bool saved = useCase.Execute(UpdateUserProfileRequest{
 		"Ada",
-		"",
 		"",
 		std::nullopt,
 		false

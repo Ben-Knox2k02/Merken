@@ -8,8 +8,6 @@ GetUserProfileResponse MapProfile(const UserProfile& profile) {
 		profile.HeaderName(),
 		profile.Initials(),
 		profile.GetNote(),
-		profile.GetImagePath(),
-		profile.HasImage(),
 		profile.GetStartDate().ToIso(),
 		profile.GetDailyGoal(),
 		profile.UsesAiStudy(),
