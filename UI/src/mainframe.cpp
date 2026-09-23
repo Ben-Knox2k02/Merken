@@ -24,7 +24,7 @@
 
 wxDECLARE_APP(App);
 
-MainFrame::MainFrame(const wxString& title) : wxFrame(nullptr, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE), selectedDeckId(0), studying(false) {
+MainFrame::MainFrame(const wxString& title) : wxFrame(nullptr, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE), selectedDeckId(0), selectedCardCount(0), studying(false) {
 	//=========== INITIALIZE WIDGETS ===================================== INITIALIZE WIDGETS ================================
 	
 	this->menuBar = new wxMenuBar;						// MENU BAR
@@ -133,15 +133,23 @@ void MainFrame::UpdateDeckMenus() {
 		GetUserProfileResponse profile = useCase.Execute();
 		guiding = profile.ok && !profile.guideFinished;
 	}
-	const bool hasDeck = this->selectedDeckId != 0 && !this->studying && !guiding;
-	this->fileMenu->Enable(wxID_NEW, !this->studying && !guiding);
-	this->fileMenu->Enable(ID_EDIT_DECK, hasDeck);
-	this->fileMenu->Enable(ID_DELETE_DECK, hasDeck);
-	this->fileMenu->Enable(ID_SETTINGS, !this->studying && !guiding);
-	this->studyMenu->Enable(ID_STUDY_DECK, !this->studying && !guiding);
-	this->studyMenu->Enable(ID_AI_STUDY, !this->studying && !guiding);
-	this->studyMenu->Enable(ID_TODAYS_PROGRESS, !this->studying && !guiding);
-	this->calendarMenu->Enable(ID_CALENDAR, !this->studying && !guiding);
+	const bool hasDecks = this->deckPanelList != nullptr && this->deckPanelList->HasDecks();
+	const bool canEditDeck = hasDecks && this->selectedDeckId != 0 && !this->studying && !guiding;
+	const bool canStudy = this->selectedCardCount > 0 && !this->studying && !guiding;
+	const bool available = !this->studying && !guiding;
+	this->menuBar->Enable(wxID_NEW, available);
+	this->menuBar->Enable(ID_EDIT_DECK, canEditDeck);
+	this->menuBar->Enable(ID_DELETE_DECK, canEditDeck);
+	this->menuBar->Enable(ID_SETTINGS, available);
+	this->menuBar->Enable(ID_STUDY_DECK, canStudy);
+	this->menuBar->Enable(ID_AI_STUDY, canStudy);
+	this->menuBar->Enable(ID_TODAYS_PROGRESS, available);
+	this->menuBar->Enable(ID_CALENDAR, available);
+}
+
+void MainFrame::SetSelectedCardCount(int count) {
+	this->selectedCardCount = count;
+	this->UpdateDeckMenus();
 }
 
 void MainFrame::ApplyMenuIcons() {
@@ -243,6 +251,7 @@ void MainFrame::ShowCardList() {
 	}
 	this->flashCardList = new FlashCardList(this->activePanel, this->selectedDeckId);
 	this->SwapCurrentPanel(this->flashCardList);
+	this->UpdateDeckMenus();
 }
 
 void MainFrame::ShowStudyDeck() {

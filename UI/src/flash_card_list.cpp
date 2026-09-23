@@ -244,6 +244,9 @@ void FlashCardList::LoadCards() {
 	this->ShowEmptyState(this->cards.empty());
 	this->UpdateStudyButtons();
 	this->RefreshGuide();
+	if (auto* frame = dynamic_cast<MainFrame*>(wxGetTopLevelParent(this))) {
+		frame->SetSelectedCardCount(static_cast<int>(this->cards.size()));
+	}
 
 	this->CallAfter([this]() {
 		this->lastHeaderWrap = 0;
@@ -321,6 +324,10 @@ void FlashCardList::UpdateDeckHeader() {
 
 	this->header->SetLabel(this->deckName);
 	this->header->Show(!this->deckName.IsEmpty());
+	const bool hasDeck = this->deckId != 0;
+	this->addButton->Show(hasDeck);
+	this->studyButton->Show(hasDeck);
+	this->aiStudyButton->Show(hasDeck);
 	this->description->SetLabel(this->deckDescription);
 	const bool hasDescription = !this->deckDescription.IsEmpty();
 	this->description->Show(hasDescription);
