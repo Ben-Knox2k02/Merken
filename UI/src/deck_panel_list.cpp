@@ -135,13 +135,14 @@ void DeckPanelList::RefreshGuide() {
 	auto useCase = wxGetApp().GetInjector().create<GetUserProfileUseCase>();
 	GetUserProfileResponse profile = useCase.Execute();
 	const bool guiding = profile.ok && !profile.guideFinished;
-	const bool createDeck = guiding && this->cards.empty();
+	const bool hasDecks = !this->cards.empty();
+	const bool createDeck = guiding && !hasDecks;
 	if (!guiding) {
 		this->Enable(true);
 	}
 	this->addDeckButton->Enable(!guiding || createDeck);
-	this->editDeckButton->Enable(!guiding);
-	this->deleteDeckButton->Enable(!guiding);
+	this->editDeckButton->Enable(!guiding && hasDecks);
+	this->deleteDeckButton->Enable(!guiding && hasDecks);
 	this->profileHeader->Enable(!guiding);
 	for (DeckCard* card : this->cards) {
 		card->Enable(!guiding);

@@ -24,6 +24,7 @@ class DeckPanelList : public wxPanel {
 		void ApplyTheme();
 		void RefreshGuide();
 		int GetSelectedDeckId() const;
+		bool HasDecks() const { return !this->cards.empty(); }
 		void SelectDeck(int deckId, bool notify = false);
 		void NotifyDeckSelected(int deckId);
 

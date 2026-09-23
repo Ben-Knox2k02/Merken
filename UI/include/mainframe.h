@@ -27,6 +27,7 @@ class MainFrame : public wxFrame {
 		wxPanel* currentPanel;
 		wxPanel* activePanel;
 		int selectedDeckId;
+		int selectedCardCount;
 		bool studying;
 
 		wxMenuBar* menuBar;
@@ -48,6 +49,7 @@ class MainFrame : public wxFrame {
 		void ShowAiStudy();
 
 		void UpdateDeckMenus();
+		void SetSelectedCardCount(int count);
 		void SetStudying(bool active);
 		void ApplyMenuIcons();
 		void OnAddDeck(wxCommandEvent& event);
