@@ -1,17 +1,12 @@
 #ifndef DECK_PANEL_H
 #define DECK_PANEL_H
 
+#include "data_structures.h"
 #include "dialog.h"
 #include <vector>
 #include <wx/wx.h>
 #include <wx/dataview.h>
 #include <wx/dcbuffer.h>
-
-struct Deck {
-	int ID;
-	wxString name;
-	wxString description;
-};
 
 class DeckPanel : public wxPanel {
 	public:
