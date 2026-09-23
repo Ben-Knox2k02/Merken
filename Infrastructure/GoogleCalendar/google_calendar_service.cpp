@@ -1,5 +1,5 @@
 #include "google_calendar_service.h"
-#include "nlohmann/json.hpp"
+#include "../../ThirdParty/nlohmann/json.hpp"
 
 // Helper function to parse a Google Calendar event JSON object into a CalendarEvent instance (created with help from Gemini)
 CalendarEvent ParseGoogleEventJson(const nlohmann::json& json){
