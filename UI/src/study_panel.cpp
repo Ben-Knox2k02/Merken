@@ -836,6 +836,7 @@ void StudyPanel::RefreshGuide() {
 	auto useCase = wxGetApp().GetInjector().create<GetUserProfileUseCase>();
 	GetUserProfileResponse profile = useCase.Execute();
 	if (!profile.ok || profile.guideFinished) {
+		this->backButton->Enable(true);
 		GuideHighlight::SetBorder(this->showAnswerButton, false);
 		GuideHighlight::SetBorder(this->rememberedButton, false);
 		GuideHighlight::SetBorder(this->forgotButton, false);
@@ -843,22 +844,33 @@ void StudyPanel::RefreshGuide() {
 		return;
 	}
 	if (this->guideReadyForBack) {
+		this->showAnswerButton->Disable();
+		this->rememberedButton->Disable();
+		this->forgotButton->Disable();
+		this->backButton->Enable();
 		GuideHighlight::SetBorder(this->showAnswerButton, false);
 		GuideHighlight::SetBorder(this->rememberedButton, false);
 		GuideHighlight::SetBorder(this->forgotButton, false);
 		GuideHighlight::Announce(this->backButton, GuidePrompt::Back, "Whenever you like, let's head back to your decks.");
 		return;
 	}
+	this->backButton->Disable();
 	GuideHighlight::SetBorder(this->backButton, false);
 	if (!this->showAnswerButton->IsShown()) {
 		return;
 	}
 	if (!this->answerVisible) {
+		this->showAnswerButton->Enable();
+		this->rememberedButton->Disable();
+		this->forgotButton->Disable();
 		GuideHighlight::SetBorder(this->rememberedButton, false);
 		GuideHighlight::SetBorder(this->forgotButton, false);
 		GuideHighlight::Announce(this->showAnswerButton, GuidePrompt::ShowAnswer, "When you're ready, let's reveal the back.");
 		return;
 	}
+	this->showAnswerButton->Disable();
+	this->rememberedButton->Enable();
+	this->forgotButton->Enable();
 	GuideHighlight::SetBorder(this->showAnswerButton, false);
 	GuideHighlight::Announce(
 		this->rememberedButton,

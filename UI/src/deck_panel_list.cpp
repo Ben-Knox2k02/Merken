@@ -134,12 +134,26 @@ void DeckPanelList::LoadDecks() {
 void DeckPanelList::RefreshGuide() {
 	auto useCase = wxGetApp().GetInjector().create<GetUserProfileUseCase>();
 	GetUserProfileResponse profile = useCase.Execute();
-	const bool showAdd = profile.ok && !profile.guideFinished && this->cards.empty();
-	if (showAdd) {
-		GuideHighlight::Announce(this->addDeckButton, GuidePrompt::CreateDeck, "Let's create your first flash-card deck.");
-		return;
+	const bool guiding = profile.ok && !profile.guideFinished;
+	const bool createDeck = guiding && this->cards.empty();
+	if (!guiding) {
+		this->Enable(true);
 	}
-	GuideHighlight::SetBorder(this->addDeckButton, false);
+	this->addDeckButton->Enable(!guiding || createDeck);
+	this->editDeckButton->Enable(!guiding);
+	this->deleteDeckButton->Enable(!guiding);
+	this->profileHeader->Enable(!guiding);
+	for (DeckCard* card : this->cards) {
+		card->Enable(!guiding);
+	}
+	if (createDeck) {
+		GuideHighlight::Announce(this->addDeckButton, GuidePrompt::CreateDeck, "Let's create your first flash-card deck.");
+	} else {
+		GuideHighlight::SetBorder(this->addDeckButton, false);
+	}
+	if (auto* frame = dynamic_cast<MainFrame*>(wxGetTopLevelParent(this))) {
+		frame->UpdateDeckMenus();
+	}
 }
 
 void DeckPanelList::AddDeckCard(int deckId, const wxString& name, int cardCount) {

@@ -15,10 +15,14 @@
 #include "centered_message.h"
 #include "theme.h"
 #include "icon_button.h"
+#include "app.h"
+#include "../../Application/UseCases/Profile/GetUserProfile/get_user_profile_usecase.h"
 #ifdef __WXOSX__
 #include <objc/message.h>
 #include <objc/runtime.h>
 #endif
+
+wxDECLARE_APP(App);
 
 MainFrame::MainFrame(const wxString& title) : wxFrame(nullptr, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE), selectedDeckId(0), studying(false) {
 	//=========== INITIALIZE WIDGETS ===================================== INITIALIZE WIDGETS ================================
@@ -123,15 +127,21 @@ void MainFrame::SetStudying(bool active) {
 }
 
 void MainFrame::UpdateDeckMenus() {
-	const bool hasDeck = this->selectedDeckId != 0 && !this->studying;
-	this->fileMenu->Enable(wxID_NEW, !this->studying);
+	bool guiding = false;
+	if (!this->studying) {
+		auto useCase = wxGetApp().GetInjector().create<GetUserProfileUseCase>();
+		GetUserProfileResponse profile = useCase.Execute();
+		guiding = profile.ok && !profile.guideFinished;
+	}
+	const bool hasDeck = this->selectedDeckId != 0 && !this->studying && !guiding;
+	this->fileMenu->Enable(wxID_NEW, !this->studying && !guiding);
 	this->fileMenu->Enable(ID_EDIT_DECK, hasDeck);
 	this->fileMenu->Enable(ID_DELETE_DECK, hasDeck);
-	this->fileMenu->Enable(ID_SETTINGS, !this->studying);
-	this->studyMenu->Enable(ID_STUDY_DECK, !this->studying);
-	this->studyMenu->Enable(ID_AI_STUDY, !this->studying);
-	this->studyMenu->Enable(ID_TODAYS_PROGRESS, !this->studying);
-	this->calendarMenu->Enable(ID_CALENDAR, !this->studying);
+	this->fileMenu->Enable(ID_SETTINGS, !this->studying && !guiding);
+	this->studyMenu->Enable(ID_STUDY_DECK, !this->studying && !guiding);
+	this->studyMenu->Enable(ID_AI_STUDY, !this->studying && !guiding);
+	this->studyMenu->Enable(ID_TODAYS_PROGRESS, !this->studying && !guiding);
+	this->calendarMenu->Enable(ID_CALENDAR, !this->studying && !guiding);
 }
 
 void MainFrame::ApplyMenuIcons() {
@@ -228,6 +238,9 @@ void MainFrame::SwapCurrentPanel(wxPanel* newPanel) {
 
 void MainFrame::ShowCardList() {
 	this->SetStudying(false);
+	if (this->deckPanelList != nullptr) {
+		this->deckPanelList->RefreshGuide();
+	}
 	this->flashCardList = new FlashCardList(this->activePanel, this->selectedDeckId);
 	this->SwapCurrentPanel(this->flashCardList);
 }
