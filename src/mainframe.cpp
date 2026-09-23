@@ -8,6 +8,8 @@
 #include "card_list_panel.h"
 #include "deck_panel.h"
 #include "study_panel.h"
+#include "calendar_panel.h"
+#include "ai_panel.h"
 
 MainFrame::MainFrame(const wxString& title)
     : wxFrame(nullptr, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE),
@@ -25,20 +27,24 @@ MainFrame::MainFrame(const wxString& title)
 	this->fileMenu->AppendSeparator();
 	this->fileMenu->Append(wxID_EXIT, "&Exit\tAlt+F4");
 	 
-	this->editMenu = new wxMenu;										// EDIT						
+	this->editMenu = new wxMenu;										// EDIT		
+	this->editMenu->Append(wxID_UNDO, "&Undo\tCtrl+Z");
+	this->editMenu->Append(wxID_REDO, "&Redo\tCtrl+Y");
+	this->editMenu->AppendSeparator();
 	this->editMenu->Append(wxID_CUT, "&Cut\tCtrl+X");
 	this->editMenu->Append(wxID_COPY, "&Copy\tCtrl+C");
 	this->editMenu->Append(wxID_PASTE, "&Paste\tCtrl+V");
+	this->editMenu->Append(wxID_SELECTALL, "&Select All\tCtrl+A");
 	
 	this->searchMenu = new wxMenu;										// SEARCH
 	this->searchMenu->Append(wxID_FIND, "&Find\tCtrl+F");
 	this->searchMenu->Append(wxID_REPLACE, "&Replace\tCtrl+H");
 	 
 	this->viewMenu = new wxMenu;										// VIEW
-	this->viewMenu->Append(ID_CARDS, "Cards");
-	this->viewMenu->Append(ID_STUDY, "Study");
-	this->viewMenu->Append(ID_CALENDAR, "Calendar");
-	this->viewMenu->Append(ID_AI, "AI");
+	this->viewMenu->Append(ID_CARDS, "&Cards\tF1");
+	this->viewMenu->Append(ID_STUDY, "&Study\tF2");
+	this->viewMenu->Append(ID_CALENDAR, "&Calendar\tF3");
+	this->viewMenu->Append(ID_AI, "&AI\tF4");
 	
 	this->toolsMenu = new wxMenu;										// TOOLS
 	this->toolsMenu->Append(ID_SETTINGS, "Settings");
@@ -53,21 +59,32 @@ MainFrame::MainFrame(const wxString& title)
 	this->menuBar->Append(toolsMenu, "Tools");
 	this->menuBar->Append(helpMenu, "Help");
 	
-	this->shortcuts[0].Set(wxACCEL_CTRL, (int)'N', wxID_NEW);			// KEYBOARD SHORTCUTS
+	//======== KEYBOARD SHORTCUTS ================================== KEYBOARD SHORTCUTS ======================
+	this->shortcuts[0].Set(wxACCEL_CTRL, (int)'N', wxID_NEW);			
 	this->shortcuts[1].Set(wxACCEL_CTRL, (int)'O', wxID_OPEN);
 	this->shortcuts[2].Set(wxACCEL_CTRL, (int)'S', wxID_SAVE);
+	this->shortcuts[3].Set(wxACCEL_ALT,  WXK_F4,   wxID_EXIT);
 	
-	this->shortcuts[3].Set(wxACCEL_CTRL, (int)'X', wxID_CUT);
-	this->shortcuts[4].Set(wxACCEL_CTRL, (int)'C', wxID_COPY);
-	this->shortcuts[5].Set(wxACCEL_CTRL, (int)'V', wxID_PASTE);
+	this->shortcuts[4].Set(wxACCEL_CTRL, (int)'Z', wxID_UNDO);
+	this->shortcuts[5].Set(wxACCEL_CTRL, (int)'Y', wxID_REDO);
+	this->shortcuts[6].Set(wxACCEL_CTRL, (int)'X', wxID_CUT);
+	this->shortcuts[7].Set(wxACCEL_CTRL, (int)'C', wxID_COPY);
+	this->shortcuts[8].Set(wxACCEL_CTRL, (int)'V', wxID_PASTE);
+	this->shortcuts[9].Set(wxACCEL_CTRL, (int)'A', wxID_SELECTALL);
 	
-	this->shortcuts[6].Set(wxACCEL_CTRL, (int)'F', wxID_FIND);
-	this->shortcuts[7].Set(wxACCEL_CTRL, (int)'H', wxID_REPLACE);
+	this->shortcuts[10].Set(wxACCEL_CTRL, (int)'F', wxID_FIND);
+	this->shortcuts[11].Set(wxACCEL_CTRL, (int)'H', wxID_REPLACE);
 	
-	wxAcceleratorTable accel(8, this->shortcuts);
+	this->shortcuts[12].Set(wxACCEL_NORMAL, WXK_F1, ID_CARDS);
+	this->shortcuts[13].Set(wxACCEL_NORMAL, WXK_F2, ID_STUDY);
+	this->shortcuts[14].Set(wxACCEL_NORMAL, WXK_F3, ID_CALENDAR);
+	this->shortcuts[15].Set(wxACCEL_NORMAL, WXK_F4, ID_AI);
+	
+	wxAcceleratorTable accel(15, this->shortcuts);
 	this->SetAcceleratorTable(accel);
 	 
-	this->SetMenuBar(this->menuBar);									// ATTACH MENU BAR / STATUS BAR
+	//============ ATTACH WIDGETS ==================================== ATTACH WIDGETS ========================= 
+	this->SetMenuBar(this->menuBar);									
 	this->CreateStatusBar();
 	
 	this->rootSizer = new wxBoxSizer(wxHORIZONTAL);
@@ -76,8 +93,7 @@ MainFrame::MainFrame(const wxString& title)
 	
 	this->activePanel = new wxPanel(this, wxID_ANY);
 	this->activePanel->SetBackgroundColour(*wxWHITE);
-	//this->SwapCurrentPanel(new CardListPanel(this->activePanel, 0));
-	this->SwapCurrentPanel(new StudyPanel(this->activePanel, 0));
+	this->SetCurrentPanel(new CardListPanel(this->activePanel, 0));
 	
 	this->rootSizer->Add(deckPanel, 0, wxEXPAND | wxALL, 0);
 	this->rootSizer->Add(activePanel, 1, wxEXPAND | wxALL, 0);
@@ -85,16 +101,18 @@ MainFrame::MainFrame(const wxString& title)
 	this->SetSizer(this->rootSizer);
 	this->Layout();
 	
-	//========= BIND EVENT HANDLERS ==================================== BIND EVENT HANDLERS =================================
-	
+	//========= BIND EVENT HANDLERS ==================================== BIND EVENT HANDLERS ===================
 	this->Bind(wxEVT_MENU, &MainFrame::OnNew, this, wxID_NEW);					// FILE
 	this->Bind(wxEVT_MENU, &MainFrame::OnOpen, this, wxID_OPEN);
 	this->Bind(wxEVT_MENU, &MainFrame::OnSave, this, wxID_SAVE);
 	this->Bind(wxEVT_MENU, &MainFrame::OnExit, this, wxID_EXIT);
 	
-	this->Bind(wxEVT_MENU, &MainFrame::OnCut, this, wxID_CUT);					// EDIT
+	this->Bind(wxEVT_MENU, &MainFrame::OnUndo, this, wxID_UNDO);					// EDIT
+	this->Bind(wxEVT_MENU, &MainFrame::OnRedo, this, wxID_REDO);
+	this->Bind(wxEVT_MENU, &MainFrame::OnCut, this, wxID_CUT);					
 	this->Bind(wxEVT_MENU, &MainFrame::OnCopy, this, wxID_COPY);
 	this->Bind(wxEVT_MENU, &MainFrame::OnPaste, this, wxID_PASTE);
+	this->Bind(wxEVT_MENU, &MainFrame::OnSelectAll, this, wxID_SELECTALL);
 	
 	this->Bind(wxEVT_MENU, &MainFrame::OnFind, this, wxID_FIND);					// SEARCH
 	this->Bind(wxEVT_MENU, &MainFrame::OnReplace, this, wxID_REPLACE);
@@ -117,14 +135,13 @@ MainFrame::MainFrame(const wxString& title)
 	this->Bind(wxEVT_CLOSE_WINDOW, &MainFrame::OnWindowClosed, this);
 }
 
-void MainFrame::SwapCurrentPanel(wxPanel* newPanel) {
+void MainFrame::SetCurrentPanel(wxPanel* newPanel) {
 	if(this->currentPanel != NULL) { 
 		this->currentPanel->Destroy();
 		this->currentPanel = NULL;
 	}
 	
 	this->activePanel->SetSizer(NULL);
-	//this->activePanel->DestroyChildren();
 	
 	this->currentPanel = newPanel;
 	this->currentPanel->SetBackgroundStyle(wxBG_STYLE_PAINT);
@@ -159,7 +176,17 @@ void MainFrame::OnExit(wxCommandEvent& event) {
 	Close(true);
 }
 
-void MainFrame::OnCut(wxCommandEvent& event) {						// EDIT
+void MainFrame::OnUndo(wxCommandEvent& event) {						// EDIT
+	wxLogStatus("UNDO");
+	event.Skip();
+}
+
+void MainFrame::OnRedo(wxCommandEvent& event) {
+	wxLogStatus("REDO");
+	event.Skip();
+}
+
+void MainFrame::OnCut(wxCommandEvent& event) {						
 	wxLogStatus("CUT");
 	event.Skip();
 }
@@ -171,6 +198,11 @@ void MainFrame::OnCopy(wxCommandEvent& event) {
 
 void MainFrame::OnPaste(wxCommandEvent& event) {
 	wxLogStatus("PASTE");
+	event.Skip();
+}
+
+void MainFrame::OnSelectAll(wxCommandEvent& event) {
+	wxLogStatus("SELECT ALL");
 	event.Skip();
 }
 
@@ -186,23 +218,25 @@ void MainFrame::OnReplace(wxCommandEvent& event) {
 
 void MainFrame::OnCards(wxCommandEvent& event) {					// VIEW
 	wxLogStatus("CARDS");
-	this->SwapCurrentPanel(new CardListPanel(this->activePanel, 0));
+	this->SetCurrentPanel(new CardListPanel(this->activePanel, 0));
 	event.Skip();
 }
 
 void MainFrame::OnStudy(wxCommandEvent& event) {
 	wxLogStatus("STUDY");
-	this->SwapCurrentPanel(new StudyPanel(this->activePanel, 0));
+	this->SetCurrentPanel(new StudyPanel(this->activePanel, 0));
 	event.Skip();
 }
 
 void MainFrame::OnCalendar(wxCommandEvent& event) {
 	wxLogStatus("CALENDAR");
+	this->SetCurrentPanel(new CalendarPanel(this->activePanel));
 	event.Skip();
 }
 
 void MainFrame::OnAI(wxCommandEvent& event) {
 	wxLogStatus("AI");
+	this->SetCurrentPanel(new AIPanel(this->activePanel));
 	event.Skip();
 }
 
@@ -216,7 +250,7 @@ void MainFrame::OnAbout(wxCommandEvent& event) {					// HELP
 	event.Skip();
 }
 
-void MainFrame::OnMouseEvent(wxMouseEvent& event) {					// I/O
+void MainFrame::OnMouseEvent(wxMouseEvent& event) {					// MOUSE
 	if(event.LeftDown()) {
 		//wxLogStatus("LMB DOWN");
 	}
@@ -241,7 +275,7 @@ void MainFrame::OnMouseEvent(wxMouseEvent& event) {					// I/O
 	event.Skip();
 }
 
-void MainFrame::OnKeyEvent(wxKeyEvent& event) {						
+void MainFrame::OnKeyEvent(wxKeyEvent& event) {						// KEY						
 	if(event.GetKeyCode() == WXK_TAB) {
 		wxWindow* window = (wxWindow*)event.GetEventObject();
 		window->Navigate();
@@ -262,7 +296,7 @@ void MainFrame::OnWindowResized(wxSizeEvent& event) {				// WINDOW
 	
 	this->app.SetWindowWidth(size.GetWidth());
 	this->app.SetWindowHeight(size.GetHeight());
-	this->app.Print();
+	//this->app.Print();
 	
 	event.Skip();
 }
