@@ -2,6 +2,7 @@
 
 StudyPanel::StudyPanel(wxWindow* parent, int deckID) : wxPanel(parent), deckID(deckID) {
     //============ ROOT PANEL ======================================== ROOT PANEL =====================
+	this->SetBackgroundStyle(wxBG_STYLE_PAINT);
     this->SetBackgroundColour(*wxWHITE);	
     this->rootSizer = new wxBoxSizer(wxVERTICAL);
 	
