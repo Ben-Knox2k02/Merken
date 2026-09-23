@@ -227,6 +227,14 @@ void FlashCardList::LoadCards() {
 		}
 	}
 
+	// An empty column is not shown, so one card would stretch across the whole row.
+	if (this->leftCol->GetItemCount() == 0) {
+		this->leftCol->AddSpacer(0);
+	}
+	if (this->rightCol->GetItemCount() == 0) {
+		this->rightCol->AddSpacer(0);
+	}
+
 	this->scroller->FitInside();
 	this->scroller->Layout();
 	this->ShowEmptyState(this->cards.empty());
