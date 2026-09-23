@@ -39,6 +39,7 @@ class FlashCardList : public wxPanel {
 		std::vector<int> cardIds;
 		wxString deckName;
 		wxString deckDescription;
+		wxSizerItem* headerGap;
 		int lastHeaderWrap;
 		int lastDescWrap;
 

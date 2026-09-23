@@ -73,6 +73,7 @@ int LabelHeight(wxWindow* win, const wxString& wrapped) {
 FlashCardList::FlashCardList(wxWindow* parent, int deckId)
 	: wxPanel(parent),
 	  deckId(deckId),
+	  headerGap(nullptr),
 	  lastHeaderWrap(0),
 	  lastDescWrap(0) {
 	this->SetBackgroundStyle(wxBG_STYLE_PAINT);
@@ -126,6 +127,9 @@ FlashCardList::FlashCardList(wxWindow* parent, int deckId)
 	headerBlock->Add(headerRow, 0, wxEXPAND);
 	headerBlock->Add(this->description, 0, wxEXPAND | wxTOP | wxBOTTOM, Theme::Get().space.xxl);
 	this->rootSizer->Add(headerBlock, 0, wxEXPAND | wxALL, pad);
+	const int nameToDesc = Theme::Get().space.xxl;
+	this->headerGap = this->rootSizer->AddSpacer(nameToDesc > pad ? nameToDesc - pad : 0);
+	this->headerGap->Show(false);
 
 	this->scroller = new wxScrolledWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxVSCROLL);
 	this->scroller->SetScrollRate(0, 16);
@@ -318,7 +322,15 @@ void FlashCardList::UpdateDeckHeader() {
 	this->header->SetLabel(this->deckName);
 	this->header->Show(!this->deckName.IsEmpty());
 	this->description->SetLabel(this->deckDescription);
-	this->description->Show(!this->deckDescription.IsEmpty());
+	const bool hasDescription = !this->deckDescription.IsEmpty();
+	this->description->Show(hasDescription);
+	if (this->headerGap != nullptr) {
+		const int nameToDesc = Theme::Get().space.xxl;
+		const int pad = Theme::Get().size.panelPad;
+		const int missing = !hasDescription && nameToDesc > pad ? nameToDesc - pad : 0;
+		this->headerGap->SetMinSize(wxSize(0, missing));
+		this->headerGap->Show(missing > 0);
+	}
 	this->lastHeaderWrap = 0;
 	this->lastDescWrap = 0;
 	this->WrapHeader();
