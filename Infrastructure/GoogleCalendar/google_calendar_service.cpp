@@ -72,8 +72,8 @@ CalendarEvent GoogleCalendarService::CreateEvent(const CalendarEvent& event, con
 			}
 		}
 	} catch (const std::exception& e) {
-		// Log the exception if needed
-		(void)e; //Suppress unused variable warning
+		//log the exception if needed
+		(void)e; //suppress unused variable warning
 
 	}
 	return event;
@@ -81,14 +81,25 @@ CalendarEvent GoogleCalendarService::CreateEvent(const CalendarEvent& event, con
 }
 
 std::optional<CalendarEvent> GoogleCalendarService::GetEvent(const std::string& googleEventId, const std::string& apiKey) {
-	(void)apiKey;
-	(void)this->httpClient;
-	if (googleEventId.empty()) {
+	if (googleEventId.empty() || apiKey.empty()) {
 		return std::nullopt;
 	}
-	CalendarEvent event(0, "", "", "");
-	event.SetGoogleEventId(googleEventId);
-	return event;
+	
+	try {
+		std::string url = "https://www.googleapis.com/calendar/v3/calendars/primary/events/" + googleEventId + "?key=" + apiKey;
+
+		HttpResponse response = this->httpClient.Get(url);
+
+		if (response.statusCode == 200 && !response.body.empty()) {
+			nlohmann::json jsonResponse = nlohmann::json::parse(response.body);
+			CalendarEvent event = ParseGoogleEventJson(jsonResponse);
+			return event;
+		}
+	} catch (const std::exception& e) {
+		//log the exception if needed
+		(void)e; //suppress unused variable warning
+	}
+	return std::nullopt;
 }
 
 std::vector<CalendarEvent> GoogleCalendarService::GetEvents(const std::string& apiKey) {
