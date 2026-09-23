@@ -13,12 +13,13 @@ class ProfileDialog : public wxDialog {
 		wxTextCtrl* nameCtrl;
 		wxTextCtrl* noteCtrl;
 		wxChoice* goalChoice;
-		wxCheckBox* aiStudyCheck;
+		wxChoice* themeChoice;
 
 		void OnSave(wxCommandEvent& event);
 
 	private:
 		std::vector<int> goalValues;
+		bool keptUsesAiStudy;
 
 		std::optional<int> SelectedGoal() const;
 };

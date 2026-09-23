@@ -1,6 +1,8 @@
 #include "profile_dialog.h"
 #include "centered_message.h"
 #include "theme.h"
+#include "theme_preference.h"
+#include "mainframe.h"
 #include "app.h"
 #include "../../Application/UseCases/Profile/UpdateUserProfile/update_user_profile_usecase.h"
 
@@ -62,8 +64,13 @@ ProfileDialog::ProfileDialog(wxWindow* parent, const GetUserProfileResponse& pro
 	this->goalChoice->SetSelection(selected);
 	fields->Add(this->goalChoice, 1, wxEXPAND);
 
-	this->aiStudyCheck = new wxCheckBox(this, wxID_ANY, "Use AI study");
-	this->aiStudyCheck->SetValue(profile.usesAiStudy);
+	fields->Add(new wxStaticText(this, wxID_ANY, "Theme:"), 0, wxALIGN_CENTER_VERTICAL);
+	this->themeChoice = new wxChoice(this, wxID_ANY);
+	this->themeChoice->Append("Light");
+	this->themeChoice->Append("Dark");
+	this->themeChoice->SetSelection(Theme::IsDarkAppearance() ? 1 : 0);
+	fields->Add(this->themeChoice, 1, wxEXPAND);
+	this->keptUsesAiStudy = profile.usesAiStudy;
 
 	wxButton* okButton = new wxButton(this, wxID_ANY, "OK");
 	wxButton* cancelButton = new wxButton(this, wxID_CANCEL, "Cancel");
@@ -75,7 +82,6 @@ ProfileDialog::ProfileDialog(wxWindow* parent, const GetUserProfileResponse& pro
 
 	wxBoxSizer* root = new wxBoxSizer(wxVERTICAL);
 	root->Add(fields, 0, wxEXPAND | wxALL, 16);
-	root->Add(this->aiStudyCheck, 0, wxLEFT | wxRIGHT | wxBOTTOM, 16);
 	root->Add(buttons, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 16);
 	this->SetSizer(root);
 	this->SetMinSize(wxSize(480, 240));
@@ -104,12 +110,20 @@ void ProfileDialog::OnSave(wxCommandEvent&) {
 	request.displayName = this->nameCtrl->GetValue().ToStdString();
 	request.note = this->noteCtrl->GetValue().ToStdString();
 	request.dailyGoal = this->SelectedGoal();
-	request.usesAiStudy = this->aiStudyCheck->GetValue();
+	request.usesAiStudy = this->keptUsesAiStudy;
 
 	auto useCase = wxGetApp().GetInjector().create<UpdateUserProfileUseCase>();
 	if (!useCase.Execute(request)) {
 		ShowCenteredMessage(this, "Could not save your profile.", "Edit Profile", wxOK | wxICON_ERROR);
 		return;
+	}
+	const bool dark = this->themeChoice->GetSelection() == 1;
+	if (!SaveAndApplyTheme(dark)) {
+		ShowCenteredMessage(this, "Could not save the theme.", "Edit Profile", wxOK | wxICON_ERROR);
+		return;
+	}
+	if (auto* frame = dynamic_cast<MainFrame*>(wxGetTopLevelParent(this))) {
+		frame->ApplyTheme();
 	}
 	this->EndModal(wxID_OK);
 }

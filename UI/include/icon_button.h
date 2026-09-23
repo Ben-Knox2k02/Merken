@@ -9,6 +9,10 @@
 #include <wx/bmpbndl.h>
 #include <wx/vector.h>
 #include "theme.h"
+#ifdef __WXOSX__
+#include <objc/message.h>
+#include <objc/runtime.h>
+#endif
 
 class IconButton : public wxBitmapButton {
 	public:
@@ -34,10 +38,16 @@ class IconButton : public wxBitmapButton {
 			const int padX = this->FromDIP(24);
 			const int width = this->FromDIP(kIconSize) + padX * 2;
 			this->SetMinSize(wxSize(width, height));
+			this->CenterIcon();
+			this->Bind(wxEVT_SIZE, [this](wxSizeEvent& event) {
+				event.Skip();
+				this->CenterIcon();
+			});
 		}
 
 		void ApplyTheme() {
-			this->SetBitmap(LoadIconBundle(this->imagePath, kIconSize, this->forceInvert || IsDarkTheme()));
+			this->SetBitmapLabel(LoadIconBundle(this->imagePath, kIconSize, this->forceInvert || IsDarkTheme()));
+			this->CenterIcon();
 		}
 
 		static wxBitmapBundle LoadIconBundle(const wxString& path, int dipSize, bool invert) {
@@ -76,6 +86,20 @@ class IconButton : public wxBitmapButton {
 
 		static bool IsDarkTheme() {
 			return Theme::IsDarkAppearance();
+		}
+
+		void CenterIcon() {
+#ifdef __WXOSX__
+			id button = reinterpret_cast<id>(this->GetHandle());
+			if (button == nullptr) {
+				return;
+			}
+			using VoidLong = void (*)(id, SEL, long);
+			// NSImageOnly draws the icon in the middle of the button.
+			reinterpret_cast<VoidLong>(objc_msgSend)(button, sel_registerName("setImagePosition:"), 1L);
+#else
+			(void)this;
+#endif
 		}
 
 		static wxImage ScaledIcon(const wxImage& source, int pixels, bool invert) {

@@ -1,6 +1,7 @@
 #include "app.h"
 #include "mainframe.h"
 #include "onboarding_dialog.h"
+#include "theme_preference.h"
 #include "../../Application/UseCases/Profile/GetUserProfile/get_user_profile_usecase.h"
 
 void App::EnsureInjector() {
@@ -15,6 +16,7 @@ bool App::OnInit() {
 	this->SetAppearance(Appearance::System);
 	wxInitAllImageHandlers();
 	this->EnsureInjector();
+	ApplyStoredTheme();
 
 	auto profileUseCase = this->GetInjector().create<GetUserProfileUseCase>();
 	GetUserProfileResponse profile = profileUseCase.Execute();
