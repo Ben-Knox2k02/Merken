@@ -50,6 +50,11 @@ DeckPanelList::DeckPanelList(wxWindow* parent)
 	this->addDeckButton = new IconButton(this, "UI/assets/add_icon.png", "Add", true);
 	this->editDeckButton = new IconButton(this, "UI/assets/edit_icon.png", "Edit", true);
 	this->deleteDeckButton = new IconButton(this, "UI/assets/delete_icon.png", "Delete", true);
+	const int buttonHeight = this->addDeckButton->GetMinHeight();
+	const wxSize sharedButtonSize(0, buttonHeight);
+	this->addDeckButton->SetMinSize(sharedButtonSize);
+	this->editDeckButton->SetMinSize(sharedButtonSize);
+	this->deleteDeckButton->SetMinSize(sharedButtonSize);
 
 	this->buttonSizer = new wxFlexGridSizer(1, 3, 0, Theme::Get().space.xs);
 	this->buttonSizer->AddGrowableCol(0, 1);
