@@ -22,6 +22,12 @@ class WxHttpClient : public IHttpClient, public wxEvtHandler {
 			const std::vector<HttpHeader>& headers = {}
 		) override;
 
+		HttpResponse PatchJson(
+			const std::string& url,
+			const std::string& jsonBody,
+			const std::vector<HttpHeader>& headers = {}
+		) override;
+
 	private:
 		HttpResponse Execute(
 			const wxString& method,

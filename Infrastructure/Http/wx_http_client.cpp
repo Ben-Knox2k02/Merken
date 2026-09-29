@@ -16,6 +16,14 @@ HttpResponse WxHttpClient::PostJson(
 	return this->Execute("POST", url, &jsonBody, headers);
 }
 
+HttpResponse WxHttpClient::PatchJson(
+	const std::string& url,
+	const std::string& jsonBody,
+	const std::vector<HttpHeader>& headers
+) {
+	return this->Execute("PATCH", url, &jsonBody, headers);
+}
+
 HttpResponse WxHttpClient::Execute(
 	const wxString& method,
 	const std::string& url,
