@@ -16,7 +16,7 @@ StudyPanel::StudyPanel(wxWindow* parent, int deckID) : wxPanel(parent), deckID(d
     this->header->SetFont(wxFont(25, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD));
     this->header->SetForegroundColour(*wxWHITE);
 
-    this->topSizer->Add(this->header, 0, wxALIGN_CENTER | wxTOP | wxBOTTOM, 20);
+    this->topSizer->Add(this->header, 0, wxALIGN_CENTER | wxTOP | wxBOTTOM, 10);
     this->topPanel->SetSizer(topSizer);
 
     //============ MIDDLE SECTION PANEL =========================== MIDDLE SECTION PANEL ==============
@@ -63,7 +63,7 @@ StudyPanel::StudyPanel(wxWindow* parent, int deckID) : wxPanel(parent), deckID(d
     bottomNav->Add(resetButton, 0, wxRIGHT, 10);
     bottomNav->Add(changeButton,0);
 
-    this->bottomSizer->Add(bottomNav, 0, wxALIGN_CENTER | wxTOP | wxBOTTOM, 20);
+    this->bottomSizer->Add(bottomNav, 0, wxALIGN_CENTER | wxTOP | wxBOTTOM, 10);
     this->bottomPanel->SetSizer(bottomSizer);
     
 	//========== ADD PANELS TO ROOT SIZER ======================== ADD PANELS TO ROOT SIZER ============ 
