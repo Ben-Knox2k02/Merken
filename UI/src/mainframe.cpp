@@ -24,10 +24,20 @@
 
 wxDECLARE_APP(App);
 
-MainFrame::MainFrame(const wxString& title) : wxFrame(nullptr, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE), selectedDeckId(0), selectedCardCount(0), studying(false) {
+MainFrame::MainFrame(const wxString& title) : wxFrame(
+	nullptr,
+	wxID_ANY,
+	title,
+	wxDefaultPosition,
+	wxDefaultSize,
+	wxDEFAULT_FRAME_STYLE
+),
+selectedDeckId(0),
+selectedCardCount(0),
+studying(false) {
 	//=========== INITIALIZE WIDGETS ===================================== INITIALIZE WIDGETS ================================
 	
-	this->menuBar = new wxMenuBar;						// MENU BAR
+	this->menuBar = new wxMenuBar; // MENU BAR
 	 
 	this->fileMenu = new wxMenu;
 	this->fileMenu->Append(wxID_NEW, "Add Deck");
