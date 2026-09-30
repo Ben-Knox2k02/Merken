@@ -103,15 +103,50 @@ std::optional<CalendarEvent> GoogleCalendarService::GetEvent(const std::string& 
 }
 
 std::vector<CalendarEvent> GoogleCalendarService::GetEvents(const std::string& apiKey) {
-	(void)apiKey;
-	(void)this->httpClient;
-	return {};
+	std::vector<CalendarEvent> events;
+	if (apiKey.empty()) {
+		return events;
+	}
+
+	std::vector<HttpHeader> headers = { { "Authorization", "Bearer " + apiKey } };
+	std::string pageToken;
+
+	try {
+		do {
+			std::string url = "https://www.googleapis.com/calendar/v3/calendars/primary/events";
+			if (!pageToken.empty()) {
+				url += "?pageToken=" + pageToken;
+			}
+			HttpResponse response = this->httpClient.Get(url, headers);
+
+			if (!response.Ok() || response.body.empty()) {
+				break;
+			}
+
+			nlohmann::json jsonResponse = nlohmann::json::parse(response.body);
+
+			if (jsonResponse.contains("items") && jsonResponse["items"].is_array()){
+				for (const auto& item : jsonResponse["items"]){
+					if (item.value("status", "") == "cancelled"){
+						continue;
+					}
+					events.push_back(ParseGoogleEventJson(item));
+				}
+			}
+
+			pageToken = jsonResponse.value("nextPageToken", "");
+		} while (!pageToken.empty());
+	} catch (const std::exception& e) {
+		//log the exception if needed
+		(void)e; //suppress unused variable warning
+	}
+	return events;
 }
 
 bool GoogleCalendarService::UpdateEvent(const CalendarEvent& event, const std::string& apiKey) {
 	(void)event;
 	(void)apiKey;
 	(void)this->httpClient;
-	return true;
+	return false;
 }
 
