@@ -27,4 +27,13 @@ struct Deck {
 	wxString description;
 };
 
+struct Event {
+	int ID;
+	wxString title;
+	wxString description;
+	wxString date;
+	wxString location;
+	wxString reminder;
+};
+
 #endif
