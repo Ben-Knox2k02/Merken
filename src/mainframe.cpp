@@ -91,12 +91,12 @@ MainFrame::MainFrame(const wxString& title)
 	
 	this->deckPanel = new DeckPanel(this);
 	
-	this->activePanel = new wxPanel(this, wxID_ANY);
-	this->activePanel->SetBackgroundColour(*wxWHITE);
-	this->SetCurrentPanel(new CardListPanel(this->activePanel, 0));
+	this->contentPanel = new wxPanel(this, wxID_ANY);
+	this->contentPanel->SetBackgroundColour(*wxWHITE);
+	this->SetCurrentPanel(new CardListPanel(this->contentPanel, 0));
 	
 	this->rootSizer->Add(deckPanel, 0, wxEXPAND | wxALL, 0);
-	this->rootSizer->Add(activePanel, 1, wxEXPAND | wxALL, 0);
+	this->rootSizer->Add(contentPanel, 1, wxEXPAND | wxALL, 0);
 	
 	this->SetSizer(this->rootSizer);
 	this->Layout();
@@ -141,7 +141,7 @@ void MainFrame::SetCurrentPanel(wxPanel* newPanel) {
 		this->currentPanel = NULL;
 	}
 	
-	this->activePanel->SetSizer(NULL);
+	this->contentPanel->SetSizer(NULL);
 	
 	this->currentPanel = newPanel;
 	this->currentPanel->SetBackgroundStyle(wxBG_STYLE_PAINT);
@@ -150,10 +150,14 @@ void MainFrame::SetCurrentPanel(wxPanel* newPanel) {
 	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
 	sizer->Add(this->currentPanel, 1, wxEXPAND);
 	
-	this->activePanel->SetSizer(sizer);
-	this->activePanel->Layout();
+	this->contentPanel->SetSizer(sizer);
+	this->contentPanel->Layout();
 	
 	this->currentPanel->SetFocus();
+}
+
+void MainFrame::SetSidebarPanel(wxPanel* newPanel) {
+	wxLogStatus("CHANGE SIDEBAR");
 }
 
 void MainFrame::OnNew(wxCommandEvent& event) {						// FILE
@@ -218,25 +222,25 @@ void MainFrame::OnReplace(wxCommandEvent& event) {
 
 void MainFrame::OnCards(wxCommandEvent& event) {					// VIEW
 	wxLogStatus("CARDS");
-	this->SetCurrentPanel(new CardListPanel(this->activePanel, 0));
+	this->SetCurrentPanel(new CardListPanel(this->contentPanel, 0));
 	event.Skip();
 }
 
 void MainFrame::OnStudy(wxCommandEvent& event) {
 	wxLogStatus("STUDY");
-	this->SetCurrentPanel(new StudyPanel(this->activePanel, 0));
+	this->SetCurrentPanel(new StudyPanel(this->contentPanel, 0));
 	event.Skip();
 }
 
 void MainFrame::OnCalendar(wxCommandEvent& event) {
 	wxLogStatus("CALENDAR");
-	this->SetCurrentPanel(new CalendarPanel(this->activePanel));
+	this->SetCurrentPanel(new CalendarPanel(this->contentPanel));
 	event.Skip();
 }
 
 void MainFrame::OnAI(wxCommandEvent& event) {
 	wxLogStatus("AI");
-	this->SetCurrentPanel(new AIPanel(this->activePanel));
+	this->SetCurrentPanel(new AIPanel(this->contentPanel));
 	event.Skip();
 }
 
