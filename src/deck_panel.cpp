@@ -10,7 +10,7 @@ DeckPanel::DeckPanel(wxWindow* parent) : wxPanel(parent) {
 	this->SetMinSize(wxSize(240, -1));
 	
 	this->header = new wxStaticText(this, wxID_ANY, "Decks");
-	this->header->SetFont(this->header->GetFont().Bold());
+	this->header->SetFont(wxFont(14, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD));
 	this->rootSizer->Add(this->header, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 10);
 	
 	this->deckList = new wxDataViewCtrl(this, wxID_ANY);
