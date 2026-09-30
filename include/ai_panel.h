@@ -11,17 +11,22 @@ class AIPanel : public wxPanel {
 		AIPanel(wxWindow* parent);
 	
 		wxPanel* topPanel;
-		wxPanel* midPanel;
 		wxPanel* bottomPanel;
 	
 		wxBoxSizer* rootSizer;
 		wxBoxSizer* topSizer;
-		wxBoxSizer* midSizer;
 		wxBoxSizer* bottomSizer;
 		
 		wxStaticText* header;
 		
+		wxTextCtrl* convoCtrl;
+		wxTextCtrl* promptCtrl;
+		
+		wxButton* submitButton;
+		
 		void OnPaint(wxPaintEvent& event);
+		
+		void OnSubmit(wxCommandEvent& event);
 };
 
 #endif
