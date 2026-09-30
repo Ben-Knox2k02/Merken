@@ -9,16 +9,16 @@ CardListPanel::CardListPanel(wxWindow* parent, int deckID) : wxPanel(parent), de
     this->header = new wxStaticText(this, wxID_ANY, "Cards in Deck");				 // HEADER
 	this->header->SetBackgroundColour(wxColour(*wxWHITE));
 	this->header->SetForegroundColour(wxColour(*wxBLACK));
-    this->header->SetFont(this->header->GetFont().Bold());
+	this->header->SetFont(wxFont(20, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD));
     this->rootSizer->Add(this->header, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 10);
 
     this->cardList = new wxDataViewCtrl(this, wxID_ANY);							 // CARD LIST
 	this->cardList->SetBackgroundColour(wxColour(*wxBLUE));
 	this->cardList->SetForegroundColour(wxColour(*wxWHITE));
 	
-    this->cardList->AppendTextColumn("Front", 0, wxDATAVIEW_CELL_INERT, 300);
-    this->cardList->AppendTextColumn("Back", 1,  wxDATAVIEW_CELL_INERT, 300);
-    this->cardList->AppendTextColumn("Tags", 2,  wxDATAVIEW_CELL_INERT, 300);
+    this->cardList->AppendTextColumn("Front", 0, wxDATAVIEW_CELL_INERT, 400);
+    this->cardList->AppendTextColumn("Back", 1,  wxDATAVIEW_CELL_INERT, 400);
+    this->cardList->AppendTextColumn("Tags", 2,  wxDATAVIEW_CELL_INERT, 400);
 	
 	this->cardViewModel = new wxDataViewListStore();
 	this->cardList->AssociateModel(cardViewModel);
@@ -62,7 +62,7 @@ CardListPanel::CardListPanel(wxWindow* parent, int deckID) : wxPanel(parent), de
     this->deleteButton->Bind(wxEVT_BUTTON, &CardListPanel::OnDelete, this);
 }
 
-void CardListPanel::OnPaint(wxPaintEvent& event) {				// PAINT METHOD FOR DOUBLE BUFFERING
+void CardListPanel::OnPaint(wxPaintEvent& event) {								// PAINT METHOD FOR DOUBLE BUFFERING
 	wxAutoBufferedPaintDC dc(this);
 	dc.SetBrush(wxBrush(this->GetBackgroundColour()));
 	dc.SetPen(*wxTRANSPARENT_PEN);
