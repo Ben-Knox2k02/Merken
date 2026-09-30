@@ -12,8 +12,8 @@ class MainFrame : public wxFrame {
 		MainFrame(const wxString& title);
 		App& app;										// GLOBAL REFERENCE TO APP
 		
-		wxPanel* deckPanel;								// LAYOUT PANELS
-		wxPanel* activePanel;
+		wxPanel* deckPanel;								
+		wxPanel* contentPanel;							// HUSK TO HOLD currentPanel
 		wxPanel* currentPanel;
 		
 		wxBoxSizer* rootSizer;
@@ -29,6 +29,7 @@ class MainFrame : public wxFrame {
 		wxMenu* helpMenu;
 		
 		void SetCurrentPanel(wxPanel* newPanel);
+		void SetSidebarPanel(wxPanel* newPanel);
 		
 		void OnNew(wxCommandEvent& event);				// FILE
 		void OnOpen(wxCommandEvent& event);
