@@ -15,6 +15,7 @@ std::vector<Deck> DeckRepository::GetDecks() {
 			result.GetString(2).ToStdString(),
 			result.GetString(3).ToStdString()
 		);
+		this->LoadCards(decks.back());
 	}
 
 	return decks;
@@ -117,4 +118,35 @@ bool DeckRepository::UpdateCard(const Card& card) {
 	stmt.Bind(11, card.GetDeckId());
 	stmt.Bind(12, card.GetCardId());
 	return stmt.ExecuteUpdate() > 0;
+}
+
+bool DeckRepository::DeleteDeck(int deckId) {
+	try {
+		wxSQLite3::Statement cards = this->db.GetConnection()->PrepareStatement(
+			"DELETE FROM cards WHERE deck_id = ?;"
+		);
+		cards.Bind(1, deckId);
+		cards.ExecuteUpdate();
+
+		wxSQLite3::Statement deck = this->db.GetConnection()->PrepareStatement(
+			"DELETE FROM decks WHERE deck_id = ?;"
+		);
+		deck.Bind(1, deckId);
+		return deck.ExecuteUpdate() > 0;
+	} catch (const wxSQLite3::Exception&) {
+		return false;
+	}
+}
+
+bool DeckRepository::DeleteCard(int deckId, int cardId) {
+	try {
+		wxSQLite3::Statement stmt = this->db.GetConnection()->PrepareStatement(
+			"DELETE FROM cards WHERE deck_id = ? AND card_id = ?;"
+		);
+		stmt.Bind(1, deckId);
+		stmt.Bind(2, cardId);
+		return stmt.ExecuteUpdate() > 0;
+	} catch (const wxSQLite3::Exception&) {
+		return false;
+	}
 }

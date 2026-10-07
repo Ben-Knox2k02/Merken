@@ -8,6 +8,7 @@ struct DeckResponse {
 	std::string name;
 	std::string description;
 	std::string createdAt;
+	int cardCount = 0;
 };
 
 #endif
