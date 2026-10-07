@@ -21,7 +21,7 @@ The sprint Gantt chart is in [MerkenGanttChart.pdf](MerkenGanttChart.pdf). The e
 
 ## Due tasks
 
-Open work for each role is a checklist next to this file. Check items off when done.
+Open work for each role is a checklist next to this file. The requirements those tasks come from are in [MERKEN_SRS.md](MERKEN_SRS.md). Check items off when done.
 
 | Role | Where to look |
 |---|---|
@@ -29,6 +29,7 @@ Open work for each role is a checklist next to this file. Check items off when d
 | Database | [DB_TODO.md](DB_TODO.md) |
 | Application | no open task list right now — study/review use cases are in |
 | APIs | [API_TODO.md](API_TODO.md) |
+| Requirements | [MERKEN_SRS.md](MERKEN_SRS.md) |
 
 ---
 
