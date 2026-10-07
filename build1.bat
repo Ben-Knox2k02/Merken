@@ -1,0 +1,108 @@
+@echo off
+setlocal enabledelayedexpansion
+
+rem === OUTPUT ==========================================================
+set OUT=Merken.exe
+echo Building %OUT%
+
+rem === PATHS ===========================================================
+set MINGW=C:\mingw-w64
+set WX=C:\wxWidgets
+set PATH=%MINGW%\bin;%PATH%
+
+rem === INCLUDE / LIB PATHS =============================================
+set INC=-I UI\include -I ThirdParty\boost-di -I ThirdParty\wxSQLite3\include -I ThirdParty\wxSQLite3\src -I %WX%\lib\gcc_lib\mswu -I %WX%\include
+set LIB=-L %WX%\lib\gcc_lib -L %MINGW%\lib
+
+rem === WXWIDGETS LIBS (wxWidgets 3.3.x) =================================
+set WXLIBS= ^
+    -lwxmsw33u_core ^
+    -lwxbase33u_net ^
+    -lwxbase33u ^
+    -lwxpng ^
+    -lwxjpeg ^
+    -lwxwebp ^
+    -lwxtiff ^
+    -lwxzlib ^
+    -lwxregexu ^
+    -lwxexpat
+
+rem === WINDOWS SYSTEM LIBS =============================================
+set WINLIBS= ^
+    -lshlwapi ^
+    -lversion ^
+    -lole32 ^
+    -lshell32 ^
+    -luuid ^
+    -lrpcrt4 ^
+    -luxtheme ^
+    -lgdi32 ^
+    -loleaut32 ^
+    -lcomdlg32 ^
+    -lcomctl32 ^
+	-lcomctl32_subclass ^
+    -loleacc ^
+    -lwinspool ^
+    -lwininet ^
+    -lws2_32 ^
+    -lcrypt32 ^
+    -lgdiplus ^
+    -lmsimg32
+
+rem === ENSURE OBJ FOLDER ===============================================
+rmdir /s /q obj
+mkdir obj
+
+rem ==== MANIFEST / RESOURCES ===========================================
+echo Compiling manifest and resources...
+if exist UI\assets\manifest.rc (
+    %MINGW%\bin\windres.exe UI\assets\manifest.rc -O coff -o obj\manifest.o
+) else (
+    echo 1 24 "Microsoft.Windows.Common-Controls" Version=\x226.0.0.0\x22 ProcessorArchitecture=\x22*\x22 PublicKeyToken=\x226595b64144ccf1df\x22 language=\x22*\x22 > obj\manifest.rc
+    %MINGW%\bin\windres.exe obj\manifest.rc -O coff -o obj\manifest.o
+)
+
+rem === PARALLEL COMPILE (UI + Application + ThirdParty) ==================
+echo Compiling sources...
+
+for /r %%f in (*.cpp) do (
+    set "filepath=%%f"
+    echo !filepath! | findstr /i "ThirdParty Tests" >nul
+    if errorlevel 1 (
+        start /B cmd /c %MINGW%\bin\g++ -std=c++17 -pipe -O2 -c "%%f" %INC% -o obj\%%~nf.o
+    )
+)
+
+rem Compile wxSQLite3 wrapper files
+if exist ThirdParty\wxSQLite3\src\wxsqlite3.cpp (
+    start /B cmd /c %MINGW%\bin\g++ -std=c++17 -pipe -O2 -c ThirdParty\wxSQLite3\src\wxsqlite3.cpp %INC% -o obj\wxsqlite3.o
+)
+if exist ThirdParty\wxSQLite3\src\sqlite3mc_amalgamation.c (
+    start /B cmd /c %MINGW%\bin\gcc -pipe -O2 -w -c ThirdParty\wxSQLite3\src\sqlite3mc_amalgamation.c -I ThirdParty\wxSQLite3\src -o obj\sqlite3mc_amalgamation.o
+)
+
+rem === WAIT FOR PARALLEL JOBS ==========================================
+echo Waiting for compilation jobs...
+:waitloop
+tasklist /FI "IMAGENAME eq g++.exe" 2>nul | find /I "g++.exe" >nul
+if not errorlevel 1 (
+    timeout /t 1 >nul
+    goto waitloop
+)
+tasklist /FI "IMAGENAME eq gcc.exe" 2>nul | find /I "gcc.exe" >nul
+if not errorlevel 1 (
+    timeout /t 1 >nul
+    goto waitloop
+)
+
+rem === LINK =============================================================
+echo Linking...
+%MINGW%\bin\g++ obj\*.o -o %OUT% -mwindows %LIB% %WXLIBS% %WINLIBS%
+if errorlevel 1 (
+    echo.
+    echo Link failed.
+    exit /b 1
+)
+
+echo Build complete: %OUT%
+endlocal
