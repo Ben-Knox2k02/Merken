@@ -1,14 +1,20 @@
 @echo off
 setlocal enabledelayedexpansion
+cd /d "%~dp0"
 
 rem === OUTPUT ==========================================================
 set OUT=Merken.exe
 echo Building %OUT%
 
 rem === PATHS ===========================================================
-set MINGW=C:\mingw-w64
-set WX=C:\wxWidgets
+if not defined MINGW set MINGW=C:\msys64\mingw64
+if defined WXWIN (set "WX=%WXWIN%") else set "WX=C:\wxWidgets"
 set PATH=%MINGW%\bin;%PATH%
+
+if not exist "%WX%\lib\gcc_lib\mswu\wx\setup.h" (
+    echo wxWidgets not built. Run build_wxWidgets1.bat first.
+    exit /b 1
+)
 
 rem === INCLUDE / LIB PATHS =============================================
 set INC=-I UI\include -I ThirdParty\boost-di -I ThirdParty\wxSQLite3\include -I ThirdParty\wxSQLite3\src -I %WX%\lib\gcc_lib\mswu -I %WX%\include
@@ -40,7 +46,6 @@ set WINLIBS= ^
     -loleaut32 ^
     -lcomdlg32 ^
     -lcomctl32 ^
-	-lcomctl32_subclass ^
     -loleacc ^
     -lwinspool ^
     -lwininet ^
@@ -50,7 +55,7 @@ set WINLIBS= ^
     -lmsimg32
 
 rem === ENSURE OBJ FOLDER ===============================================
-rmdir /s /q obj
+if exist obj rmdir /s /q obj
 mkdir obj
 
 rem ==== MANIFEST / RESOURCES ===========================================
@@ -58,10 +63,17 @@ echo Compiling manifest and resources...
 if exist UI\assets\manifest.rc (
     %MINGW%\bin\windres.exe UI\assets\manifest.rc -O coff -o obj\manifest.o
 ) else (
-    echo 1 24 "Microsoft.Windows.Common-Controls" Version=\x226.0.0.0\x22 ProcessorArchitecture=\x22*\x22 PublicKeyToken=\x226595b64144ccf1df\x22 language=\x22*\x22 > obj\manifest.rc
-    %MINGW%\bin\windres.exe obj\manifest.rc -O coff -o obj\manifest.o
+    > obj\Merken.manifest echo ^<?xml version="1.0" encoding="UTF-8" standalone="yes"?^>
+    >> obj\Merken.manifest echo ^<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0"^>
+    >> obj\Merken.manifest echo   ^<dependency^>^<dependentAssembly^>
+    >> obj\Merken.manifest echo     ^<assemblyIdentity type="win32" name="Microsoft.Windows.Common-Controls" version="6.0.0.0" processorArchitecture="*" publicKeyToken="6595b64144ccf1df" language="*"/^>
+    >> obj\Merken.manifest echo   ^</dependentAssembly^>^</dependency^>
+    >> obj\Merken.manifest echo ^</assembly^>
+    echo 1 24 "Merken.manifest" > obj\manifest.rc
+    pushd obj
+    %MINGW%\bin\windres.exe manifest.rc -O coff -o manifest.o
+    popd
 )
-
 rem === PARALLEL COMPILE (UI + Application + ThirdParty) ==================
 echo Compiling sources...
 

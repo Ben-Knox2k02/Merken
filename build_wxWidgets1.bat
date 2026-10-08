@@ -97,7 +97,7 @@ if errorlevel 1 (
 popd
 echo.
 echo wxWidgets used libraries are in: %WX%\lib\gcc_lib
-echo Next: build.bat
+echo Next: build1.bat
 exit /b 0
 
 :find_toolchain
