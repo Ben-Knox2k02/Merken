@@ -9,6 +9,8 @@ rem Example: mingw32-make -f makefile.gcc SHARED=0 BUILD=release wxaui
 if defined WXWIN (set "WX=%WXWIN%") else set "WX=C:\wxWidgets"
 if "%NUMBER_OF_PROCESSORS%"=="" set NUMBER_OF_PROCESSORS=4
 
+if defined MINGW set "PATH=%MINGW%\bin;%PATH%"
+
 call :find_toolchain
 if errorlevel 1 exit /b 1
 
