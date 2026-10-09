@@ -53,13 +53,20 @@ rem === ENSURE OBJ FOLDER ===============================================
 rmdir /s /q obj
 mkdir obj
 
+rem ==== ICON ============================================================
+echo Compiling icon resource...
+if exist UI\assets\app.rc (
+     %MINGW%\bin\windres.exe UI\assets\app.rc -O coff -o obj\app_icon.o
+) else (
+     echo ICON == NULL
+)
+
 rem ==== MANIFEST / RESOURCES ===========================================
 echo Compiling manifest and resources...
 if exist UI\assets\manifest.rc (
     %MINGW%\bin\windres.exe UI\assets\manifest.rc -O coff -o obj\manifest.o
 ) else (
-    echo 1 24 "Microsoft.Windows.Common-Controls" Version=\x226.0.0.0\x22 ProcessorArchitecture=\x22*\x22 PublicKeyToken=\x226595b64144ccf1df\x22 language=\x22*\x22 > obj\manifest.rc
-    %MINGW%\bin\windres.exe obj\manifest.rc -O coff -o obj\manifest.o
+    echo Using Default Manifest
 )
 
 rem === PARALLEL COMPILE (UI + Application + ThirdParty) ==================
