@@ -1,7 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 
-echo Custom Archive File libcomctl32_subclass.a should be installed in C:\path\to\your\MinGW\lib
+echo custom archive file libcomctl32_subclass.a should be installed in C:\path\to\your\MinGW\lib
 
 rem === OUTPUT ==========================================================
 set OUT=Merken.exe
@@ -12,6 +12,8 @@ if defined MINGW (
     set "MINGW=%MINGW%"
 ) else if exist "C:\msys64\mingw64\bin\g++.exe" (
     set "MINGW=C:\msys64\mingw64"
+) else if exist "C:\msys64\mingw-w64\bin\g++.exe" (
+	set "MINGW=C:\msys64\mingw-w64"
 ) else if exist "C:\mingw64\bin\g++.exe" (
     set "MINGW=C:\mingw64"
 ) else if exist "C:\mingw-w64\bin\g++.exe" (
