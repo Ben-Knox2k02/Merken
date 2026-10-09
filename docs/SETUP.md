@@ -95,6 +95,14 @@ Standalone MinGW-w64 (for example [WinLibs](https://winlibs.com/)) also works: p
 
 If you change compiler (UCRT64 vs MINGW64, or a new MinGW), delete `%WXWIN%\lib\gcc_lib` and `%WXWIN%\build\msw\gcc_mswu` and run `build_wxWidgets.bat` again with the same `g++` you will use for `build.bat`.
 
+## 4. Install Custom Archive
+```
+The custom archive file resolves subclass linker errors when building the application
+Make sure libcomctl32_subclass.a and comctl32_subclass.def are located in C:\path\to\your\MinGW\lib
+Example: C:\mingw-w64\lib\libcomctl32_subclass.a
+         C:\mingw-w64\lib\comctl32_subclass.def
+```
+
 ### 3. Build Merken
 
 From the repo root:
