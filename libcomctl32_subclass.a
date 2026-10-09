@@ -1,0 +1,29 @@
+!<arch>
+/               1791384463  0     0     0       274       `
+   
+  N  à   ²   ²  
+J  
+J  è  è  €  €__libcomctl32_subclass_a_iname _head_libcomctl32_subclass_a SetWindowSubclass __imp_SetWindowSubclass RemoveWindowSubclass __imp_RemoveWindowSubclass GetWindowSubclass __imp_GetWindowSubclass DefSubclassProc __imp_DefSubclassProc //                                              188       `
+libcomctl32_subclass_a_t.o/
+libcomctl32_subclass_a_h.o/
+libcomctl32_subclass_a_s00003.o/
+libcomctl32_subclass_a_s00002.o/
+libcomctl32_subclass_a_s00001.o/
+libcomctl32_subclass_a_s00000.o/
+/0              1791384463  0     0     100666  597       `
+d†     $        .text                                 P`.data                               @ PÀ.bss                                € PÀ.idata$4                         @ 0À.idata$5                         @ 0À.idata$7                         @ 0À                comctl32.dll    .file       þÿ  gfake              .text                            .data                            .bss                             .idata$4                        .idata$5                        .idata$7       
+                                #   __libcomctl32_subclass_a_iname 
+/28             1791384463  0     0     100666  662       `
+d†     6        .text                                 P`.data                               @ PÀ.bss                                € PÀ.idata$2                      @ 0À.idata$5                            @ @À.idata$4                            @ 0À                                      
+    .file       þÿ  gfake              hname           fthunk          .text                            .data                            .bss                             .idata$2                       .idata$4        .idata$5                           !            @   _head_libcomctl32_subclass_a __libcomctl32_subclass_a_iname /56             1791384463  0     0     100666  603       `
+d†      \  
+      .text              ,  H           0`.data                               @ 0À.bss                                € 0À.idata$7           4  R           0À.idata$5           8                @À.idata$4           @                0À.idata$6                               Àÿ%        š     €š     €           	    .text           .data           .bss            .idata$7        .idata$5        .idata$4        .idata$6                                           .            K   SetWindowSubclass __imp_SetWindowSubclass _head_libcomctl32_subclass_a 
+/89             1791384463  0     0     100666  609       `
+d†      \  
+      .text              ,  H           0`.data                               @ 0À.bss                                € 0À.idata$7           4  R           0À.idata$5           8                @À.idata$4           @                0À.idata$6                               Àÿ%        œ     €œ     €           	    .text           .data           .bss            .idata$7        .idata$5        .idata$4        .idata$6                                           4            Q   RemoveWindowSubclass __imp_RemoveWindowSubclass _head_libcomctl32_subclass_a 
+/122            1791384463  0     0     100666  603       `
+d†      \  
+      .text              ,  H           0`.data                               @ 0À.bss                                € 0À.idata$7           4  R           0À.idata$5           8                @À.idata$4           @                0À.idata$6                               Àÿ%        ›     €›     €           	    .text           .data           .bss            .idata$7        .idata$5        .idata$4        .idata$6                                           .            K   GetWindowSubclass __imp_GetWindowSubclass _head_libcomctl32_subclass_a 
+/155            1791384463  0     0     100666  599       `
+d†      \  
+      .text              ,  H           0`.data                               @ 0À.bss                                € 0À.idata$7           4  R           0À.idata$5           8                @À.idata$4           @                0À.idata$6                               Àÿ%             €     €           	    .text           .data           .bss            .idata$7        .idata$5        .idata$4        .idata$6                                           *            G   DefSubclassProc __imp_DefSubclassProc _head_libcomctl32_subclass_a 
