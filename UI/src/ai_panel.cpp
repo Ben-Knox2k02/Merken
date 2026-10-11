@@ -26,7 +26,7 @@ AIPanel::AIPanel(wxWindow* parent) : wxPanel(parent) {
     this->bottomSizer = new wxBoxSizer(wxVERTICAL);
 	
 	this->convoCtrl = new wxTextCtrl(this->bottomPanel, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE | wxTE_READONLY | wxTE_RICH2);	
-	this->promptCtrl = new wxTextCtrl(this->bottomPanel, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
+	this->promptCtrl = new wxTextCtrl(this->bottomPanel, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER | wxTE_RICH2);
 	this->promptCtrl->SetHint("Ask Gemini to generate cards, explain concepts, or create quizzes...");
 	this->submitButton = new wxButton(this->bottomPanel, wxID_ANY, "Submit");
 	
