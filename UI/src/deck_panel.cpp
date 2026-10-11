@@ -2,9 +2,10 @@
 #include "deck_panel.h"
 #include "dialog.h"
 #include "centered_message.h"
-#include "../../Application/UseCases/Deck/GetDecks/get_decks_usecase.h"
 #include "../../Application/UseCases/Deck/CreateDeck/create_deck_usecase.h"
+#include "../../Application/UseCases/Deck/GetDecks/get_decks_usecase.h"
 #include "../../Application/UseCases/Deck/UpdateDeck/update_deck_usecase.h"
+#include "../../Application/UseCases/Deck/DeleteDeck/delete_deck_usecase.h"
 
 DeckPanel::DeckPanel(wxWindow* parent) : wxPanel(parent) {
 	this->rootSizer = new wxBoxSizer(wxVERTICAL);
@@ -187,7 +188,33 @@ void DeckPanel::OnEditDeck(wxCommandEvent& event) {
 }
 
 void DeckPanel::OnDeleteDeck(wxCommandEvent& event) {
-	ShowCenteredMessage(this, "Delete is not implemented yet.", "Delete Deck", wxOK | wxICON_INFORMATION);
+	const int deckId = this->GetSelectedDeckId();
+	if (deckId == 0) {
+		ShowCenteredMessage(this, "No deck selected.", "Delete Deck", wxOK | wxICON_WARNING);
+		return;
+	}
+
+	// Confirm deletion before proceeding
+	int confirm = wxMessageBox("Are you sure you want to delete this deck?", 
+	                           "Confirm Delete", 
+	                           wxYES_NO | wxICON_QUESTION, 
+	                           this);
+	if (confirm != wxYES) {
+		return;
+	}
+
+	// Prepare the request to delete the deck.
+	DeleteDeckRequest request;
+	request.deckId = deckId;
+
+	// Call the DeleteDeckUseCase to delete the deck.
+	auto useCase = wxGetApp().GetInjector().create<DeleteDeckUseCase>();
+	if (!useCase.Execute(request)) {
+		ShowCenteredMessage(this, "Could not delete deck.", "Delete Deck", wxOK | wxICON_ERROR);
+		return;
+	}
+
+	this->LoadDecks();
 	event.Skip();
 }
 
