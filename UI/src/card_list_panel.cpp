@@ -2,10 +2,15 @@
 #include "centered_message.h"
 #include "app.h"
 #include "../../Application/UseCases/Deck/GetCards/get_cards_usecase.h"
+#include "../../Application/UseCases/Deck/GetDecks/get_decks_usecase.h"
 #include "../../Application/UseCases/Deck/CreateCard/create_card_usecase.h"
 #include "../../Application/UseCases/Deck/UpdateCard/update_card_usecase.h"
+#include "../../Application/UseCases/Deck/DeleteCard/delete_card_usecase.h"
+#include "../../Application/UseCases/Profile/GetUserProfile/get_user_profile_usecase.h"
 
 CardListPanel::CardListPanel(wxWindow* parent, int deckID) : wxPanel(parent), deckID(deckID) {
+	App& app = wxGetApp();
+	
 	this->rootSizer = new wxBoxSizer(wxVERTICAL);
 	
 	this->SetBackgroundStyle(wxBG_STYLE_PAINT);
@@ -20,9 +25,10 @@ CardListPanel::CardListPanel(wxWindow* parent, int deckID) : wxPanel(parent), de
 	this->cardList = new wxDataViewCtrl(this, wxID_ANY);
 	this->cardList->SetBackgroundColour(wxColour(*wxBLUE));
 	this->cardList->SetForegroundColour(wxColour(*wxWHITE));
-	this->cardList->AppendTextColumn("Front", 0, wxDATAVIEW_CELL_INERT, 400, wxALIGN_CENTER);
-	this->cardList->AppendTextColumn("Back", 1, wxDATAVIEW_CELL_INERT, 400, wxALIGN_CENTER);
-	this->cardList->AppendTextColumn("Tags", 2, wxDATAVIEW_CELL_INERT, 400, wxALIGN_CENTER);
+	int columnWidth = app.GetWindowWidth() / 4;
+	this->cardList->AppendTextColumn("Front", 0, wxDATAVIEW_CELL_INERT, columnWidth, wxALIGN_CENTER);
+	this->cardList->AppendTextColumn("Back", 1, wxDATAVIEW_CELL_INERT, columnWidth, wxALIGN_CENTER);
+	this->cardList->AppendTextColumn("Tags", 2, wxDATAVIEW_CELL_INERT, columnWidth, wxALIGN_CENTER);
 
 	this->cardViewModel = new wxDataViewListStore();
 	this->cardList->AssociateModel(this->cardViewModel);
@@ -180,18 +186,35 @@ void CardListPanel::OnDelete(wxCommandEvent& event) {
 	wxFrame* frame = wxDynamicCast(wxGetTopLevelParent(this), wxFrame);
 	if(frame) { frame->SetStatusText("Delete Card"); }
 	
-	/* int row = this->GetSelectedRow();
-	if(row == -1) {
-		wxMessageBox("No card selected", "Delete Card", wxOK | wxICON_WARNING);
-		return;
-	}
-	else {
-		int answer = wxMessageBox("Delete this card?", "Confirm Delete", wxYES_NO | wxICON_QUESTION);
-		if(answer == wxYES) {
-			wxDataViewItem item = this->cardViewModel->GetItem(row);
-			this->cardViewModel->DeleteItem(row);
-		}
-	} */
+	const int cardId = this->GetSelectedCardId();
+    if (cardId == 0) {
+        ShowCenteredMessage(this, "No card selected.", "Delete Card", wxOK | wxICON_WARNING);
+        return;
+    }
+
+    // Confirm deletion before proceeding
+    int confirm = wxMessageBox("Are you sure you want to delete this card?", 
+                               "Confirm Delete", 
+                               wxYES_NO | wxICON_QUESTION, 
+                               this);
+    if (confirm != wxYES) {
+        return;
+    }
+
+    // Prepare the request to delete the card
+    DeleteCardRequest request;
+    request.deckId = this->deckID;
+    request.cardId = cardId;
+
+    // Call the DeleteCardUseCase via the DI container
+    auto useCase = wxGetApp().GetInjector().create<DeleteCardUseCase>();
+    if (!useCase.Execute(request)) {
+        ShowCenteredMessage(this, "Could not delete card.", "Delete Card", wxOK | wxICON_ERROR);
+        return;
+    }
+
+    // Refresh the card list and finish event propagation
+    this->LoadCards();
 	
 	event.Skip();
 }
