@@ -12,7 +12,7 @@
 
 MainFrame::MainFrame(const wxString& title)
     : wxFrame(nullptr, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE),
-      app(wxGetApp()), currentPanel(nullptr), sidebarPanel(nullptr)
+      app(wxGetApp()), currentPanel(nullptr), sidebarPanel(nullptr), findDialog(nullptr)
 {
 	std::cout << "[TRACE] Entering MainFrame constructor..." << std::endl;
 	//=========== INITIALIZE WIDGETS ===================================== INITIALIZE WIDGETS ================================
@@ -108,6 +108,8 @@ MainFrame::MainFrame(const wxString& title)
 	
 	this->Bind(wxEVT_MENU, &MainFrame::OnUndo, this, wxID_UNDO);					// EDIT
 	this->Bind(wxEVT_MENU, &MainFrame::OnRedo, this, wxID_REDO);
+	this->Bind(wxEVT_UPDATE_UI, &MainFrame::OnUpdateUndo, this, wxID_UNDO);
+	this->Bind(wxEVT_UPDATE_UI, &MainFrame::OnUpdateRedo, this, wxID_REDO);
 	this->Bind(wxEVT_MENU, &MainFrame::OnCut, this, wxID_CUT);					
 	this->Bind(wxEVT_MENU, &MainFrame::OnCopy, this, wxID_COPY);
 	this->Bind(wxEVT_MENU, &MainFrame::OnPaste, this, wxID_PASTE);
@@ -132,8 +134,6 @@ MainFrame::MainFrame(const wxString& title)
 	
 	this->Bind(wxEVT_SIZE, &MainFrame::OnWindowResized, this);					// WINDOW EVENTS
 	this->Bind(wxEVT_CLOSE_WINDOW, &MainFrame::OnWindowClosed, this);
-	
-	//========= BIND EVENT HANDLERS ==================================== BIND EVENT HANDLERS =================================
 	
 	this->Bind(wxEVT_MENU, &MainFrame::OnNew, this, wxID_NEW);					// MENU EVENTS
 	this->Bind(wxEVT_MENU, &MainFrame::OnOpen, this, wxID_OPEN);
@@ -202,12 +202,49 @@ void MainFrame::OnExit(wxCommandEvent& event) {
 
 void MainFrame::OnUndo(wxCommandEvent& event) {						// EDIT
 	wxLogStatus("UNDO");
+	wxWindow* focused = wxWindow::FindFocus();
+    wxTextCtrl* textCtrl = wxDynamicCast(focused, wxTextCtrl);
+    if (textCtrl && textCtrl->CanUndo()) {
+        textCtrl->Undo();
+        return;
+    }
 	event.Skip();
 }
 
 void MainFrame::OnRedo(wxCommandEvent& event) {
 	wxLogStatus("REDO");
+	wxWindow* focused = wxWindow::FindFocus();
+    wxTextCtrl* textCtrl = wxDynamicCast(focused, wxTextCtrl);
+    if (textCtrl && textCtrl->CanRedo()) {
+        textCtrl->Redo();
+        return;
+    }
 	event.Skip();
+}
+
+void MainFrame::OnUpdateUndo(wxUpdateUIEvent& event) {
+    wxWindow* focused = wxWindow::FindFocus();
+    wxTextCtrl* textCtrl = wxDynamicCast(focused, wxTextCtrl);
+    
+    if (textCtrl) {
+        event.Enable(textCtrl->CanUndo());
+    } else {
+        // Fallback: enable if active panel has undo history, or false by default
+        event.Enable(false); 
+    }
+}
+
+void MainFrame::OnUpdateRedo(wxUpdateUIEvent& event) {
+    wxWindow* focused = wxWindow::FindFocus();
+    wxTextCtrl* textCtrl = wxDynamicCast(focused, wxTextCtrl);
+    
+    if (textCtrl) {
+        bool canRedo = textCtrl->CanRedo();
+        event.Enable(canRedo);
+        // wxLogStatus("CanRedo: %s", canRedo ? "TRUE" : "FALSE");
+    } else {
+        event.Enable(false); // FIXED: Removed the invalid textCtrl->CanRedo() call here
+    }
 }
 
 void MainFrame::OnCut(wxCommandEvent& event) {						
@@ -227,17 +264,51 @@ void MainFrame::OnPaste(wxCommandEvent& event) {
 
 void MainFrame::OnSelectAll(wxCommandEvent& event) {
 	wxLogStatus("SELECT ALL");
+	
 	event.Skip();
 }
 
-void MainFrame::OnFind(wxCommandEvent& event) {						// SEARCH
-	wxLogStatus("FIND");
-	event.Skip();
+void MainFrame::OnFind(wxCommandEvent& event) {                        // SEARCH
+    wxLogStatus("FIND");
+
+    this->findDialog = new wxFindReplaceDialog(this, &findData, "Find");
+	//this->findDialog->CentreOnParent();
+	this->findDialog->Show(true);
+	
+	if(this->findDialog && this->findDialog->IsShown()) {
+        this->findDialog->SetFocus();
+        return;
+    }
+    
+    this->findDialog->Bind(wxEVT_CLOSE_WINDOW, [this](wxCloseEvent& e) {
+        this->findDialog->Show(false);
+		this->findDialog = NULL;
+		e.Skip();
+    });
+    
+    event.Skip();
 }
 
-void MainFrame::OnReplace(wxCommandEvent& event) {	
-	wxLogStatus("REPLACE");
-	event.Skip();
+void MainFrame::OnReplace(wxCommandEvent& event) {    
+    wxLogStatus("REPLACE");
+	
+	this->findDialog = new wxFindReplaceDialog(this, &this->findData, "Replace");
+    this->findData.SetFlags(wxFR_DOWN);
+	//this->findDialog->CentreOnParent();
+	this->findDialog->Show(true);
+	
+	if(this->findDialog && this->findDialog->IsShown()) {
+        this->findDialog->SetFocus();
+        return;
+    }
+    
+    this->findDialog->Bind(wxEVT_CLOSE_WINDOW, [this](wxCloseEvent& e) {
+        this->findDialog->Show(false);
+		this->findDialog = NULL;
+		e.Skip();
+    });
+   
+    event.Skip();
 }
 
 void MainFrame::OnCards(wxCommandEvent& event) {					// VIEW
