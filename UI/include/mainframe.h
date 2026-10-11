@@ -3,6 +3,7 @@
 
 #include "app.h"
 #include <wx/wx.h>
+#include <wx/fdrepdlg.h>
 
 #define NUM_SHORTCUTS 16
 
@@ -29,6 +30,8 @@ class MainFrame : public wxFrame {
 		wxPanel* currentPanel;
 
 		wxAcceleratorEntry shortcuts[NUM_SHORTCUTS];
+		wxFindReplaceDialog* findDialog;
+		wxFindReplaceData findData;
 
 		wxMenuBar* menuBar;
 		wxMenu* fileMenu;
@@ -50,6 +53,8 @@ class MainFrame : public wxFrame {
 		
 		void OnUndo(wxCommandEvent& event);				// EDIT
 		void OnRedo(wxCommandEvent& event);
+		void OnUpdateUndo(wxUpdateUIEvent& event);
+		void OnUpdateRedo(wxUpdateUIEvent& event);
 		void OnCut(wxCommandEvent& event);				
 		void OnCopy(wxCommandEvent& event);
 		void OnPaste(wxCommandEvent& event);
