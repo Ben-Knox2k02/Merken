@@ -15,12 +15,12 @@ CardDialog::CardDialog(wxWindow* parent, const wxString& title)
 	fields->AddGrowableRow(1, 1);
 
 	fields->Add(new wxStaticText(this, wxID_ANY, "Front:"), 0, wxALIGN_TOP | wxTOP, 4);
-	this->frontCtrl = new wxTextCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE);
+	this->frontCtrl = new wxTextCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE | wxTE_RICH2);
 	this->frontCtrl->SetMinSize(wxSize(-1, 80));
 	fields->Add(this->frontCtrl, 1, wxEXPAND);
 
 	fields->Add(new wxStaticText(this, wxID_ANY, "Back:"), 0, wxALIGN_TOP | wxTOP, 4);
-	this->backCtrl = new wxTextCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE);
+	this->backCtrl = new wxTextCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE | wxTE_RICH2);
 	this->backCtrl->SetMinSize(wxSize(-1, 80));
 	fields->Add(this->backCtrl, 1, wxEXPAND);
 
