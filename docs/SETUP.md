@@ -121,6 +121,9 @@ test.bat
 ```
 
 `build.bat` produces `Merken.exe`. `test.bat` produces and runs `merken_tests.exe`.
+`Note: 
+   C:/mingw-w64/bin/../lib/gcc/x86_64-w64-mingw32/16.2.0/../../../../x86_64-w64-mingw32/bin/ld.exe: .rsrc merge failure: multiple non-default manifests
+   is harmless
 
 ---
 
