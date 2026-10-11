@@ -99,8 +99,15 @@ If you change compiler (UCRT64 vs MINGW64, or a new MinGW), delete `%WXWIN%\lib\
 ```
 The custom archive file resolves subclass linker errors when building the application
 Make sure libcomctl32_subclass.a and comctl32_subclass.def are located in C:\path\to\your\MinGW\lib
+
 Example: C:\mingw-w64\lib\libcomctl32_subclass.a
          C:\mingw-w64\lib\comctl32_subclass.def
+
+If the downloaded libcomctl32_subclass.a isn't working (i.e. "file format not recognized" during link time)
+navigate to C:\path\to\your\MinGW\lib and run this command to generate a fresh archive
+
+dlltool -d comctl32_subclass.def -l libcomctl32_subclass.a
+
 ```
 
 ### 4. Build Merken
