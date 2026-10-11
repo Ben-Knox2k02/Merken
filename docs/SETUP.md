@@ -104,8 +104,9 @@ Example: C:\mingw-w64\lib\libcomctl32_subclass.a
          C:\mingw-w64\lib\comctl32_subclass.def
 
 If the downloaded libcomctl32_subclass.a isn't working (i.e. "file format not recognized" during link time)
-navigate to C:\path\to\your\MinGW\lib and run this command to generate a fresh archive
+navigate to C:\path\to\your\MinGW\lib and run these commands to generate a fresh archive.
 
+del libcomctl32_subclass.a
 dlltool -d comctl32_subclass.def -l libcomctl32_subclass.a
 
 ```
