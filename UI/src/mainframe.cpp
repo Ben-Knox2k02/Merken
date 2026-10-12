@@ -13,6 +13,7 @@
 #include "progress_panel.h"
 #include "settings_dialog.h"
 #include "centered_message.h"
+#include "theme.h"
 
 MainFrame::MainFrame(const wxString& title)
     : wxFrame(nullptr, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE),
@@ -91,15 +92,20 @@ MainFrame::MainFrame(const wxString& title)
 	//============ ATTACH WIDGETS ==================================== ATTACH WIDGETS ========================= 
 	this->SetMenuBar(this->menuBar);									
 	this->CreateStatusBar();
+	this->SetBackgroundColour(Theme::Get().color.window);
 	
 	this->rootSizer = new wxBoxSizer(wxHORIZONTAL);
 	
 	this->contentPanel = new wxPanel(this, wxID_ANY);
+	this->contentPanel->SetBackgroundColour(Theme::Get().color.window);
 	this->SetCurrentPanel(new FlashCardList(this->contentPanel, 0));
 	this->sidebarPanel = new DeckPanelList(this);
-	
-	this->rootSizer->Add(this->sidebarPanel, 30, wxEXPAND | wxALL, this->FromDIP(10));
-	this->rootSizer->Add(this->contentPanel, 70, wxEXPAND | wxALL, 0);
+
+	const int edge = this->FromDIP(Theme::Get().size.panelPad);
+	const int gap = this->FromDIP(Theme::Get().space.md);
+	this->rootSizer->Add(this->sidebarPanel, 30, wxEXPAND | wxTOP | wxBOTTOM | wxLEFT, edge);
+	this->rootSizer->AddSpacer(gap);
+	this->rootSizer->Add(this->contentPanel, 70, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, edge);
 	
 	this->SetSizer(this->rootSizer);
 	this->Layout();
@@ -197,7 +203,7 @@ void MainFrame::SetCurrentPanel(wxPanel* newPanel) {
 	
 	this->currentPanel = newPanel;
 	this->currentPanel->SetBackgroundStyle(wxBG_STYLE_PAINT);
-    this->currentPanel->SetBackgroundColour(*wxWHITE);
+	this->currentPanel->SetBackgroundColour(Theme::Get().color.window);
 	
 	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
 	sizer->Add(this->currentPanel, 1, wxEXPAND);
@@ -434,10 +440,14 @@ void MainFrame::ApplyPanelWidths() {
 		return;
 	}
 
-	const int outerPad = this->FromDIP(10);
-	const int deckSlot = clientWidth * 30 / 100;
-	const int deckWidth = deckSlot - outerPad * 2;
-	const int cardWidth = clientWidth - deckSlot;
+	const int edge = this->FromDIP(Theme::Get().size.panelPad);
+	const int gap = this->FromDIP(Theme::Get().space.md);
+	const int inner = clientWidth - edge - gap - edge;
+	if(inner <= 0) {
+		return;
+	}
+	const int deckWidth = inner * 30 / 100;
+	const int cardWidth = inner - deckWidth;
 	if(deckWidth <= 0 || cardWidth <= 0) {
 		return;
 	}

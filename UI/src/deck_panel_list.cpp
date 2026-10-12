@@ -2,6 +2,7 @@
 #include "dialog.h"
 #include "centered_message.h"
 #include "mainframe.h"
+#include "theme.h"
 #include "app.h"
 #include "../../Application/UseCases/Deck/GetDecks/get_decks_usecase.h"
 #include "../../Application/UseCases/Deck/CreateDeck/create_deck_usecase.h"
@@ -17,23 +18,28 @@ DeckPanelList::DeckPanelList(wxWindow* parent)
 	this->SetBackgroundStyle(wxBG_STYLE_PAINT);
 	this->Create(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE);
 	this->SetWindowStyleFlag(this->GetWindowStyleFlag() & ~wxCLIP_CHILDREN);
+	this->SetBackgroundColour(Theme::Get().color.card);
 	this->SetMinSize(wxSize(this->FromDIP(kMinWidth), -1));
 
 	this->rootSizer = new wxBoxSizer(wxVERTICAL);
 
+	const int pad = this->FromDIP(Theme::Get().size.panelPad);
 	this->header = new wxStaticText(this, wxID_ANY, "Decks");
 	this->header->SetFont(this->header->GetFont().Bold());
-	this->rootSizer->Add(this->header, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 10);
+	this->header->SetForegroundColour(Theme::Get().color.secondaryLabel);
+	this->header->SetBackgroundColour(Theme::Get().color.card);
+	this->rootSizer->Add(this->header, 0, wxALIGN_LEFT | wxALL, pad);
 
 	this->scroller = new wxScrolledWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxVSCROLL);
 	this->SetWindowStyleFlag(this->GetWindowStyleFlag() & ~wxCLIP_CHILDREN);
 	this->scroller->SetWindowStyleFlag(this->scroller->GetWindowStyleFlag() & ~wxCLIP_CHILDREN);
+	this->scroller->SetBackgroundColour(Theme::Get().color.card);
 	this->scroller->SetScrollRate(0, 16);
 	this->scroller->ShowScrollbars(wxSHOW_SB_NEVER, wxSHOW_SB_DEFAULT);
 
 	this->listSizer = new wxBoxSizer(wxVERTICAL);
 	this->scroller->SetSizer(this->listSizer);
-	this->rootSizer->Add(this->scroller, 1, wxEXPAND | wxALL, 10);
+	this->rootSizer->Add(this->scroller, 1, wxEXPAND | wxALL, pad);
 
 	this->addDeckButton = new IconButton(this, "UI/assets/add_icon.png", "Add");
 	this->editDeckButton = new IconButton(this, "UI/assets/edit_icon.png", "Edit");
@@ -41,11 +47,11 @@ DeckPanelList::DeckPanelList(wxWindow* parent)
 
 	this->buttonSizer = new wxBoxSizer(wxHORIZONTAL);
 	this->buttonSizer->Add(this->addDeckButton, 1, wxEXPAND);
-	this->buttonSizer->AddSpacer(this->FromDIP(5));
+	this->buttonSizer->AddSpacer(this->FromDIP(Theme::Get().space.xs));
 	this->buttonSizer->Add(this->editDeckButton, 1, wxEXPAND);
-	this->buttonSizer->AddSpacer(this->FromDIP(5));
+	this->buttonSizer->AddSpacer(this->FromDIP(Theme::Get().space.xs));
 	this->buttonSizer->Add(this->deleteDeckButton, 1, wxEXPAND);
-	this->rootSizer->Add(this->buttonSizer, 0, wxEXPAND | wxALL, 10);
+	this->rootSizer->Add(this->buttonSizer, 0, wxEXPAND | wxALL, pad);
 
 	this->SetSizer(this->rootSizer);
 
@@ -67,23 +73,7 @@ void DeckPanelList::OnSize(wxSizeEvent& event) {
 void DeckPanelList::OnPaint(wxPaintEvent&) {
 	wxPaintDC dc(this);
 	wxGCDC gc(dc);
-	const wxSize size = this->GetClientSize();
-
-	wxColour outside = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW);
-	if (this->GetParent() != nullptr) {
-		outside = this->GetParent()->GetBackgroundColour();
-	}
-	const wxColour inside = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW);
-	const wxColour border = wxSystemSettings::GetColour(wxSYS_COLOUR_BTNSHADOW);
-
-	gc.SetPen(*wxTRANSPARENT_PEN);
-	gc.SetBrush(wxBrush(outside));
-	gc.DrawRectangle(0, 0, size.GetWidth(), size.GetHeight());
-
-	gc.SetPen(wxPen(border, 1));
-	gc.SetBrush(wxBrush(inside));
-	const int radius = this->FromDIP(kCornerRadius);
-	gc.DrawRoundedRectangle(1, 1, size.GetWidth() - 2, size.GetHeight() - 2, radius);
+	Theme::Get().DrawPanel(gc, this, this->GetClientSize());
 }
 
 void DeckPanelList::LoadDecks() {
