@@ -79,18 +79,18 @@ Oldest first. The three merge commits at the end are listed so the walk is compl
 - [x] `e2813c9` Show onboarding before the main window
 - [x] `303345a` Add the first-run guide
 - [x] `7f04ee6` Enable only the next guide button
-- [ ] `0086653` Keep a single flash card at half width
-- [ ] `d59e675` Keep the deck name gap when a deck has no description
-- [ ] `f0ff5e5` Center icon buttons
-- [ ] `5d2dd57` Disable deck and study actions when nothing is available
-- [ ] `b2a238e` Give the deck list buttons equal widths
-- [ ] `9dc273e` Small code cleanup
-- [ ] `0c5352f` Add app.manifest file for application assembly
-- [ ] `b592d3c` Add manifest.rc for application assets
-- [ ] `da1dca2` Merge branch `BackEnd` into `UIWork` (confirm nothing new to take)
-- [ ] `01178f3` Merge `origin/main` into `UIWork` (confirm nothing new to take)
-- [ ] `20268c1` Merge `origin/main` into `UIWork` (confirm nothing new to take)
-- [ ] Confirm find/replace, undo/redo, rich text, and deck-delete confirmation still work
+- [x] `0086653` Keep a single flash card at half width
+- [x] `d59e675` Keep the deck name gap when a deck has no description
+- [x] `f0ff5e5` Center icon buttons
+- [x] `5d2dd57` Disable deck and study actions when nothing is available
+- [x] `b2a238e` Give the deck list buttons equal widths
+- [x] `9dc273e` Small code cleanup
+- [x] `0c5352f` Add app.manifest file for application assembly
+- [x] `b592d3c` Add manifest.rc for application assets
+- [x] `da1dca2` Merge branch `BackEnd` into `UIWork` (confirm nothing new to take)
+- [x] `01178f3` Merge `origin/main` into `UIWork` (confirm nothing new to take)
+- [x] `20268c1` Merge `origin/main` into `UIWork` (confirm nothing new to take)
+- [x] Confirm find/replace, undo/redo, rich text, and deck-delete confirmation still work
 
 ## 4. Port origin/Berken
 
