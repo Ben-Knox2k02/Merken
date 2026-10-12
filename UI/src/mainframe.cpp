@@ -18,7 +18,7 @@
 
 MainFrame::MainFrame(const wxString& title)
     : wxFrame(nullptr, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE),
-      app(wxGetApp()), currentPanel(nullptr), sidebarPanel(nullptr), selectedDeckId(0), findDialog(nullptr)
+      app(wxGetApp()), currentPanel(nullptr), sidebarPanel(nullptr), selectedDeckId(0), studying(false), findDialog(nullptr)
 {
 	std::cout << "[TRACE] Entering MainFrame constructor..." << std::endl;
 	//=========== INITIALIZE WIDGETS ===================================== INITIALIZE WIDGETS ================================
@@ -166,13 +166,31 @@ void MainFrame::OnDeckSelected(int deckId) {
 	}
 }
 
+void MainFrame::SetStudying(bool active) {
+	this->studying = active;
+	if (this->sidebarPanel != nullptr) {
+		this->sidebarPanel->Enable(!active);
+	}
+	this->UpdateDeckMenus();
+}
+
 void MainFrame::UpdateDeckMenus() {
 	if (this->fileMenu == nullptr) {
 		return;
 	}
-	const bool hasDeck = this->selectedDeckId != 0;
+	const bool hasDeck = this->selectedDeckId != 0 && !this->studying;
+	this->fileMenu->Enable(wxID_NEW, !this->studying);
 	this->fileMenu->Enable(ID_EDIT_DECK, hasDeck);
 	this->fileMenu->Enable(ID_DELETE_DECK, hasDeck);
+	this->fileMenu->Enable(ID_SETTINGS, !this->studying);
+	if (this->studyMenu != nullptr) {
+		this->studyMenu->Enable(ID_STUDY, !this->studying);
+		this->studyMenu->Enable(ID_AI, !this->studying);
+		this->studyMenu->Enable(ID_TODAYS_PROGRESS, !this->studying);
+	}
+	if (this->calendarMenu != nullptr) {
+		this->calendarMenu->Enable(ID_CALENDAR, !this->studying);
+	}
 }
 
 void MainFrame::ApplyMenuIcons() {
@@ -227,6 +245,7 @@ void MainFrame::OnSysColourChanged(wxSysColourChangedEvent& event) {
 }
 
 void MainFrame::ShowCardList() {
+	this->SetStudying(false);
 	this->SetCurrentPanel(new FlashCardList(this->contentPanel, this->selectedDeckId));
 }
 
@@ -236,6 +255,7 @@ void MainFrame::ShowStudyDeck() {
 		return;
 	}
 	this->SetCurrentPanel(new StudyPanel(this->contentPanel, this->selectedDeckId));
+	this->SetStudying(true);
 }
 
 void MainFrame::ShowTodaysProgress() {
@@ -252,6 +272,7 @@ void MainFrame::ShowAiStudy() {
 		return;
 	}
 	this->SetCurrentPanel(new AiStudyPanel(this->contentPanel, this->selectedDeckId));
+	this->SetStudying(true);
 }
 
 void MainFrame::SetCurrentPanel(wxPanel* newPanel) {
