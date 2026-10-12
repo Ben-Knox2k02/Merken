@@ -120,16 +120,16 @@ Oldest first. Same rule: one commit, then a Windows build and run.
 - [x] `084804b` Add EventDialog class to `dialog.h`
 - [x] `c03c64a` Add function keys to data structure enum
 - [x] `69a6723` Remove Deck struct from `deck_panel.h`
-- [ ] `817aba8` Enhance MainFrame with additional menus and shortcuts
-- [ ] `2cb6d31` Set background style and color for StudyPanel
-- [ ] `8d09aac` Update to faster and more robust wxWidgets build script
-- [ ] `d3fe228` Remove redundant function key IDs
-- [ ] `f543f86` Add new controls to AIPanel class
-- [ ] `5521426` Define Event structure in `data_structures.h`
-- [ ] `36d1564` Add `SetSidebarPanel` method and update panel references
-- [ ] `adc4845` Refactor AI panel layout and add input controls
-- [ ] `7d70b2b` Update header font size and card list column widths
-- [ ] `0cfdecc` Update header font to a specific wxFont configuration
-- [ ] `e18a8fa` Replace `activePanel` with `contentPanel` in MainFrame
-- [ ] `ae162af` Adjust padding in study panel layout
+- [x] `817aba8` Enhance MainFrame with additional menus and shortcuts
+- [x] `2cb6d31` Set background style and color for StudyPanel
+- [x] `8d09aac` Update to faster and more robust wxWidgets build script
+- [x] `d3fe228` Remove redundant function key IDs
+- [x] `f543f86` Add new controls to AIPanel class
+- [x] `5521426` Define Event structure in `data_structures.h`
+- [x] `36d1564` Add `SetSidebarPanel` method and update panel references
+- [x] `adc4845` Refactor AI panel layout and add input controls
+- [x] `7d70b2b` Update header font size and card list column widths
+- [x] `0cfdecc` Update header font to a specific wxFont configuration
+- [x] `e18a8fa` Replace `activePanel` with `contentPanel` in MainFrame
+- [x] `ae162af` Adjust padding in study panel layout
 - [ ] Confirm find/replace, undo/redo, rich text, deck-delete confirmation, and the replayed UIWork behavior still work
