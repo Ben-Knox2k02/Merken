@@ -14,7 +14,9 @@ class FlashCardList : public wxPanel {
 		wxStaticText* header;
 		wxStaticText* description;
 		wxScrolledWindow* scroller;
-		wxFlexGridSizer* listSizer;
+		wxBoxSizer* listSizer;
+		wxBoxSizer* leftCol;
+		wxBoxSizer* rightCol;
 		wxButton* addButton;
 		wxButton* studyButton;
 
