@@ -5,6 +5,7 @@
 #include <vector>
 #include "deck_card.h"
 #include "icon_button.h"
+#include "profile_header.h"
 
 class DeckPanelList : public wxPanel {
 	public:
@@ -12,7 +13,7 @@ class DeckPanelList : public wxPanel {
 
 		wxBoxSizer* rootSizer;
 		wxFlexGridSizer* buttonSizer;
-		wxStaticText* header;
+		ProfileHeader* profileHeader;
 		wxScrolledWindow* scroller;
 		wxBoxSizer* listSizer;
 		IconButton* addDeckButton;
