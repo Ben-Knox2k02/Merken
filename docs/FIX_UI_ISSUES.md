@@ -35,30 +35,30 @@ Windows fixes to apply at the first commit that needs them, then keep:
 
 ## 1. Branch
 
-- [ ] Confirm local branch `fix-ui-issues` exists at `1fea29d` and matches `main`, with a clean tree
+- [x] Confirm local branch `fix-ui-issues` exists at `1fea29d` and matches `main`, with a clean tree
 
 ## 2. Baseline the current UI
 
-- [ ] Run `build.bat` on the unchanged branch and record the result. Recorded: `build.bat` selected `C:\mingw64`, then `windres` and `g++` were not found. `g++` 16.1.0 is at `C:\mingw-w64\mingw64\bin`.
-- [ ] Fix link, manifest, and startup until the current UI builds
-- [ ] Launch `Merken.exe` and confirm the current UI opens
+- [x] Run `build.bat` on the unchanged branch and record the result. Recorded: `build.bat` selected `C:\mingw64`, then `windres` and `g++` were not found. `g++` 16.1.0 is at `C:\mingw-w64\mingw64\bin`.
+- [x] Fix link, manifest, and startup until the current UI builds
+- [x] Launch `Merken.exe` and confirm the current UI opens
 
 ## 3. Replay origin/UIWork
 
 Oldest first. The three merge commits at the end are listed so the walk is complete. This branch already contains that `main` plus the later commits, so they should be checked once we confirm they add nothing new.
 
-- [ ] `4ff5eb6` Wire remaining UI screens through use cases
-- [ ] `0d3da65` Replace deck and card tables with redesigned lists
-- [ ] `506dcde` Add separator between deck cards
-- [ ] `8ab737f` Tighten deck cards and round the deck list panel
-- [ ] `824158d` Replace the card table with FlashCard list items
-- [ ] `6263e6a` Add deck and flash card delete actions
-- [ ] `1d9e325` Add a dashboard deck navbar and two-column cards
-- [ ] `ddd250c` Add theme, split layout, and per-card flash card actions
-- [ ] `c7fd4c4` Show deck card counts and restyle the deck list
-- [ ] `5fe9dc4` Wrap flash card text and pack list columns
-- [ ] `99a038e` Add study header buttons and fit flash card wells
-- [ ] `83700e4` Disable study buttons when a deck has no cards
+- [x] `4ff5eb6` Wire remaining UI screens through use cases
+- [x] `0d3da65` Replace deck and card tables with redesigned lists
+- [x] `506dcde` Add separator between deck cards
+- [x] `8ab737f` Tighten deck cards and round the deck list panel
+- [x] `824158d` Replace the card table with FlashCard list items
+- [x] `6263e6a` Add deck and flash card delete actions
+- [x] `1d9e325` Add a dashboard deck navbar and two-column cards
+- [x] `ddd250c` Add theme, split layout, and per-card flash card actions
+- [x] `c7fd4c4` Show deck card counts and restyle the deck list
+- [x] `5fe9dc4` Wrap flash card text and pack list columns
+- [x] `99a038e` Add study header buttons and fit flash card wells
+- [x] `83700e4` Disable study buttons when a deck has no cards
 - [ ] `9460847` Follow system light and dark appearance
 - [ ] `d080b20` Restructure app menus and add menu icons
 - [ ] `f42dc7b` Open the main window at 1366 by 768 DIP
