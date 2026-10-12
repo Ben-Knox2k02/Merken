@@ -94,8 +94,8 @@ MainFrame::MainFrame(const wxString& title)
 	this->contentPanel = new wxPanel(this, wxID_ANY);
 	this->SetCurrentPanel(new CardListPanel(this->contentPanel, 0));
 	
-	this->rootSizer->Add(this->sidebarPanel, 0, wxEXPAND | wxALL, 0);
-	this->rootSizer->Add(this->contentPanel, 1, wxEXPAND | wxALL, 0);
+	this->rootSizer->Add(this->sidebarPanel, 30, wxEXPAND | wxALL, 0);
+	this->rootSizer->Add(this->contentPanel, 70, wxEXPAND | wxALL, 0);
 	
 	this->SetSizer(this->rootSizer);
 	this->Layout();
@@ -170,6 +170,7 @@ void MainFrame::SetCurrentPanel(wxPanel* newPanel) {
 	
 	this->contentPanel->SetSizer(sizer);
 	this->contentPanel->Layout();
+	this->ApplyPanelWidths();
 	
 	this->currentPanel->SetFocus();
 }
@@ -385,13 +386,45 @@ void MainFrame::OnKeyEvent(wxKeyEvent& event) {						// KEY
 	event.Skip();
 }
 
+void MainFrame::ApplyPanelWidths() {
+	const int clientWidth = this->GetClientSize().GetWidth();
+	if(clientWidth <= 0 || this->sidebarPanel == nullptr || this->contentPanel == nullptr) {
+		return;
+	}
+
+	const int deckWidth = clientWidth * 30 / 100;
+	const int cardWidth = clientWidth - deckWidth;
+	this->sidebarPanel->SetMinSize(wxSize(deckWidth, -1));
+	this->sidebarPanel->SetMaxSize(wxSize(deckWidth, -1));
+	this->contentPanel->SetMinSize(wxSize(cardWidth, -1));
+	this->contentPanel->SetMaxSize(wxSize(cardWidth, -1));
+
+	if(auto* decks = dynamic_cast<DeckPanel*>(this->sidebarPanel)) {
+		if(decks->deckList != nullptr && decks->deckList->GetColumnCount() >= 2) {
+			const int inner = deckWidth > 20 ? deckWidth - 20 : deckWidth;
+			const int nameWidth = inner / 2;
+			decks->deckList->GetColumn(0)->SetWidth(nameWidth);
+			decks->deckList->GetColumn(1)->SetWidth(inner - nameWidth);
+		}
+	}
+
+	if(auto* cards = dynamic_cast<CardListPanel*>(this->currentPanel)) {
+		if(cards->cardList != nullptr && cards->cardList->GetColumnCount() >= 3) {
+			const int inner = cardWidth > 20 ? cardWidth - 20 : cardWidth;
+			const int columnWidth = inner / 3;
+			cards->cardList->GetColumn(0)->SetWidth(columnWidth);
+			cards->cardList->GetColumn(1)->SetWidth(columnWidth);
+			cards->cardList->GetColumn(2)->SetWidth(inner - (columnWidth * 2));
+		}
+	}
+}
+
 void MainFrame::OnWindowResized(wxSizeEvent& event) {				// WINDOW
-	wxLogStatus("WINDOW RESIZED");
 	wxSize size = event.GetSize();
 	
 	this->app.SetWindowWidth(size.GetWidth());
 	this->app.SetWindowHeight(size.GetHeight());
-	//this->app.Print();
+	this->ApplyPanelWidths();
 	
 	event.Skip();
 }

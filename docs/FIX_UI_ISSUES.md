@@ -39,7 +39,7 @@ Windows fixes to apply at the first commit that needs them, then keep:
 
 ## 2. Baseline the current UI
 
-- [ ] Run `build.bat` on the unchanged branch and record the result
+- [ ] Run `build.bat` on the unchanged branch and record the result. Recorded: `build.bat` selected `C:\mingw64`, then `windres` and `g++` were not found. `g++` 16.1.0 is at `C:\mingw-w64\mingw64\bin`.
 - [ ] Fix link, manifest, and startup until the current UI builds
 - [ ] Launch `Merken.exe` and confirm the current UI opens
 

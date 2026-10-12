@@ -9,8 +9,7 @@
 
 DeckPanel::DeckPanel(wxWindow* parent) : wxPanel(parent) {
 	this->rootSizer = new wxBoxSizer(wxVERTICAL);
-	this->SetMinSize(wxSize(240, -1));
-	
+
 	this->SetBackgroundStyle(wxBG_STYLE_PAINT);
 	this->SetBackgroundColour(wxColour(*wxWHITE));
 

@@ -75,6 +75,7 @@ class MainFrame : public wxFrame {
 		void OnMouseEvent(wxMouseEvent& event);			// I/O
 		void OnKeyEvent(wxKeyEvent& event);
 		
+		void ApplyPanelWidths();
 		void OnWindowResized(wxSizeEvent& event);		// WINDOW
 		void OnWindowClosed(wxCloseEvent& event);
 };

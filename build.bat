@@ -1,25 +1,43 @@
 @echo off
 setlocal enabledelayedexpansion
 
-echo custom archive file libcomctl32_subclass.a should be installed in C:\path\to\your\MinGW\lib
-
 rem === OUTPUT ==========================================================
 set OUT=Merken.exe
 echo Building %OUT%
 
 rem === PATHS ===========================================================
-if defined MINGW (
-    set "MINGW=%MINGW%"
-) else if exist "C:\msys64\mingw64\bin\g++.exe" (
-    set "MINGW=C:\msys64\mingw64"
-) else if exist "C:\msys64\mingw-w64\bin\g++.exe" (
-	set "MINGW=C:\msys64\mingw-w64"
-) else if exist "C:\mingw64\bin\g++.exe" (
-    set "MINGW=C:\mingw64"
-) else if exist "C:\mingw-w64\bin\g++.exe" (
-    set "MINGW=C:\mingw-w64"
-) else (
-    set "MINGW=C:\mingw64"
+rem MINGW and MINGW_HOME are the toolchain root: the folder that contains bin\g++.exe.
+if defined MINGW if exist "%MINGW%\bin\g++.exe" goto :mingw_ready
+if defined MINGW_HOME if exist "%MINGW_HOME%\bin\g++.exe" (
+    set "MINGW=%MINGW_HOME%"
+    goto :mingw_ready
+)
+
+set "MINGW="
+for %%D in (
+    "C:\msys64\ucrt64"
+    "C:\msys64\mingw64"
+    "C:\msys64\mingw-w64"
+    "C:\mingw64"
+    "C:\mingw-w64\mingw64"
+    "C:\mingw-w64"
+    "C:\MinGW"
+    "C:\TDM-GCC-64"
+) do (
+    if not defined MINGW if exist "%%~D\bin\g++.exe" set "MINGW=%%~D"
+)
+
+if not defined MINGW (
+    for /f "delims=" %%G in ('where g++ 2^>nul') do (
+        if not defined MINGW for %%I in ("%%~dpG..") do set "MINGW=%%~fI"
+    )
+)
+
+:mingw_ready
+if not exist "%MINGW%\bin\g++.exe" (
+    echo MinGW g++ was not found.
+    echo Set MINGW to the toolchain root, the folder that contains bin\g++.exe.
+    exit /b 1
 )
 
 if defined WXWIN (
@@ -38,7 +56,8 @@ echo Using wxWidgets path: %WX%
 
 rem === INCLUDE / LIB PATHS =============================================
 set INC=-I UI\include -I ThirdParty\boost-di -I ThirdParty\wxSQLite3\include -I ThirdParty\wxSQLite3\src -I %WX%\lib\gcc_lib\mswu -I %WX%\include
-set LIB=-L %WX%\lib\gcc_lib -L %MINGW%\lib
+rem Repo root is searched first so the committed libcomctl32_subclass.a wins.
+set LIB=-L "%~dp0." -L %WX%\lib\gcc_lib -L %MINGW%\lib
 
 rem === WXWIDGETS LIBS (wxWidgets 3.3.x) =================================
 set WXLIBS= ^
@@ -88,9 +107,20 @@ if exist UI\resources\app.rc (
 )
 
 rem ==== MANIFEST ===========================================
+rem GCC's default manifest does not request Common Controls 6. wx 3.3 imports
+rem GetWindowSubclass from that DLL. A second windres manifest object duplicates
+rem the default one and ld fails with ".rsrc merge failure". -B replaces
+rem default-manifest.o only when the prefix is absolute, uses forward slashes,
+rem and ends with a slash. Keep the object out of obj\*.o.
 echo Compiling manifest...
+if not exist obj\manifest mkdir obj\manifest
 if exist UI\resources\manifest.rc (
-    %MINGW%\bin\windres.exe UI\resources\manifest.rc -O coff -o obj\manifest.o
+    %MINGW%\bin\windres.exe UI\resources\manifest.rc -O coff -o obj\manifest\default-manifest.o
+    if errorlevel 1 (
+        echo.
+        echo Manifest failed.
+        exit /b 1
+    )
 ) else (
     echo Using Default Manifest
 )
@@ -130,7 +160,14 @@ if not errorlevel 1 (
 
 rem === LINK =============================================================
 echo Linking...
-%MINGW%\bin\g++ obj\*.o -o %OUT% %LIB% %WXLIBS% %WINLIBS%
+set "MANIFEST_B="
+if exist obj\manifest\default-manifest.o set "MANIFEST_B=%CD%\obj\manifest"
+if defined MANIFEST_B set "MANIFEST_B=%MANIFEST_B:\=/%/"
+if defined MANIFEST_B (
+    %MINGW%\bin\g++ obj\*.o -o %OUT% -B "%MANIFEST_B%" %LIB% %WXLIBS% %WINLIBS%
+) else (
+    %MINGW%\bin\g++ obj\*.o -o %OUT% %LIB% %WXLIBS% %WINLIBS%
+)
 if errorlevel 1 (
     echo.
     echo Link failed.
