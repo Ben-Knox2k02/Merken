@@ -1,4 +1,5 @@
 #include "dialog.h"
+#include "theme.h"
 
 CardDialog::CardDialog(wxWindow* parent, const wxString& title)
 	: wxDialog(
@@ -40,6 +41,7 @@ CardDialog::CardDialog(wxWindow* parent, const wxString& title)
 	this->SetSizer(this->rootSizer);
 	this->SetMinSize(wxSize(480, 360));
 	this->SetSize(wxSize(520, 400));
+	Theme::Get().StyleDialog(this);
 	this->Layout();
 	this->CentreOnParent();
 }
@@ -78,6 +80,7 @@ DeckDialog::DeckDialog(wxWindow* parent, const wxString& title)
 	this->SetSizer(this->rootSizer);
 	this->SetMinSize(wxSize(480, 320));
 	this->SetSize(wxSize(520, 360));
+	Theme::Get().StyleDialog(this);
 	this->Layout();
 	this->CentreOnParent();
 }

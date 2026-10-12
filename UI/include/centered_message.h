@@ -3,6 +3,7 @@
 
 #include <wx/wx.h>
 #include <wx/artprov.h>
+#include "theme.h"
 
 inline int ShowCenteredMessage(
 	wxWindow* parent,
@@ -63,6 +64,7 @@ inline int ShowCenteredMessage(
 
 	dialog.SetSizer(root);
 	dialog.SetMinSize(wxSize(420, 140));
+	Theme::Get().StyleDialog(&dialog);
 	dialog.Fit();
 	dialog.Layout();
 	dialog.CentreOnParent();

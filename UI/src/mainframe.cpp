@@ -15,7 +15,6 @@
 #include "centered_message.h"
 #include "theme.h"
 #include "icon_button.h"
-#include <wx/aboutdlg.h>
 
 MainFrame::MainFrame(const wxString& title)
     : wxFrame(nullptr, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE),
@@ -470,13 +469,56 @@ void MainFrame::OnSettings(wxCommandEvent& event) {					// TOOLS
 }
 
 void MainFrame::OnAbout(wxCommandEvent&) {
-	wxAboutDialogInfo info;
-	info.SetName("Merken");
-	info.SetDescription(
+	wxDialog dialog(
+		this,
+		wxID_ANY,
+		"About Merken",
+		wxDefaultPosition,
+		wxDefaultSize,
+		wxDEFAULT_DIALOG_STYLE
+	);
+
+	wxStaticText* name = new wxStaticText(&dialog, wxID_ANY, "Merken");
+	wxFont nameFont = name->GetFont();
+	nameFont.SetPointSize(nameFont.GetPointSize() + 3);
+	name->SetFont(nameFont);
+
+	wxStaticText* description = new wxStaticText(
+		&dialog,
+		wxID_ANY,
 		"Merken is a flash-card study app. Create decks, add cards, and review them "
 		"with spaced practice or AI-guided study sessions."
 	);
-	wxAboutBox(info, this);
+	description->Wrap(dialog.FromDIP(360));
+
+	wxStdDialogButtonSizer* buttons = new wxStdDialogButtonSizer();
+	buttons->AddButton(new wxButton(&dialog, wxID_OK));
+	buttons->Realize();
+
+	dialog.Bind(wxEVT_BUTTON, [&dialog](wxCommandEvent& event) {
+		const int id = event.GetId();
+		if (id == wxID_OK || id == wxID_CANCEL) {
+			dialog.EndModal(id);
+			return;
+		}
+		event.Skip();
+	});
+
+	const Theme& theme = Theme::Get();
+	const int pad = dialog.FromDIP(16);
+	wxBoxSizer* root = new wxBoxSizer(wxVERTICAL);
+	root->Add(name, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, pad);
+	root->Add(description, 0, wxEXPAND | wxALL, pad);
+	root->Add(buttons, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, pad);
+
+	dialog.SetSizer(root);
+	dialog.SetMinSize(dialog.FromDIP(wxSize(420, 160)));
+	theme.StyleDialog(&dialog);
+	description->SetForegroundColour(theme.color.secondaryLabel);
+	dialog.Fit();
+	dialog.Layout();
+	dialog.CentreOnParent();
+	dialog.ShowModal();
 }
 
 void MainFrame::OnMouseEvent(wxMouseEvent& event) {					// MOUSE
