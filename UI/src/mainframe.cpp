@@ -192,6 +192,7 @@ void MainFrame::ApplyMenuIcons() {
 	setIcon(ID_DELETE_DECK, "UI/assets/delete_icon.png");
 	setIcon(ID_STUDY, "UI/assets/study_icon.png");
 	setIcon(ID_AI, "UI/assets/ai_study_icon.png");
+	setIcon(ID_CALENDAR, "UI/assets/calendar_icon.png");
 }
 
 void MainFrame::ReloadDecks() {
