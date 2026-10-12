@@ -90,8 +90,24 @@ class StudyCard : public wxPanel {
 			this->SetWindowStyleFlag(this->GetWindowStyleFlag() & ~wxCLIP_CHILDREN);
 
 			const Theme& theme = Theme::Get();
+			this->caption = new wxStaticText();
+			this->caption->SetBackgroundStyle(wxBG_STYLE_COLOUR);
+			this->caption->Create(
+				this,
+				wxID_ANY,
+				"Front",
+				wxDefaultPosition,
+				wxDefaultSize,
+				wxALIGN_CENTRE_HORIZONTAL
+			);
+			this->caption->SetBackgroundColour(theme.color.card);
+			this->caption->SetForegroundColour(theme.color.label);
+			wxFont captionFont = this->caption->GetFont();
+			captionFont.SetPointSize(captionFont.GetPointSize() + 3);
+			this->caption->SetFont(captionFont);
+
 			this->text = new wxStaticText();
-			this->text->SetBackgroundStyle(wxBG_STYLE_TRANSPARENT);
+			this->text->SetBackgroundStyle(wxBG_STYLE_COLOUR);
 			this->text->Create(
 				this,
 				wxID_ANY,
@@ -108,11 +124,13 @@ class StudyCard : public wxPanel {
 			this->text->SetFont(font);
 
 			const int pad = this->FromDIP(theme.size.cardPad);
-			wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
-			sizer->AddStretchSpacer(1);
-			sizer->Add(this->text, 0, wxEXPAND | wxLEFT | wxRIGHT, pad);
-			sizer->AddStretchSpacer(1);
-			this->SetSizer(sizer);
+			this->sizer = new wxBoxSizer(wxVERTICAL);
+			this->sizer->Add(this->caption, 0, wxALIGN_CENTER_HORIZONTAL | wxTOP | wxLEFT | wxRIGHT, pad);
+			this->sizer->AddStretchSpacer(1);
+			this->sizer->Add(this->text, 0, wxEXPAND | wxLEFT | wxRIGHT, pad);
+			this->sizer->AddStretchSpacer(1);
+			this->sizer->Show(this->caption, false);
+			this->SetSizer(this->sizer);
 
 			this->Bind(wxEVT_PAINT, &StudyCard::OnPaint, this);
 			this->Bind(wxEVT_SIZE, &StudyCard::OnSize, this);
@@ -125,10 +143,13 @@ class StudyCard : public wxPanel {
 			this->lastWrap = -1;
 			this->ApplyColours();
 			this->Rewrap();
+			this->Layout();
 			this->Refresh();
 		}
 
 	private:
+		wxBoxSizer* sizer;
+		wxStaticText* caption;
 		wxStaticText* text;
 		wxString raw;
 		StudyCardSide side;
@@ -147,9 +168,24 @@ class StudyCard : public wxPanel {
 		}
 
 		void ApplyColours() {
+			const Theme& theme = Theme::Get();
 			const wxColour fill = this->FillColour();
+			const wxColour ink = theme.color.label;
 			this->text->SetBackgroundColour(fill);
-			this->text->SetForegroundColour(Theme::Get().color.label);
+			this->text->SetForegroundColour(ink);
+			this->caption->SetBackgroundColour(fill);
+			this->caption->SetForegroundColour(ink);
+			if (this->side == StudyCardSide::Back) {
+				this->caption->SetLabel("Back");
+				this->sizer->Show(this->caption, true);
+			} else if (this->side == StudyCardSide::Front) {
+				this->caption->SetLabel("Front");
+				this->sizer->Show(this->caption, true);
+			} else {
+				this->sizer->Show(this->caption, false);
+			}
+			this->caption->Refresh();
+			this->text->Refresh();
 		}
 
 		void Rewrap() {
@@ -221,10 +257,6 @@ StudyPanel::StudyPanel(wxWindow* parent, int deckId)
 	this->header->SetForegroundColour(theme.color.label);
 	this->rootSizer->Add(this->header, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 10);
 
-	this->promptLabel = new wxStaticText(this, wxID_ANY, "Front");
-	this->promptLabel->SetForegroundColour(theme.color.secondaryLabel);
-	this->rootSizer->Add(this->promptLabel, 0, wxALIGN_CENTER_HORIZONTAL | wxTOP, 20);
-
 	this->card = new StudyCard(this);
 	wxBoxSizer* cardRow = new wxBoxSizer(wxHORIZONTAL);
 	cardRow->AddStretchSpacer(1);
@@ -288,7 +320,6 @@ void StudyPanel::UpdateProgress() {
 }
 
 void StudyPanel::ShowNothingDue() {
-	this->promptLabel->Hide();
 	this->card->SetText("Nothing due today");
 	this->summaryLabel->Hide();
 	this->showAnswerButton->Hide();
@@ -301,7 +332,6 @@ void StudyPanel::ShowNothingDue() {
 }
 
 void StudyPanel::ShowSummary(const ReviewCardResponse& lastReview) {
-	this->promptLabel->Hide();
 	this->card->SetText("Session complete");
 	this->summaryLabel->SetLabel(wxString::Format(
 		"Cards reviewed: %d\nCards correct: %d\nRetention: %s",
@@ -331,9 +361,6 @@ void StudyPanel::ShowCurrentCard() {
 	}
 
 	this->answerVisible = false;
-	this->promptLabel->SetLabel("Front");
-	this->promptLabel->SetForegroundColour(Theme::Get().color.secondaryLabel);
-	this->promptLabel->Show();
 	this->card->SetText(wxString(this->dueCards.front().front), StudyCardSide::Front);
 	this->summaryLabel->Hide();
 	this->showAnswerButton->Show();
@@ -384,8 +411,6 @@ void StudyPanel::OnShowAnswer(wxCommandEvent&) {
 		return;
 	}
 	this->answerVisible = true;
-	this->promptLabel->SetLabel("Back");
-	this->promptLabel->SetForegroundColour(Theme::Get().color.accent);
 	this->card->SetText(wxString(this->dueCards.front().back), StudyCardSide::Back);
 	this->showAnswerButton->Disable();
 	this->rememberedButton->Enable();
