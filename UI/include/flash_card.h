@@ -179,11 +179,7 @@ class FlashCard : public wxPanel {
 
 		void SetSelected(bool selected) {
 			this->selected = selected;
-			this->ApplyTextColours();
-			this->Refresh();
-			this->frontWell->Refresh();
-			this->backWell->Refresh();
-			this->RelayoutTags();
+			this->ApplyTheme();
 		}
 
 		wxString GetFront() const { return this->front; }
@@ -218,6 +214,16 @@ class FlashCard : public wxPanel {
 
 		void SetOnDelete(std::function<void()> handler) {
 			this->onDelete = std::move(handler);
+		}
+
+		void ApplyTheme() {
+			this->ApplyTextColours();
+			this->editButton->ApplyTheme();
+			this->deleteButton->ApplyTheme();
+			this->Refresh();
+			this->frontWell->Refresh();
+			this->backWell->Refresh();
+			this->RelayoutTags();
 		}
 
 	private:

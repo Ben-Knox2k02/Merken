@@ -24,7 +24,9 @@ class IconButton : public wxBitmapButton {
 				wxDefaultPosition,
 				wxDefaultSize,
 				wxBU_AUTODRAW
-			) {
+			),
+			imagePath(imagePath),
+			forceInvert(invert) {
 			if (!tooltip.IsEmpty()) {
 				this->SetToolTip(tooltip);
 			}
@@ -32,6 +34,10 @@ class IconButton : public wxBitmapButton {
 			const int padX = this->FromDIP(24);
 			const int width = this->FromDIP(kIconSize) + padX * 2;
 			this->SetMinSize(wxSize(width, height));
+		}
+
+		void ApplyTheme() {
+			this->SetBitmap(LoadIconBundle(this->imagePath, kIconSize, this->forceInvert || IsDarkTheme()));
 		}
 
 		static wxBitmapBundle LoadIconBundle(const wxString& path, int dipSize, bool invert) {
@@ -47,6 +53,8 @@ class IconButton : public wxBitmapButton {
 		}
 
 	private:
+		wxString imagePath;
+		bool forceInvert;
 		static constexpr int kIconSize = 16;
 
 		static wxString ResolveAssetPath(const wxString& relative) {

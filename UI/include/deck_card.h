@@ -54,8 +54,12 @@ class DeckCard : public wxPanel {
 
 		void SetSelected(bool selected) {
 			this->selected = selected;
+			this->ApplyTheme();
+		}
+
+		void ApplyTheme() {
 			this->SetBackgroundColour(
-				selected ? Theme::Get().color.selectedFill : Theme::Get().color.primary
+				this->selected ? Theme::Get().color.selectedFill : Theme::Get().color.primary
 			);
 			this->icon->SetBitmap(this->IconBundle());
 			this->ApplyTextColours();

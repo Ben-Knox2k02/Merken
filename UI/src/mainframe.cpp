@@ -156,6 +156,7 @@ MainFrame::MainFrame(const wxString& title)
 	this->Bind(wxEVT_ENTER_WINDOW, &MainFrame::OnMouseEvent, this);
 	this->Bind(wxEVT_LEAVE_WINDOW, &MainFrame::OnMouseEvent, this);
 	this->Bind(wxEVT_CLOSE_WINDOW, &MainFrame::OnWindowClosed, this);
+	this->Bind(wxEVT_SYS_COLOUR_CHANGED, &MainFrame::OnSysColourChanged, this);
 }
 
 void MainFrame::OnDeckSelected(int deckId) {
@@ -169,6 +170,29 @@ void MainFrame::ReloadDecks() {
 	if (auto* decks = dynamic_cast<DeckPanelList*>(this->sidebarPanel)) {
 		decks->LoadDecks();
 	}
+}
+
+void MainFrame::ApplyTheme() {
+	const Theme& theme = Theme::Get();
+	this->SetBackgroundColour(theme.color.window);
+	if (this->contentPanel != nullptr) {
+		this->contentPanel->SetBackgroundColour(theme.color.window);
+	}
+	if (auto* decks = dynamic_cast<DeckPanelList*>(this->sidebarPanel)) {
+		decks->ApplyTheme();
+	}
+	if (auto* cards = dynamic_cast<FlashCardList*>(this->currentPanel)) {
+		cards->ApplyTheme();
+	} else if (this->currentPanel != nullptr) {
+		this->currentPanel->SetBackgroundColour(theme.color.window);
+		this->currentPanel->Refresh();
+	}
+	this->Refresh();
+}
+
+void MainFrame::OnSysColourChanged(wxSysColourChangedEvent& event) {
+	this->ApplyTheme();
+	event.Skip();
 }
 
 void MainFrame::ShowCardList() {

@@ -45,6 +45,7 @@ class MainFrame : public wxFrame {
 		
 		void OnDeckSelected(int deckId);
 		void ReloadDecks();
+		void ApplyTheme();
 
 		void ShowCardList();
 		void ShowStudyDeck();
@@ -88,6 +89,7 @@ class MainFrame : public wxFrame {
 		void ApplyPanelWidths();
 		void OnWindowResized(wxSizeEvent& event);		// WINDOW
 		void OnWindowClosed(wxCloseEvent& event);
+		void OnSysColourChanged(wxSysColourChangedEvent& event);
 };
 
 #endif

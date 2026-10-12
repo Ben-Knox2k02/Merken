@@ -25,6 +25,7 @@ class FlashCardList : public wxPanel {
 
 		void SetDeck(int deckId);
 		void LoadCards();
+		void ApplyTheme();
 
 		void OnAdd(wxCommandEvent& event);
 		void OnStudy(wxCommandEvent& event);
@@ -36,6 +37,7 @@ class FlashCardList : public wxPanel {
 		wxString deckName;
 		wxString deckDescription;
 		int lastHeaderWrap;
+		int lastDescWrap;
 
 		void AddCard(int cardId, const wxString& front, const wxString& back, const wxString& tags);
 		void EditCard(int cardId);

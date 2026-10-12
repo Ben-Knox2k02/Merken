@@ -10,13 +10,69 @@
 #include "../../Application/UseCases/Deck/UpdateCard/update_card_usecase.h"
 #include "../../Application/UseCases/Deck/DeleteCard/delete_card_usecase.h"
 #include <wx/dcgraph.h>
+#include <wx/tokenzr.h>
 
 wxDECLARE_APP(App);
+
+namespace {
+
+wxString WrapToWidth(wxWindow* win, const wxString& text, int width) {
+	wxString result;
+	wxStringTokenizer paragraphs(text, "\n", wxTOKEN_RET_EMPTY);
+	bool firstParagraph = true;
+	while (paragraphs.HasMoreTokens()) {
+		const wxString paragraph = paragraphs.GetNextToken();
+		wxString line;
+		wxStringTokenizer words(paragraph, " \t");
+		while (words.HasMoreTokens()) {
+			const wxString word = words.GetNextToken();
+			if (word.empty()) {
+				continue;
+			}
+			const wxString trial = line.empty() ? word : line + " " + word;
+			if (!line.empty() && win->GetTextExtent(trial).GetWidth() > width) {
+				if (!result.empty() || !firstParagraph) {
+					result += "\n";
+				}
+				result += line;
+				line = word;
+				firstParagraph = false;
+			} else {
+				line = trial;
+			}
+		}
+		if (!line.empty()) {
+			if (!result.empty() || !firstParagraph) {
+				result += "\n";
+			}
+			result += line;
+			firstParagraph = false;
+		}
+	}
+	return result.empty() ? text : result;
+}
+
+int LabelHeight(wxWindow* win, const wxString& wrapped) {
+	const int lineH = win->GetTextExtent("Ag").GetHeight();
+	if (wrapped.empty()) {
+		return lineH;
+	}
+	int lines = 1;
+	for (size_t i = 0; i < wrapped.length(); ++i) {
+		if (wrapped[i] == '\n') {
+			++lines;
+		}
+	}
+	return lines * lineH;
+}
+
+}
 
 FlashCardList::FlashCardList(wxWindow* parent, int deckId)
 	: wxPanel(),
 	  deckId(deckId),
-	  lastHeaderWrap(0) {
+	  lastHeaderWrap(0),
+	  lastDescWrap(0) {
 	this->SetBackgroundStyle(wxBG_STYLE_PAINT);
 	this->Create(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE);
 	this->SetWindowStyleFlag(this->GetWindowStyleFlag() & ~wxCLIP_CHILDREN);
@@ -28,7 +84,6 @@ FlashCardList::FlashCardList(wxWindow* parent, int deckId)
 	this->header->SetBackgroundStyle(wxBG_STYLE_TRANSPARENT);
 	this->header->Create(this, wxID_ANY, "");
 	wxFont titleFont = this->header->GetFont();
-	titleFont.MakeBold();
 	titleFont.SetPointSize(titleFont.GetPointSize() + 3);
 	this->header->SetFont(titleFont);
 	this->header->SetForegroundColour(Theme::Get().color.label);
@@ -42,9 +97,6 @@ FlashCardList::FlashCardList(wxWindow* parent, int deckId)
 	this->description->Hide();
 
 	const int pad = this->FromDIP(Theme::Get().size.panelPad);
-	wxBoxSizer* titleBlock = new wxBoxSizer(wxVERTICAL);
-	titleBlock->Add(this->header, 0, wxEXPAND);
-	titleBlock->Add(this->description, 0, wxEXPAND | wxTOP, this->FromDIP(Theme::Get().space.xs));
 
 	this->headerButtonSizer = new wxBoxSizer(wxHORIZONTAL);
 	this->addButton = new wxButton(this, wxID_ANY, "Add Flash Card");
@@ -70,9 +122,13 @@ FlashCardList::FlashCardList(wxWindow* parent, int deckId)
 	this->headerButtonSizer->Add(this->aiStudyButton, 0);
 
 	wxBoxSizer* headerRow = new wxBoxSizer(wxHORIZONTAL);
-	headerRow->Add(titleBlock, 1, wxALIGN_CENTER_VERTICAL | wxRIGHT, this->FromDIP(Theme::Get().space.md));
-	headerRow->Add(this->headerButtonSizer, 0, wxALIGN_CENTER_VERTICAL);
-	this->rootSizer->Add(headerRow, 0, wxEXPAND | wxALL, pad);
+	headerRow->Add(this->header, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL | wxRIGHT, this->FromDIP(Theme::Get().space.md));
+	headerRow->Add(this->headerButtonSizer, 0, wxALIGN_TOP);
+
+	wxBoxSizer* headerBlock = new wxBoxSizer(wxVERTICAL);
+	headerBlock->Add(headerRow, 0, wxEXPAND);
+	headerBlock->Add(this->description, 0, wxEXPAND | wxTOP | wxBOTTOM, this->FromDIP(Theme::Get().space.xxl));
+	this->rootSizer->Add(headerBlock, 0, wxEXPAND | wxALL, pad);
 
 	this->scroller = new wxScrolledWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxVSCROLL);
 	this->scroller->SetWindowStyleFlag(this->scroller->GetWindowStyleFlag() & ~wxCLIP_CHILDREN);
@@ -112,9 +168,10 @@ void FlashCardList::OnPaint(wxPaintEvent&) {
 }
 
 void FlashCardList::OnSize(wxSizeEvent& event) {
-	const int previousWrap = this->lastHeaderWrap;
+	const int previousTitle = this->lastHeaderWrap;
+	const int previousDesc = this->lastDescWrap;
 	this->WrapHeader();
-	if (this->lastHeaderWrap != previousWrap) {
+	if (this->lastHeaderWrap != previousTitle || this->lastDescWrap != previousDesc) {
 		this->Layout();
 	}
 	this->scroller->Layout();
@@ -150,6 +207,7 @@ void FlashCardList::LoadCards() {
 
 	this->CallAfter([this]() {
 		this->lastHeaderWrap = 0;
+		this->lastDescWrap = 0;
 		this->WrapHeader();
 		this->Layout();
 		for (FlashCard* card : this->cards) {
@@ -182,8 +240,25 @@ void FlashCardList::UpdateDeckHeader() {
 	this->description->SetLabel(this->deckDescription);
 	this->description->Show(!this->deckDescription.IsEmpty());
 	this->lastHeaderWrap = 0;
+	this->lastDescWrap = 0;
 	this->WrapHeader();
 	this->Layout();
+}
+
+void FlashCardList::ApplyTheme() {
+	const Theme& theme = Theme::Get();
+	const bool invert = Theme::IsDarkAppearance();
+	this->SetBackgroundColour(theme.color.window);
+	this->header->SetForegroundColour(theme.color.label);
+	this->description->SetForegroundColour(theme.color.secondaryLabel);
+	this->scroller->SetBackgroundColour(theme.color.window);
+	this->addButton->SetBitmap(IconButton::LoadIconBundle("UI/assets/add_icon.png", 16, invert), wxLEFT);
+	this->studyButton->SetBitmap(IconButton::LoadIconBundle("UI/assets/study_icon.png", 16, invert), wxLEFT);
+	this->aiStudyButton->SetBitmap(IconButton::LoadIconBundle("UI/assets/ai_study_icon.png", 16, invert), wxLEFT);
+	for (FlashCard* card : this->cards) {
+		card->ApplyTheme();
+	}
+	this->Refresh();
 }
 
 void FlashCardList::UpdateStudyButtons() {
@@ -194,23 +269,34 @@ void FlashCardList::UpdateStudyButtons() {
 
 void FlashCardList::WrapHeader() {
 	const int pad = this->FromDIP(Theme::Get().size.panelPad);
+	const int minWrap = this->FromDIP(Theme::Get().size.minWrap);
 	const int buttons = this->headerButtonSizer != nullptr ? this->headerButtonSizer->GetMinSize().GetWidth() : 0;
-	const int wrapWidth = this->GetClientSize().GetWidth() - 2 * pad - buttons - this->FromDIP(Theme::Get().space.md);
-	if (wrapWidth < this->FromDIP(Theme::Get().size.minWrap)) {
+
+	int titleWrap = this->header->GetClientSize().GetWidth();
+	if (titleWrap < minWrap) {
+		titleWrap = this->GetClientSize().GetWidth() - 2 * pad - buttons - this->FromDIP(Theme::Get().space.md);
+	}
+	if (titleWrap >= minWrap && this->lastHeaderWrap != titleWrap) {
+		this->lastHeaderWrap = titleWrap;
+		const wxString title = WrapToWidth(this->header, this->deckName, titleWrap);
+		this->header->SetLabel(title);
+		this->header->SetMinSize(wxSize(0, LabelHeight(this->header, title)));
+	}
+
+	if (!this->description->IsShown()) {
 		return;
 	}
-	if (this->lastHeaderWrap != 0 &&
-		wrapWidth >= this->lastHeaderWrap - this->FromDIP(Theme::Get().size.wrapDeadband) &&
-		wrapWidth <= this->lastHeaderWrap + this->FromDIP(Theme::Get().size.wrapDeadband)) {
+	int descWrap = this->description->GetClientSize().GetWidth();
+	if (descWrap < minWrap) {
+		descWrap = this->GetClientSize().GetWidth() - 2 * pad;
+	}
+	if (descWrap < minWrap || this->lastDescWrap == descWrap) {
 		return;
 	}
-	this->lastHeaderWrap = wrapWidth;
-	this->header->SetLabel(this->deckName);
-	this->header->Wrap(wrapWidth);
-	if (this->description->IsShown()) {
-		this->description->SetLabel(this->deckDescription);
-		this->description->Wrap(wrapWidth);
-	}
+	this->lastDescWrap = descWrap;
+	const wxString desc = WrapToWidth(this->description, this->deckDescription, descWrap);
+	this->description->SetLabel(desc);
+	this->description->SetMinSize(wxSize(0, LabelHeight(this->description, desc)));
 }
 
 void FlashCardList::AddCard(int cardId, const wxString& front, const wxString& back, const wxString& tags) {

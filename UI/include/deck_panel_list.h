@@ -20,6 +20,7 @@ class DeckPanelList : public wxPanel {
 		IconButton* deleteDeckButton;
 
 		void LoadDecks();
+		void ApplyTheme();
 		int GetSelectedDeckId() const;
 		void SelectDeck(int deckId, bool notify = false);
 		void NotifyDeckSelected(int deckId);
