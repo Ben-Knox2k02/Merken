@@ -67,18 +67,18 @@ Oldest first. The three merge commits at the end are listed so the walk is compl
 - [x] `cf58b3f` Place the study side label inside the card
 - [x] `e9f2c21` Extend the window under the macOS title bar
 - [x] `beca47c` Open the study back card with a page turn
-- [ ] `170fc08` Lock the window during study and keep card text regular
-- [ ] `f64ad46` Give the study card more padding and smaller text
-- [ ] `b346472` Match the study deck title to the card list
-- [ ] `5bfcd94` Slide the study answer open beside the front card
-- [ ] `750006e` Show a message when a deck has no cards
-- [ ] `a18a34a` Show a retention donut when a study session ends
-- [ ] `823795c` Remove unnecessary frame size constants
-- [ ] `3c4e3b4` Center short study card text
-- [ ] `ed1a8e3` Show the profile at the top of the deck list
-- [ ] `e2813c9` Show onboarding before the main window
-- [ ] `303345a` Add the first-run guide
-- [ ] `7f04ee6` Enable only the next guide button
+- [x] `170fc08` Lock the window during study and keep card text regular
+- [x] `f64ad46` Give the study card more padding and smaller text
+- [x] `b346472` Match the study deck title to the card list
+- [x] `5bfcd94` Slide the study answer open beside the front card
+- [x] `750006e` Show a message when a deck has no cards
+- [x] `a18a34a` Show a retention donut when a study session ends
+- [x] `823795c` Remove unnecessary frame size constants
+- [x] `3c4e3b4` Center short study card text
+- [x] `ed1a8e3` Show the profile at the top of the deck list
+- [x] `e2813c9` Show onboarding before the main window
+- [x] `303345a` Add the first-run guide
+- [x] `7f04ee6` Enable only the next guide button
 - [ ] `0086653` Keep a single flash card at half width
 - [ ] `d59e675` Keep the deck name gap when a deck has no description
 - [ ] `f0ff5e5` Center icon buttons
