@@ -13,6 +13,7 @@ enum {									// CUSTOM IDs
 	ID_CALENDAR,
 	ID_AI,
 	ID_SETTINGS,
+	ID_TODAYS_PROGRESS,
 	ID_SHOW_ANSWER,
 	ID_PREVIOUS_CARD,
 	ID_NEXT_CARD
@@ -28,6 +29,7 @@ class MainFrame : public wxFrame {
 		wxPanel* sidebarPanel;		
 		wxPanel* contentPanel;		// HUSK TO HOLD currentPanel
 		wxPanel* currentPanel;
+		int selectedDeckId;
 
 		wxAcceleratorEntry shortcuts[NUM_SHORTCUTS];
 		wxFindReplaceDialog* findDialog;
@@ -42,6 +44,12 @@ class MainFrame : public wxFrame {
 		wxMenu* helpMenu;
 		
 		void OnDeckSelected(int deckId);
+
+		void ShowCardList();
+		void ShowStudyDeck();
+		void ShowTodaysProgress();
+		void ShowCalendar();
+		void ShowAiStudy();
 
 		void SetCurrentPanel(wxPanel* newPanel);		// LAYOUT METHODS
 		void SetSidebarPanel(wxPanel* newPanel);
@@ -65,6 +73,7 @@ class MainFrame : public wxFrame {
 		
 		void OnCards(wxCommandEvent& event);			// VIEW
 		void OnStudy(wxCommandEvent& event);
+		void OnTodaysProgress(wxCommandEvent& event);
 		void OnCalendar(wxCommandEvent& event);
 		void OnAI(wxCommandEvent& event);
 		

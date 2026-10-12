@@ -1,105 +1,83 @@
 #include "calendar_panel.h"
+#include "mainframe.h"
+#include "app.h"
+#include "../../Application/UseCases/Calendar/GetEvents/get_events_usecase.h"
+#include <thread>
 
-CalendarPanel::CalendarPanel(wxWindow* parent) : wxPanel(parent) {
-	//============ ROOT PANEL ======================================== ROOT PANEL =====================
-	this->SetBackgroundStyle(wxBG_STYLE_PAINT);
-    this->SetBackgroundColour(*wxWHITE);	
-    this->rootSizer = new wxBoxSizer(wxVERTICAL);
-	
-    //========= TOP SECTION PANEL =================================  TOP SECTION PANEL ================
-    this->topPanel = new wxPanel(this);
-    this->topPanel->SetBackgroundColour(wxColour(*wxBLUE));
+wxDECLARE_APP(App);
 
-    this->topSizer = new wxBoxSizer(wxVERTICAL);
+CalendarPanel::CalendarPanel(wxWindow* parent)
+	: wxPanel(parent),
+	  alive(std::make_shared<bool>(true)) {
+	this->rootSizer = new wxBoxSizer(wxVERTICAL);
 
-    this->header = new wxStaticText(this->topPanel, wxID_ANY, "Calendar");
-    this->header->SetFont(wxFont(25, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD));
-    this->header->SetForegroundColour(*wxWHITE);
+	this->header = new wxStaticText(this, wxID_ANY, "Calendar");
+	this->header->SetFont(this->header->GetFont().Bold());
+	this->rootSizer->Add(this->header, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 10);
 
-    this->topSizer->Add(this->header, 0, wxALIGN_CENTER | wxTOP | wxBOTTOM, 10);
-    this->topPanel->SetSizer(this->topSizer);
+	this->statusLabel = new wxStaticText(this, wxID_ANY, "Loading eventsΓÇª");
+	this->rootSizer->Add(this->statusLabel, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 4);
 
-    //============ MIDDLE SECTION PANEL =========================== MIDDLE SECTION PANEL ==============
-    this->midPanel = new wxPanel(this);
-    this->midPanel->SetBackgroundColour(wxColour(240, 240, 240)); 				// LIGHT GREY
+	this->eventList = new wxDataViewCtrl(this, wxID_ANY);
+	this->eventList->AppendTextColumn("Title", 0, wxDATAVIEW_CELL_INERT, 180, wxALIGN_LEFT);
+	this->eventList->AppendTextColumn("Start", 1, wxDATAVIEW_CELL_INERT, 160, wxALIGN_LEFT);
+	this->eventList->AppendTextColumn("End", 2, wxDATAVIEW_CELL_INERT, 160, wxALIGN_LEFT);
+	this->eventList->AppendTextColumn("Description", 3, wxDATAVIEW_CELL_INERT, 240, wxALIGN_LEFT);
 
-    this->midSizer = new wxBoxSizer(wxVERTICAL);
-	
-	this->calendar = new wxCalendarCtrl(
-		this->midPanel,
-		wxID_ANY,
-		wxDefaultDateTime,
-		wxDefaultPosition,
-		wxDefaultSize,
-		wxCAL_SHOW_HOLIDAYS | wxCAL_MONDAY_FIRST
-	);
-	
-	this->midSizer->Add(this->calendar, 1, wxEXPAND | wxALL, 10);
-    this->midPanel->SetSizer(this->midSizer);
+	this->eventViewModel = new wxDataViewListStore();
+	this->eventList->AssociateModel(this->eventViewModel);
+	this->eventViewModel->DecRef();
+	this->rootSizer->Add(this->eventList, 1, wxEXPAND | wxALL, 10);
 
-    //========== BOTTOM SECTION PANEL ============================== BOTTOM SECTION PANEL =============
-    this->bottomPanel = new wxPanel(this);
-	this->bottomPanel->SetBackgroundColour(wxColour(*wxBLUE));
+	this->backButton = new wxButton(this, wxID_ANY, "Back");
+	this->rootSizer->Add(this->backButton, 0, wxALIGN_CENTER | wxALL, 10);
 
-    this->bottomSizer = new wxBoxSizer(wxVERTICAL);
-	
-	this->createEventButton = new wxButton(this->bottomPanel, wxID_ANY, "Create Event");	
-	this->editEventButton = new wxButton(this->bottomPanel, wxID_ANY, "Edit Event");
-	this->deleteEventButton = new wxButton(this->bottomPanel, wxID_ANY, "Delete Event");
-	
-	wxBoxSizer* bottomNav = new wxBoxSizer(wxHORIZONTAL);
-    bottomNav->Add(createEventButton,  0, wxRIGHT, 20);
-    bottomNav->Add(editEventButton, 0, wxRIGHT, 20);
-    bottomNav->Add(deleteEventButton, 0);
-
-    this->bottomSizer->Add(bottomNav, 0, wxALIGN_CENTER | wxTOP | wxBOTTOM, 10);
-    this->bottomPanel->SetSizer(bottomSizer);
-    
-	//========== ADD PANELS TO ROOT SIZER ======================== ADD PANELS TO ROOT SIZER ============ 
-    this->rootSizer->Add(this->topPanel,    0, wxEXPAND | wxALL, 0);			
-    this->rootSizer->Add(this->midPanel,    1, wxEXPAND | wxALL, 0);
-    this->rootSizer->Add(this->bottomPanel, 0, wxEXPAND | wxALL, 0);
-
-    this->SetSizer(this->rootSizer);
-    this->Layout();
-	
-	//========== BIND EVENT HANDLERS ============================== BIND EVENT HANDLERS ================
-	this->Bind(wxEVT_PAINT, &CalendarPanel::OnPaint, this);
-	
-	this->createEventButton->Bind(wxEVT_BUTTON, &CalendarPanel::OnCreateEvent, this);				
-    this->editEventButton->Bind(wxEVT_BUTTON, &CalendarPanel::OnEditEvent, this);
-    this->deleteEventButton->Bind(wxEVT_BUTTON, &CalendarPanel::OnDeleteEvent, this);
-	
+	this->SetSizer(this->rootSizer);
+	this->backButton->Bind(wxEVT_BUTTON, &CalendarPanel::OnBack, this);
+	this->LoadEvents();
 }
 
-void CalendarPanel::OnPaint(wxPaintEvent& event) {				// PAINT METHOD FOR DOUBLE BUFFERING
-	wxAutoBufferedPaintDC dc(this);
-	dc.SetBrush(wxBrush(this->GetBackgroundColour()));
-	dc.Clear();
+CalendarPanel::~CalendarPanel() {
+	*this->alive = false;
 }
 
-void CalendarPanel::OnCreateEvent(wxCommandEvent& event) {
-	wxFrame* frame = wxDynamicCast(wxGetTopLevelParent(this), wxFrame);
-	if(frame) { frame->SetStatusText("Create Event"); }
-	
-	EventDialog dialog(this);
-	dialog.CentreOnParent();
-	
-	if(dialog.ShowModal() == wxID_OK) {
-		
+void CalendarPanel::LoadEvents() {
+	this->statusLabel->SetLabel("Loading eventsΓÇª");
+	this->eventViewModel->DeleteAllItems();
+
+	auto useCase = wxGetApp().GetInjector().create<GetEventsUseCase>();
+	auto alive = this->alive;
+	std::thread([this, alive, useCase]() mutable {
+		GetEventsResponse response = useCase.Execute();
+		if (wxTheApp == nullptr) { return; }
+		wxTheApp->CallAfter([this, alive, response]() {
+			if (!*alive) { return; }
+			this->ShowEvents(response);
+		});
+	}).detach();
+}
+
+void CalendarPanel::ShowEvents(const GetEventsResponse& response) {
+	this->eventViewModel->DeleteAllItems();
+	for (const EventResponse& event : response.events) {
+		wxVector<wxVariant> row;
+		row.push_back(wxVariant(wxString(event.title)));
+		row.push_back(wxVariant(wxString(event.startTime)));
+		row.push_back(wxVariant(wxString(event.endTime)));
+		row.push_back(wxVariant(wxString(event.description)));
+		this->eventViewModel->AppendItem(row, static_cast<wxUIntPtr>(event.calendarEventId));
 	}
-	
-	event.Skip();
+
+	if (response.events.empty()) {
+		this->statusLabel->SetLabel("No events.");
+	} else {
+		this->statusLabel->SetLabel(wxString::Format("%d events", static_cast<int>(response.events.size())));
+	}
+	this->Layout();
 }
 
-void CalendarPanel::OnEditEvent(wxCommandEvent& event) {
-	wxFrame* frame = wxDynamicCast(wxGetTopLevelParent(this), wxFrame);
-	if(frame) { frame->SetStatusText("Edit Event"); }
-	event.Skip();
-}
-
-void CalendarPanel::OnDeleteEvent(wxCommandEvent& event) {
-	wxFrame* frame = wxDynamicCast(wxGetTopLevelParent(this), wxFrame);
-	if(frame) { frame->SetStatusText("Delete Event"); }
-	event.Skip();
+void CalendarPanel::OnBack(wxCommandEvent&) {
+	if (auto* frame = dynamic_cast<MainFrame*>(wxGetTopLevelParent(this))) {
+		frame->ShowCardList();
+	}
 }

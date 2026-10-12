@@ -9,10 +9,14 @@
 #include "study_panel.h"
 #include "calendar_panel.h"
 #include "ai_panel.h"
+#include "ai_study_panel.h"
+#include "progress_panel.h"
+#include "settings_dialog.h"
+#include "centered_message.h"
 
 MainFrame::MainFrame(const wxString& title)
     : wxFrame(nullptr, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE),
-      app(wxGetApp()), currentPanel(nullptr), sidebarPanel(nullptr), findDialog(nullptr)
+      app(wxGetApp()), currentPanel(nullptr), sidebarPanel(nullptr), selectedDeckId(0), findDialog(nullptr)
 {
 	std::cout << "[TRACE] Entering MainFrame constructor..." << std::endl;
 	//=========== INITIALIZE WIDGETS ===================================== INITIALIZE WIDGETS ================================
@@ -43,6 +47,7 @@ MainFrame::MainFrame(const wxString& title)
 	this->viewMenu = new wxMenu;										// VIEW
 	this->viewMenu->Append(ID_CARDS, "&Cards\tF1");
 	this->viewMenu->Append(ID_STUDY, "&Study\tF2");
+	this->viewMenu->Append(ID_TODAYS_PROGRESS, "Today's &Progress");
 	this->viewMenu->Append(ID_CALENDAR, "&Calendar\tF3");
 	this->viewMenu->Append(ID_AI, "&AI\tF4");
 	
@@ -120,6 +125,7 @@ MainFrame::MainFrame(const wxString& title)
 	
 	this->Bind(wxEVT_MENU, &MainFrame::OnCards, this, ID_CARDS);					// VIEW
 	this->Bind(wxEVT_MENU, &MainFrame::OnStudy, this, ID_STUDY);
+	this->Bind(wxEVT_MENU, &MainFrame::OnTodaysProgress, this, ID_TODAYS_PROGRESS);
 	this->Bind(wxEVT_MENU, &MainFrame::OnCalendar, this, ID_CALENDAR);
 	this->Bind(wxEVT_MENU, &MainFrame::OnAI, this, ID_AI);
 	
@@ -148,9 +154,38 @@ MainFrame::MainFrame(const wxString& title)
 }
 
 void MainFrame::OnDeckSelected(int deckId) {
+	this->selectedDeckId = deckId;
 	if(auto cardPanel = dynamic_cast<CardListPanel*>(this->currentPanel)) {
 		cardPanel->SetDeck(deckId);
 	}
+}
+
+void MainFrame::ShowCardList() {
+	this->SetCurrentPanel(new CardListPanel(this->contentPanel, this->selectedDeckId));
+}
+
+void MainFrame::ShowStudyDeck() {
+	if(this->selectedDeckId == 0) {
+		ShowCenteredMessage(this, "Select a deck first.", "Study Deck", wxOK | wxICON_WARNING);
+		return;
+	}
+	this->SetCurrentPanel(new StudyPanel(this->contentPanel, this->selectedDeckId));
+}
+
+void MainFrame::ShowTodaysProgress() {
+	this->SetCurrentPanel(new ProgressPanel(this->contentPanel));
+}
+
+void MainFrame::ShowCalendar() {
+	this->SetCurrentPanel(new CalendarPanel(this->contentPanel));
+}
+
+void MainFrame::ShowAiStudy() {
+	if(this->selectedDeckId == 0) {
+		ShowCenteredMessage(this, "Select a deck first.", "AI Study", wxOK | wxICON_WARNING);
+		return;
+	}
+	this->SetCurrentPanel(new AiStudyPanel(this->contentPanel, this->selectedDeckId));
 }
 
 void MainFrame::SetCurrentPanel(wxPanel* newPanel) {
@@ -314,30 +349,38 @@ void MainFrame::OnReplace(wxCommandEvent& event) {
 
 void MainFrame::OnCards(wxCommandEvent& event) {					// VIEW
 	wxLogStatus("CARDS");
-	this->SetCurrentPanel(new CardListPanel(this->contentPanel, 0));
+	this->ShowCardList();
 	event.Skip();
 }
 
 void MainFrame::OnStudy(wxCommandEvent& event) {
 	wxLogStatus("STUDY");
-	this->SetCurrentPanel(new StudyPanel(this->contentPanel, 0));
+	this->ShowStudyDeck();
+	event.Skip();
+}
+
+void MainFrame::OnTodaysProgress(wxCommandEvent& event) {
+	wxLogStatus("TODAY'S PROGRESS");
+	this->ShowTodaysProgress();
 	event.Skip();
 }
 
 void MainFrame::OnCalendar(wxCommandEvent& event) {
 	wxLogStatus("CALENDAR");
-	this->SetCurrentPanel(new CalendarPanel(this->contentPanel));
+	this->ShowCalendar();
 	event.Skip();
 }
 
 void MainFrame::OnAI(wxCommandEvent& event) {
 	wxLogStatus("AI");
-	this->SetCurrentPanel(new AIPanel(this->contentPanel));
+	this->ShowAiStudy();
 	event.Skip();
 }
 
 void MainFrame::OnSettings(wxCommandEvent& event) {					// TOOLS
 	wxLogStatus("SETTINGS");
+	SettingsDialog dialog(this);
+	dialog.ShowModal();
 	event.Skip();
 }
 

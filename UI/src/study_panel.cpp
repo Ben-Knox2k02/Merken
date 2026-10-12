@@ -1,128 +1,209 @@
 #include "study_panel.h"
+#include "centered_message.h"
+#include "mainframe.h"
+#include "app.h"
+#include "../../Application/UseCases/Deck/StudyDeck/study_deck_usecase.h"
+#include "../../Application/UseCases/Deck/ReviewCard/review_card_usecase.h"
 
-StudyPanel::StudyPanel(wxWindow* parent, int deckID) : wxPanel(parent), deckID(deckID) {
-    //============ ROOT PANEL ======================================== ROOT PANEL =====================
-	this->SetBackgroundStyle(wxBG_STYLE_PAINT);
-    this->SetBackgroundColour(*wxWHITE);	
-    this->rootSizer = new wxBoxSizer(wxVERTICAL);
-	
-    //========= TOP SECTION PANEL =================================  TOP SECTION PANEL ================
-    this->topPanel = new wxPanel(this);
-    this->topPanel->SetBackgroundColour(wxColour(*wxBLUE));
+wxDECLARE_APP(App);
 
-    this->topSizer = new wxBoxSizer(wxVERTICAL);
+namespace {
+wxString FormatPercent(double rate) {
+	return wxString::Format("%.0f%%", rate * 100.0);
+}
+}
 
-    this->header = new wxStaticText(topPanel, wxID_ANY, "Study Session");
-    this->header->SetFont(wxFont(25, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD));
-    this->header->SetForegroundColour(*wxWHITE);
+StudyPanel::StudyPanel(wxWindow* parent, int deckId)
+	: wxPanel(parent),
+	  deckId(deckId),
+	  startingCount(0),
+	  answerVisible(false) {
+	this->rootSizer = new wxBoxSizer(wxVERTICAL);
 
-    this->topSizer->Add(this->header, 0, wxALIGN_CENTER | wxTOP | wxBOTTOM, 10);
-    this->topPanel->SetSizer(topSizer);
+	this->header = new wxStaticText(this, wxID_ANY, "Study");
+	this->header->SetFont(this->header->GetFont().Bold());
+	this->rootSizer->Add(this->header, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 10);
 
-    //============ MIDDLE SECTION PANEL =========================== MIDDLE SECTION PANEL ==============
-    this->midPanel = new wxPanel(this);
-    this->midPanel->SetBackgroundColour(wxColour(240, 240, 240)); 				// LIGHT GREY
+	this->promptLabel = new wxStaticText(this, wxID_ANY, "Front");
+	this->rootSizer->Add(this->promptLabel, 0, wxALIGN_CENTER_HORIZONTAL | wxTOP, 20);
 
-    this->midSizer = new wxBoxSizer(wxVERTICAL);
+	this->cardText = new wxStaticText(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE_HORIZONTAL);
+	wxFont cardFont = this->cardText->GetFont();
+	cardFont.SetPointSize(cardFont.GetPointSize() + 6);
+	this->cardText->SetFont(cardFont);
+	this->rootSizer->Add(this->cardText, 1, wxEXPAND | wxALL, 20);
 
-    this->cardText = new wxStaticText(midPanel, wxID_ANY, "Card Text");
-    this->answerCtrl = new wxTextCtrl(midPanel, wxID_ANY);
-    this->progressText = new wxStaticText(midPanel, wxID_ANY, "Progress: 4 / 15");
+	this->summaryLabel = new wxStaticText(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE_HORIZONTAL);
+	this->rootSizer->Add(this->summaryLabel, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 10);
 
-    this->showAnswerButton = new wxButton(midPanel, wxID_ANY, "Show Answer");
-    this->previousButton   = new wxButton(midPanel, wxID_ANY, "Previous Card");
-    this->nextButton       = new wxButton(midPanel, wxID_ANY, "Next Card");
+	wxBoxSizer* gradeSizer = new wxBoxSizer(wxHORIZONTAL);
+	this->showAnswerButton = new wxButton(this, wxID_ANY, "Show Answer");
+	this->rememberedButton = new wxButton(this, wxID_ANY, "Remembered");
+	this->forgotButton = new wxButton(this, wxID_ANY, "Forgot");
+	gradeSizer->Add(this->showAnswerButton, 0, wxRIGHT, 8);
+	gradeSizer->Add(this->rememberedButton, 0, wxRIGHT, 8);
+	gradeSizer->Add(this->forgotButton, 0);
+	this->rootSizer->Add(gradeSizer, 0, wxALIGN_CENTER | wxALL, 10);
 
-    wxBoxSizer* navSizer = new wxBoxSizer(wxHORIZONTAL);
-    navSizer->Add(this->previousButton, 0, wxRIGHT, 10);
-    navSizer->Add(this->nextButton, 0, wxRIGHT, 10);
-    navSizer->Add(this->showAnswerButton, 0);
+	this->progressLabel = new wxStaticText(this, wxID_ANY, "0 / 0");
+	this->rootSizer->Add(this->progressLabel, 0, wxALIGN_CENTER_HORIZONTAL | wxTOP, 8);
 
-    this->midSizer->AddStretchSpacer(1);											// Center the entire middle block vertically
-    this->midSizer->Add(this->cardText,     0, wxALIGN_CENTER | wxALL, 10);
-    this->midSizer->Add(this->answerCtrl,   0, wxALIGN_CENTER | wxALL, 10);
-    this->midSizer->Add(navSizer,           0, wxALIGN_CENTER | wxALL, 10);
-    this->midSizer->Add(this->progressText, 0, wxALIGN_CENTER | wxALL, 10);
-    this->midSizer->AddStretchSpacer(1);
+	this->progressBar = new wxGauge(this, wxID_ANY, 1);
+	this->progressBar->SetMinSize(wxSize(280, -1));
+	this->rootSizer->Add(this->progressBar, 0, wxALIGN_CENTER | wxALL, 8);
 
-    this->midPanel->SetSizer(this->midSizer);
+	this->todayLabel = new wxStaticText(this, wxID_ANY, wxEmptyString);
+	this->rootSizer->Add(this->todayLabel, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 4);
 
-    //========== BOTTOM SECTION PANEL ============================== BOTTOM SECTION PANEL =============
-    this->bottomPanel = new wxPanel(this);
-    //this->bottomPanel->SetBackgroundColour(wxColour(220, 220, 255)); // light blue
-	this->bottomPanel->SetBackgroundColour(wxColour(*wxBLUE));
+	this->backButton = new wxButton(this, wxID_ANY, "Back");
+	this->rootSizer->Add(this->backButton, 0, wxALIGN_CENTER | wxALL, 16);
 
-    this->bottomSizer = new wxBoxSizer(wxVERTICAL);
+	this->SetSizer(this->rootSizer);
 
-    this->backButton   = new wxButton(bottomPanel, wxID_ANY, "Back");
-    this->resetButton  = new wxButton(bottomPanel, wxID_ANY, "Reset");
-    this->changeButton = new wxButton(bottomPanel, wxID_ANY, "Change Deck");
-
-    wxBoxSizer* bottomNav = new wxBoxSizer(wxHORIZONTAL);
-    bottomNav->Add(backButton,  0, wxRIGHT, 10);
-    bottomNav->Add(resetButton, 0, wxRIGHT, 10);
-    bottomNav->Add(changeButton,0);
-
-    this->bottomSizer->Add(bottomNav, 0, wxALIGN_CENTER | wxTOP | wxBOTTOM, 10);
-    this->bottomPanel->SetSizer(bottomSizer);
-    
-	//========== ADD PANELS TO ROOT SIZER ======================== ADD PANELS TO ROOT SIZER ============ 
-    this->rootSizer->Add(topPanel,    0, wxEXPAND | wxALL, 0);			
-    this->rootSizer->Add(midPanel,    1, wxEXPAND | wxALL, 0);
-    this->rootSizer->Add(bottomPanel, 0, wxEXPAND | wxALL, 0);
-
-    this->SetSizer(rootSizer);
-    this->Layout();
-	
-	//========== BIND EVENT HANDLERS ============================== BIND EVENT HANDLERS ================
-	this->Bind(wxEVT_PAINT, &StudyPanel::OnPaint, this);
-	
-    this->previousButton->Bind(wxEVT_BUTTON, &StudyPanel::OnPrevious, this);				
-    this->nextButton->Bind(wxEVT_BUTTON, &StudyPanel::OnNext, this);
-    this->showAnswerButton->Bind(wxEVT_BUTTON, &StudyPanel::OnShowAnswer, this);
+	this->showAnswerButton->Bind(wxEVT_BUTTON, &StudyPanel::OnShowAnswer, this);
+	this->rememberedButton->Bind(wxEVT_BUTTON, &StudyPanel::OnRemembered, this);
+	this->forgotButton->Bind(wxEVT_BUTTON, &StudyPanel::OnForgot, this);
 	this->backButton->Bind(wxEVT_BUTTON, &StudyPanel::OnBack, this);
-	this->resetButton->Bind(wxEVT_BUTTON, &StudyPanel::OnReset, this);
-	this->changeButton->Bind(wxEVT_BUTTON, &StudyPanel::OnChange, this);
+
+	this->StartStudy();
 }
 
-void StudyPanel::OnPaint(wxPaintEvent& event) {				// PAINT METHOD FOR DOUBLE BUFFERING
-	wxAutoBufferedPaintDC dc(this);
-	dc.SetBrush(wxBrush(this->GetBackgroundColour()));
-	dc.Clear();
+void StudyPanel::StartStudy() {
+	auto useCase = wxGetApp().GetInjector().create<StudyDeckUseCase>();
+	StudyDeckRequest request;
+	request.deckId = this->deckId;
+	StudyDeckResponse response = useCase.Execute(request);
+
+	this->deckName = response.deckName;
+	this->dueCards = response.dueCards;
+	this->startingCount = static_cast<int>(this->dueCards.size());
+	this->header->SetLabel(this->deckName.empty() ? "Study" : wxString(this->deckName));
+	this->ShowCurrentCard();
 }
 
-void StudyPanel::OnPrevious(wxCommandEvent& event) {
-	wxFrame* frame = wxDynamicCast(wxGetTopLevelParent(this), wxFrame);
-	if(frame) { frame->SetStatusText("Previous Card"); }
-	event.Skip();
+void StudyPanel::UpdateProgress() {
+	const int remaining = static_cast<int>(this->dueCards.size());
+	this->progressLabel->SetLabel(wxString::Format("%d / %d", remaining, this->startingCount));
+	this->progressBar->SetRange(this->startingCount < 1 ? 1 : this->startingCount);
+	this->progressBar->SetValue(this->startingCount - remaining);
 }
 
-void StudyPanel::OnNext(wxCommandEvent& event) {
-	wxFrame* frame = wxDynamicCast(wxGetTopLevelParent(this), wxFrame);
-	if(frame) { frame->SetStatusText("Next Card"); }
-	event.Skip();
+void StudyPanel::ShowNothingDue() {
+	this->promptLabel->Hide();
+	this->cardText->SetLabel("Nothing due today");
+	this->summaryLabel->Hide();
+	this->showAnswerButton->Hide();
+	this->rememberedButton->Hide();
+	this->forgotButton->Hide();
+	this->progressLabel->Hide();
+	this->progressBar->Hide();
+	this->todayLabel->Hide();
+	this->Layout();
 }
 
-void StudyPanel::OnShowAnswer(wxCommandEvent& event) {
-	wxFrame* frame = wxDynamicCast(wxGetTopLevelParent(this), wxFrame);
-	if(frame) { frame->SetStatusText("Show Answer"); }
-	event.Skip();
+void StudyPanel::ShowSummary(const ReviewCardResponse& lastReview) {
+	this->promptLabel->Hide();
+	this->cardText->SetLabel("Session complete");
+	this->summaryLabel->SetLabel(wxString::Format(
+		"Cards reviewed: %d\nCards correct: %d\nRetention: %s",
+		lastReview.cardsReviewed,
+		lastReview.cardsCorrect,
+		FormatPercent(lastReview.retentionRate)
+	));
+	this->summaryLabel->Show();
+	this->showAnswerButton->Hide();
+	this->rememberedButton->Hide();
+	this->forgotButton->Hide();
+	this->UpdateProgress();
+	this->todayLabel->SetLabel(wxString::Format(
+		"Today: %d reviewed, %s retention",
+		lastReview.cardsReviewed,
+		FormatPercent(lastReview.retentionRate)
+	));
+	this->Layout();
 }
 
-void StudyPanel::OnBack(wxCommandEvent& event) {
-	wxFrame* frame = wxDynamicCast(wxGetTopLevelParent(this), wxFrame);
-	if(frame) { frame->SetStatusText("Back to Card List"); }
-	event.Skip();
+void StudyPanel::ShowCurrentCard() {
+	if (this->dueCards.empty()) {
+		if (this->startingCount == 0) {
+			this->ShowNothingDue();
+		}
+		return;
+	}
+
+	this->answerVisible = false;
+	this->promptLabel->SetLabel("Front");
+	this->promptLabel->Show();
+	this->cardText->SetLabel(wxString(this->dueCards.front().front));
+	this->cardText->Wrap(520);
+	this->summaryLabel->Hide();
+	this->showAnswerButton->Show();
+	this->showAnswerButton->Enable();
+	this->rememberedButton->Show();
+	this->forgotButton->Show();
+	this->rememberedButton->Disable();
+	this->forgotButton->Disable();
+	this->progressLabel->Show();
+	this->progressBar->Show();
+	this->todayLabel->Show();
+	this->UpdateProgress();
+	this->Layout();
 }
 
-void StudyPanel::OnReset(wxCommandEvent& event) {
-	wxFrame* frame = wxDynamicCast(wxGetTopLevelParent(this), wxFrame);
-	if(frame) { frame->SetStatusText("Reset"); }
-	event.Skip();
+void StudyPanel::Grade(bool remembered) {
+	if (this->dueCards.empty() || !this->answerVisible) {
+		return;
+	}
+
+	ReviewCardRequest request;
+	request.deckId = this->deckId;
+	request.cardId = this->dueCards.front().cardId;
+	request.remembered = remembered;
+
+	auto useCase = wxGetApp().GetInjector().create<ReviewCardUseCase>();
+	ReviewCardResponse response = useCase.Execute(request);
+	if (!response.success) {
+		ShowCenteredMessage(this, "Could not save this review.", "Study Deck", wxOK | wxICON_ERROR);
+		return;
+	}
+
+	this->todayLabel->SetLabel(wxString::Format(
+		"Today: %d reviewed, %s retention",
+		response.cardsReviewed,
+		FormatPercent(response.retentionRate)
+	));
+	this->dueCards.erase(this->dueCards.begin());
+	if (this->dueCards.empty()) {
+		this->ShowSummary(response);
+		return;
+	}
+	this->ShowCurrentCard();
 }
 
-void StudyPanel::OnChange(wxCommandEvent& event) {
-	wxFrame* frame = wxDynamicCast(wxGetTopLevelParent(this), wxFrame);
-	if(frame) { frame->SetStatusText("Change Deck"); }
-	event.Skip();
+void StudyPanel::OnShowAnswer(wxCommandEvent&) {
+	if (this->dueCards.empty()) {
+		return;
+	}
+	this->answerVisible = true;
+	this->promptLabel->SetLabel("Back");
+	this->cardText->SetLabel(wxString(this->dueCards.front().back));
+	this->cardText->Wrap(520);
+	this->showAnswerButton->Disable();
+	this->rememberedButton->Enable();
+	this->forgotButton->Enable();
+	this->Layout();
+}
+
+void StudyPanel::OnRemembered(wxCommandEvent&) {
+	this->Grade(true);
+}
+
+void StudyPanel::OnForgot(wxCommandEvent&) {
+	this->Grade(false);
+}
+
+void StudyPanel::OnBack(wxCommandEvent&) {
+	if (auto* frame = dynamic_cast<MainFrame*>(wxGetTopLevelParent(this))) {
+		frame->ShowCardList();
+	}
 }

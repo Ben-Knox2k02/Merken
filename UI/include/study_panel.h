@@ -1,46 +1,47 @@
 #ifndef STUDY_PANEL_H
 #define STUDY_PANEL_H
 
-#include <vector>
 #include <wx/wx.h>
-#include <wx/dataview.h>
-#include <wx/dcbuffer.h>
+#include <string>
+#include <vector>
+#include "../../Application/UseCases/Deck/GetCards/card_response.h"
+#include "../../Application/UseCases/Deck/ReviewCard/review_card_response.h"
 
 class StudyPanel : public wxPanel {
 	public:
-		StudyPanel(wxWindow* parent, int deckID);
-		
-		int deckID;
-		
-		wxPanel* topPanel;
-		wxPanel* midPanel;
-		wxPanel* bottomPanel;
-	
+		StudyPanel(wxWindow* parent, int deckId);
+
 		wxBoxSizer* rootSizer;
-		wxBoxSizer* topSizer;
-		wxBoxSizer* midSizer;
-		wxBoxSizer* bottomSizer;
-		
 		wxStaticText* header;
+		wxStaticText* promptLabel;
 		wxStaticText* cardText;
-		wxStaticText* progressText;
-		
-		wxTextCtrl* answerCtrl;
-		
-		wxButton* previousButton;
-		wxButton* nextButton;
+		wxStaticText* progressLabel;
+		wxGauge* progressBar;
+		wxStaticText* todayLabel;
+		wxStaticText* summaryLabel;
 		wxButton* showAnswerButton;
+		wxButton* rememberedButton;
+		wxButton* forgotButton;
 		wxButton* backButton;
-		wxButton* resetButton;
-		wxButton* changeButton;
-		
-		void OnPaint(wxPaintEvent& event);
+
+		void StartStudy();
+		void ShowCurrentCard();
+		void ShowNothingDue();
+		void ShowSummary(const ReviewCardResponse& lastReview);
+		void Grade(bool remembered);
+		void UpdateProgress();
+
 		void OnShowAnswer(wxCommandEvent& event);
-		void OnPrevious(wxCommandEvent& event);
-		void OnNext(wxCommandEvent& event);
+		void OnRemembered(wxCommandEvent& event);
+		void OnForgot(wxCommandEvent& event);
 		void OnBack(wxCommandEvent& event);
-		void OnReset(wxCommandEvent& event);
-		void OnChange(wxCommandEvent& event);
+
+	private:
+		int deckId;
+		std::string deckName;
+		std::vector<CardResponse> dueCards;
+		int startingCount;
+		bool answerVisible;
 };
 
 #endif
