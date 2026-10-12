@@ -63,7 +63,7 @@ Oldest first. The three merge commits at the end are listed so the walk is compl
 - [x] `d080b20` Restructure app menus and add menu icons
 - [x] `f42dc7b` Open the main window at 1366 by 768 DIP
 - [x] `f4cd8fb` Add a calendar icon to the View Calendar menu
-- [ ] `63bc618` Theme dialogs and restyle the study card
+- [x] `63bc618` Theme dialogs and restyle the study card
 - [ ] `cf58b3f` Place the study side label inside the card
 - [ ] `e9f2c21` Extend the window under the macOS title bar
 - [ ] `beca47c` Open the study back card with a page turn
