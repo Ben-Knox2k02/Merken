@@ -12,8 +12,9 @@ class FlashCardList : public wxPanel {
 		wxBoxSizer* rootSizer;
 		wxBoxSizer* buttonSizer;
 		wxStaticText* header;
+		wxStaticText* description;
 		wxScrolledWindow* scroller;
-		wxBoxSizer* listSizer;
+		wxFlexGridSizer* listSizer;
 		wxButton* addButton;
 		wxButton* editButton;
 		wxButton* deleteButton;
@@ -34,12 +35,17 @@ class FlashCardList : public wxPanel {
 		std::vector<FlashCard*> cards;
 		std::vector<int> cardIds;
 		int selectedCardId;
+		wxString deckName;
+		wxString deckDescription;
+		int lastHeaderWrap;
 
 		void AddCard(int cardId, const wxString& front, const wxString& back, const wxString& tags);
 		void BindClicks(wxWindow* window, int cardId);
 		void SelectCard(int cardId);
 		void RefreshSelection();
 		FlashCard* FindCard(int cardId) const;
+		void UpdateDeckHeader();
+		void WrapHeader();
 		void OnPaint(wxPaintEvent& event);
 		void OnSize(wxSizeEvent& event);
 
