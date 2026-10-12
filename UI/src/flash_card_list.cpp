@@ -237,8 +237,26 @@ void FlashCardList::LoadCards() {
 void FlashCardList::RefreshGuide() {
 	auto useCase = wxGetApp().GetInjector().create<GetUserProfileUseCase>();
 	GetUserProfileResponse profile = useCase.Execute();
-	const bool guided = profile.ok && !profile.guideFinished && this->deckId != 0;
-	if (guided && this->cards.empty()) {
+	const bool guiding = profile.ok && !profile.guideFinished;
+	const bool addStep = guiding && this->deckId != 0 && this->cards.empty();
+	const bool studyStep = guiding && this->deckId != 0 && !this->cards.empty();
+	if (!guiding) {
+		this->addButton->Enable(true);
+		this->UpdateStudyButtons();
+		for (FlashCard* card : this->cards) {
+			card->Enable(true);
+		}
+		GuideHighlight::SetBorder(this->addButton, false);
+		GuideHighlight::SetBorder(this->studyButton, false);
+		return;
+	}
+	this->addButton->Enable(addStep);
+	this->studyButton->Enable(studyStep);
+	this->aiStudyButton->Enable(false);
+	for (FlashCard* card : this->cards) {
+		card->Enable(false);
+	}
+	if (addStep) {
 		GuideHighlight::SetBorder(this->studyButton, false);
 		GuideHighlight::Announce(
 			this->addButton,
@@ -247,7 +265,7 @@ void FlashCardList::RefreshGuide() {
 		);
 		return;
 	}
-	if (guided) {
+	if (studyStep) {
 		GuideHighlight::SetBorder(this->addButton, false);
 		GuideHighlight::Announce(
 			this->studyButton,

@@ -15,6 +15,7 @@
 #include "centered_message.h"
 #include "theme.h"
 #include "icon_button.h"
+#include "../../Application/UseCases/Profile/GetUserProfile/get_user_profile_usecase.h"
 
 MainFrame::MainFrame(const wxString& title)
     : wxFrame(nullptr, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE),
@@ -178,18 +179,25 @@ void MainFrame::UpdateDeckMenus() {
 	if (this->fileMenu == nullptr) {
 		return;
 	}
-	const bool hasDeck = this->selectedDeckId != 0 && !this->studying;
-	this->fileMenu->Enable(wxID_NEW, !this->studying);
+	bool guiding = false;
+	if (!this->studying) {
+		auto useCase = wxGetApp().GetInjector().create<GetUserProfileUseCase>();
+		GetUserProfileResponse profile = useCase.Execute();
+		guiding = profile.ok && !profile.guideFinished;
+	}
+	const bool unlocked = !this->studying && !guiding;
+	const bool hasDeck = this->selectedDeckId != 0 && unlocked;
+	this->fileMenu->Enable(wxID_NEW, unlocked);
 	this->fileMenu->Enable(ID_EDIT_DECK, hasDeck);
 	this->fileMenu->Enable(ID_DELETE_DECK, hasDeck);
-	this->fileMenu->Enable(ID_SETTINGS, !this->studying);
+	this->fileMenu->Enable(ID_SETTINGS, unlocked);
 	if (this->studyMenu != nullptr) {
-		this->studyMenu->Enable(ID_STUDY, !this->studying);
-		this->studyMenu->Enable(ID_AI, !this->studying);
-		this->studyMenu->Enable(ID_TODAYS_PROGRESS, !this->studying);
+		this->studyMenu->Enable(ID_STUDY, unlocked);
+		this->studyMenu->Enable(ID_AI, unlocked);
+		this->studyMenu->Enable(ID_TODAYS_PROGRESS, unlocked);
 	}
 	if (this->calendarMenu != nullptr) {
-		this->calendarMenu->Enable(ID_CALENDAR, !this->studying);
+		this->calendarMenu->Enable(ID_CALENDAR, unlocked);
 	}
 }
 
@@ -246,6 +254,9 @@ void MainFrame::OnSysColourChanged(wxSysColourChangedEvent& event) {
 
 void MainFrame::ShowCardList() {
 	this->SetStudying(false);
+	if (auto* decks = dynamic_cast<DeckPanelList*>(this->sidebarPanel)) {
+		decks->RefreshGuide();
+	}
 	this->SetCurrentPanel(new FlashCardList(this->contentPanel, this->selectedDeckId));
 }
 
