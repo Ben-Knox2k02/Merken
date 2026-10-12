@@ -64,7 +64,7 @@ Oldest first. The three merge commits at the end are listed so the walk is compl
 - [x] `f42dc7b` Open the main window at 1366 by 768 DIP
 - [x] `f4cd8fb` Add a calendar icon to the View Calendar menu
 - [x] `63bc618` Theme dialogs and restyle the study card
-- [ ] `cf58b3f` Place the study side label inside the card
+- [x] `cf58b3f` Place the study side label inside the card
 - [ ] `e9f2c21` Extend the window under the macOS title bar
 - [ ] `beca47c` Open the study back card with a page turn
 - [ ] `170fc08` Lock the window during study and keep card text regular
