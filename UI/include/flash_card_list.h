@@ -19,6 +19,7 @@ class FlashCardList : public wxPanel {
 		wxBoxSizer* rightCol;
 		wxButton* addButton;
 		wxButton* studyButton;
+		wxButton* aiStudyButton;
 
 		int deckId;
 
@@ -27,6 +28,7 @@ class FlashCardList : public wxPanel {
 
 		void OnAdd(wxCommandEvent& event);
 		void OnStudy(wxCommandEvent& event);
+		void OnAiStudy(wxCommandEvent& event);
 
 	private:
 		std::vector<FlashCard*> cards;

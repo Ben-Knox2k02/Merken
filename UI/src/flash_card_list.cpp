@@ -47,10 +47,27 @@ FlashCardList::FlashCardList(wxWindow* parent, int deckId)
 	titleBlock->Add(this->description, 0, wxEXPAND | wxTOP, this->FromDIP(Theme::Get().space.xs));
 
 	this->headerButtonSizer = new wxBoxSizer(wxHORIZONTAL);
-	this->addButton = new wxButton(this, wxID_ANY, "Add");
+	this->addButton = new wxButton(this, wxID_ANY, "Add Flash Card");
+	this->addButton->SetBitmap(
+		IconButton::LoadIconBundle("UI/assets/add_icon.png", 16, Theme::IsDarkAppearance()),
+		wxLEFT
+	);
+	this->addButton->SetBitmapMargins(this->FromDIP(6), 0);
 	this->studyButton = new wxButton(this, wxID_ANY, "Study Deck");
+	this->studyButton->SetBitmap(
+		IconButton::LoadIconBundle("UI/assets/study_icon.png", 16, Theme::IsDarkAppearance()),
+		wxLEFT
+	);
+	this->studyButton->SetBitmapMargins(this->FromDIP(6), 0);
+	this->aiStudyButton = new wxButton(this, wxID_ANY, "AI Study Deck");
+	this->aiStudyButton->SetBitmap(
+		IconButton::LoadIconBundle("UI/assets/ai_study_icon.png", 16, Theme::IsDarkAppearance()),
+		wxLEFT
+	);
+	this->aiStudyButton->SetBitmapMargins(this->FromDIP(6), 0);
 	this->headerButtonSizer->Add(this->addButton, 0, wxRIGHT, this->FromDIP(Theme::Get().space.xs));
-	this->headerButtonSizer->Add(this->studyButton, 0);
+	this->headerButtonSizer->Add(this->studyButton, 0, wxRIGHT, this->FromDIP(Theme::Get().space.xs));
+	this->headerButtonSizer->Add(this->aiStudyButton, 0);
 
 	wxBoxSizer* headerRow = new wxBoxSizer(wxHORIZONTAL);
 	headerRow->Add(titleBlock, 1, wxALIGN_CENTER_VERTICAL | wxRIGHT, this->FromDIP(Theme::Get().space.md));
@@ -75,6 +92,7 @@ FlashCardList::FlashCardList(wxWindow* parent, int deckId)
 
 	this->addButton->Bind(wxEVT_BUTTON, &FlashCardList::OnAdd, this);
 	this->studyButton->Bind(wxEVT_BUTTON, &FlashCardList::OnStudy, this);
+	this->aiStudyButton->Bind(wxEVT_BUTTON, &FlashCardList::OnAiStudy, this);
 	this->Bind(wxEVT_PAINT, &FlashCardList::OnPaint, this);
 	this->Bind(wxEVT_SIZE, &FlashCardList::OnSize, this);
 	this->Bind(wxEVT_ERASE_BACKGROUND, [](wxEraseEvent&) {});
@@ -315,5 +333,11 @@ void FlashCardList::DeleteCard(int cardId) {
 void FlashCardList::OnStudy(wxCommandEvent&) {
 	if (auto* frame = dynamic_cast<MainFrame*>(wxGetTopLevelParent(this))) {
 		frame->ShowStudyDeck();
+	}
+}
+
+void FlashCardList::OnAiStudy(wxCommandEvent&) {
+	if (auto* frame = dynamic_cast<MainFrame*>(wxGetTopLevelParent(this))) {
+		frame->ShowAiStudy();
 	}
 }
