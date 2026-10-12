@@ -44,6 +44,7 @@ class MainFrame : public wxFrame {
 		wxMenu* helpMenu;
 		
 		void OnDeckSelected(int deckId);
+		void ReloadDecks();
 
 		void ShowCardList();
 		void ShowStudyDeck();

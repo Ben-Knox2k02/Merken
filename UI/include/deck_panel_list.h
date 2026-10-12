@@ -11,7 +11,7 @@ class DeckPanelList : public wxPanel {
 		explicit DeckPanelList(wxWindow* parent);
 
 		wxBoxSizer* rootSizer;
-		wxBoxSizer* buttonSizer;
+		wxFlexGridSizer* buttonSizer;
 		wxStaticText* header;
 		wxScrolledWindow* scroller;
 		wxBoxSizer* listSizer;
@@ -35,7 +35,7 @@ class DeckPanelList : public wxPanel {
 
 		static constexpr int kMinWidth = 320 * 2 / 3;
 
-		void AddDeckCard(int deckId, const wxString& name);
+		void AddDeckCard(int deckId, const wxString& name, int cardCount);
 		void BindClicks(wxWindow* window, int deckId);
 		void RefreshSelection();
 		DeckCard* FindCard(int deckId) const;

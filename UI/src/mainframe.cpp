@@ -165,6 +165,12 @@ void MainFrame::OnDeckSelected(int deckId) {
 	}
 }
 
+void MainFrame::ReloadDecks() {
+	if (auto* decks = dynamic_cast<DeckPanelList*>(this->sidebarPanel)) {
+		decks->LoadDecks();
+	}
+}
+
 void MainFrame::ShowCardList() {
 	this->SetCurrentPanel(new FlashCardList(this->contentPanel, this->selectedDeckId));
 }
