@@ -19,7 +19,7 @@
 
 MainFrame::MainFrame(const wxString& title)
     : wxFrame(nullptr, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE),
-      app(wxGetApp()), currentPanel(nullptr), sidebarPanel(nullptr), selectedDeckId(0), studying(false), findDialog(nullptr)
+      app(wxGetApp()), currentPanel(nullptr), sidebarPanel(nullptr), selectedDeckId(0), selectedCardCount(0), studying(false), findDialog(nullptr)
 {
 	std::cout << "[TRACE] Entering MainFrame constructor..." << std::endl;
 	//=========== INITIALIZE WIDGETS ===================================== INITIALIZE WIDGETS ================================
@@ -186,19 +186,29 @@ void MainFrame::UpdateDeckMenus() {
 		guiding = profile.ok && !profile.guideFinished;
 	}
 	const bool unlocked = !this->studying && !guiding;
-	const bool hasDeck = this->selectedDeckId != 0 && unlocked;
+	bool hasDecks = false;
+	if (auto* decks = dynamic_cast<DeckPanelList*>(this->sidebarPanel)) {
+		hasDecks = decks->HasDecks();
+	}
+	const bool canEditDeck = hasDecks && this->selectedDeckId != 0 && unlocked;
+	const bool canStudy = this->selectedCardCount > 0 && unlocked;
 	this->fileMenu->Enable(wxID_NEW, unlocked);
-	this->fileMenu->Enable(ID_EDIT_DECK, hasDeck);
-	this->fileMenu->Enable(ID_DELETE_DECK, hasDeck);
+	this->fileMenu->Enable(ID_EDIT_DECK, canEditDeck);
+	this->fileMenu->Enable(ID_DELETE_DECK, canEditDeck);
 	this->fileMenu->Enable(ID_SETTINGS, unlocked);
 	if (this->studyMenu != nullptr) {
-		this->studyMenu->Enable(ID_STUDY, unlocked);
-		this->studyMenu->Enable(ID_AI, unlocked);
+		this->studyMenu->Enable(ID_STUDY, canStudy);
+		this->studyMenu->Enable(ID_AI, canStudy);
 		this->studyMenu->Enable(ID_TODAYS_PROGRESS, unlocked);
 	}
 	if (this->calendarMenu != nullptr) {
 		this->calendarMenu->Enable(ID_CALENDAR, unlocked);
 	}
+}
+
+void MainFrame::SetSelectedCardCount(int count) {
+	this->selectedCardCount = count;
+	this->UpdateDeckMenus();
 }
 
 void MainFrame::ApplyMenuIcons() {
@@ -258,6 +268,7 @@ void MainFrame::ShowCardList() {
 		decks->RefreshGuide();
 	}
 	this->SetCurrentPanel(new FlashCardList(this->contentPanel, this->selectedDeckId));
+	this->UpdateDeckMenus();
 }
 
 void MainFrame::ShowStudyDeck() {

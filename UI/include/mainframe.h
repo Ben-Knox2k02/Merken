@@ -32,6 +32,7 @@ class MainFrame : public wxFrame {
 		wxPanel* contentPanel;		// HUSK TO HOLD currentPanel
 		wxPanel* currentPanel;
 		int selectedDeckId;
+		int selectedCardCount;
 		bool studying;
 
 		wxAcceleratorEntry shortcuts[NUM_SHORTCUTS];
@@ -62,6 +63,7 @@ class MainFrame : public wxFrame {
 		void SetSidebarPanel(wxPanel* newPanel);
 		
 		void UpdateDeckMenus();
+		void SetSelectedCardCount(int count);
 		void SetStudying(bool active);
 		void ApplyMenuIcons();
 		void OnNew(wxCommandEvent& event);				// FILE
