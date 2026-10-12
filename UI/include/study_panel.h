@@ -16,6 +16,7 @@ class StudyPanel : public wxPanel {
 		wxBoxSizer* rootSizer;
 		wxStaticText* header;
 		StudyCard* card;
+		StudyCard* backCard;
 		wxStaticText* progressLabel;
 		wxGauge* progressBar;
 		wxStaticText* todayLabel;
@@ -43,6 +44,16 @@ class StudyPanel : public wxPanel {
 		std::vector<CardResponse> dueCards;
 		int startingCount;
 		bool answerVisible;
+		wxTimer pageTimer;
+		wxSizerItem* pageLead;
+		wxSizerItem* pageGap;
+		wxSizerItem* pageTail;
+		int pageElapsed;
+		bool spreading;
+
+		void ApplySpread();
+		void ClosePage();
+		void OnPageTick(wxTimerEvent& event);
 };
 
 #endif
