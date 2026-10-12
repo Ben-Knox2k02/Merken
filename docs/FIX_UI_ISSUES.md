@@ -66,7 +66,7 @@ Oldest first. The three merge commits at the end are listed so the walk is compl
 - [x] `63bc618` Theme dialogs and restyle the study card
 - [x] `cf58b3f` Place the study side label inside the card
 - [x] `e9f2c21` Extend the window under the macOS title bar
-- [ ] `beca47c` Open the study back card with a page turn
+- [x] `beca47c` Open the study back card with a page turn
 - [ ] `170fc08` Lock the window during study and keep card text regular
 - [ ] `f64ad46` Give the study card more padding and smaller text
 - [ ] `b346472` Match the study deck title to the card list
