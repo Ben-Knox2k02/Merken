@@ -14,6 +14,8 @@
 #include "settings_dialog.h"
 #include "centered_message.h"
 #include "theme.h"
+#include "icon_button.h"
+#include <wx/aboutdlg.h>
 
 MainFrame::MainFrame(const wxString& title)
     : wxFrame(nullptr, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE),
@@ -26,11 +28,13 @@ MainFrame::MainFrame(const wxString& title)
 	this->menuBar = new wxMenuBar;						// MENU BAR
 	 
 	this->fileMenu = new wxMenu;										// FILE
-	this->fileMenu->Append(wxID_NEW, "&New\tCtrl+N");		
-	this->fileMenu->Append(wxID_OPEN, "&Open\tCtrl+O");
-	this->fileMenu->Append(wxID_SAVE, "&Save\tCtrl+S");
+	this->fileMenu->Append(wxID_NEW, "Add Deck");
+	this->fileMenu->Append(ID_EDIT_DECK, "Edit Deck");
+	this->fileMenu->Append(ID_DELETE_DECK, "Delete Deck");
 	this->fileMenu->AppendSeparator();
-	this->fileMenu->Append(wxID_EXIT, "&Exit\tAlt+F4");
+	this->fileMenu->Append(ID_SETTINGS, "Settings");
+	this->fileMenu->AppendSeparator();
+	this->fileMenu->Append(wxID_EXIT, "Exit");
 	 
 	this->editMenu = new wxMenu;										// EDIT		
 	this->editMenu->Append(wxID_UNDO, "&Undo\tCtrl+Z");
@@ -45,24 +49,25 @@ MainFrame::MainFrame(const wxString& title)
 	this->searchMenu->Append(wxID_FIND, "&Find\tCtrl+F");
 	this->searchMenu->Append(wxID_REPLACE, "&Replace\tCtrl+H");
 	 
-	this->viewMenu = new wxMenu;										// VIEW
-	this->viewMenu->Append(ID_CARDS, "&Cards\tF1");
-	this->viewMenu->Append(ID_STUDY, "&Study\tF2");
-	this->viewMenu->Append(ID_TODAYS_PROGRESS, "Today's &Progress");
-	this->viewMenu->Append(ID_CALENDAR, "&Calendar\tF3");
-	this->viewMenu->Append(ID_AI, "&AI\tF4");
-	
-	this->toolsMenu = new wxMenu;										// TOOLS
-	this->toolsMenu->Append(ID_SETTINGS, "Settings");
+	this->viewMenu = nullptr;
+	this->studyMenu = new wxMenu;										// STUDY
+	this->studyMenu->Append(ID_STUDY, "Study Deck\tF2");
+	this->studyMenu->Append(ID_AI, "AI Study Deck\tF4");
+	this->studyMenu->Append(ID_TODAYS_PROGRESS, "Today's Progress");
+
+	this->calendarMenu = new wxMenu;									// CALENDAR
+	this->calendarMenu->Append(ID_CALENDAR, "View Calendar\tF3");
+
+	this->toolsMenu = nullptr;
 	
 	this->helpMenu = new wxMenu;										// HELP		
-	this->helpMenu->Append(wxID_ABOUT, "About");
+	this->helpMenu->Append(wxID_ABOUT, "About Merken");
 	 
 	this->menuBar->Append(fileMenu, "File");							// ATTACH MENUS
 	this->menuBar->Append(editMenu, "Edit");
 	this->menuBar->Append(searchMenu, "Search");
-	this->menuBar->Append(viewMenu, "View");
-	this->menuBar->Append(toolsMenu, "Tools");
+	this->menuBar->Append(studyMenu, "Study");
+	this->menuBar->Append(calendarMenu, "Calendar");
 	this->menuBar->Append(helpMenu, "Help");
 	
 	//======== KEYBOARD SHORTCUTS ================================== KEYBOARD SHORTCUTS ======================
@@ -90,7 +95,8 @@ MainFrame::MainFrame(const wxString& title)
 	this->SetAcceleratorTable(accel);
 	
 	//============ ATTACH WIDGETS ==================================== ATTACH WIDGETS ========================= 
-	this->SetMenuBar(this->menuBar);									
+	this->SetMenuBar(this->menuBar);
+	this->ApplyMenuIcons();
 	this->CreateStatusBar();
 	this->SetBackgroundColour(Theme::Get().color.window);
 	
@@ -111,9 +117,9 @@ MainFrame::MainFrame(const wxString& title)
 	this->Layout();
 	
 	//========= BIND EVENT HANDLERS ==================================== BIND EVENT HANDLERS ===================
-	this->Bind(wxEVT_MENU, &MainFrame::OnNew, this, wxID_NEW);					// FILE
-	this->Bind(wxEVT_MENU, &MainFrame::OnOpen, this, wxID_OPEN);
-	this->Bind(wxEVT_MENU, &MainFrame::OnSave, this, wxID_SAVE);
+	this->Bind(wxEVT_MENU, &MainFrame::OnAddDeck, this, wxID_NEW);				// FILE
+	this->Bind(wxEVT_MENU, &MainFrame::OnEditDeck, this, ID_EDIT_DECK);
+	this->Bind(wxEVT_MENU, &MainFrame::OnDeleteDeck, this, ID_DELETE_DECK);
 	this->Bind(wxEVT_MENU, &MainFrame::OnExit, this, wxID_EXIT);
 	
 	this->Bind(wxEVT_MENU, &MainFrame::OnUndo, this, wxID_UNDO);					// EDIT
@@ -146,12 +152,6 @@ MainFrame::MainFrame(const wxString& title)
 	this->Bind(wxEVT_SIZE, &MainFrame::OnWindowResized, this);					// WINDOW EVENTS
 	this->Bind(wxEVT_CLOSE_WINDOW, &MainFrame::OnWindowClosed, this);
 	
-	this->Bind(wxEVT_MENU, &MainFrame::OnNew, this, wxID_NEW);					// MENU EVENTS
-	this->Bind(wxEVT_MENU, &MainFrame::OnOpen, this, wxID_OPEN);
-	this->Bind(wxEVT_MENU, &MainFrame::OnSave, this, wxID_SAVE);
-	this->Bind(wxEVT_MENU, &MainFrame::OnAbout, this, wxID_ABOUT);
-	this->Bind(wxEVT_MENU, &MainFrame::OnExit, this, wxID_EXIT);
-
 	this->Bind(wxEVT_SIZE, &MainFrame::OnWindowResized, this);					// WINDOW EVENTS
 	this->Bind(wxEVT_ENTER_WINDOW, &MainFrame::OnMouseEvent, this);
 	this->Bind(wxEVT_LEAVE_WINDOW, &MainFrame::OnMouseEvent, this);
@@ -161,14 +161,44 @@ MainFrame::MainFrame(const wxString& title)
 
 void MainFrame::OnDeckSelected(int deckId) {
 	this->selectedDeckId = deckId;
+	this->UpdateDeckMenus();
 	if(auto cardPanel = dynamic_cast<FlashCardList*>(this->currentPanel)) {
 		cardPanel->SetDeck(deckId);
 	}
 }
 
+void MainFrame::UpdateDeckMenus() {
+	if (this->fileMenu == nullptr) {
+		return;
+	}
+	const bool hasDeck = this->selectedDeckId != 0;
+	this->fileMenu->Enable(ID_EDIT_DECK, hasDeck);
+	this->fileMenu->Enable(ID_DELETE_DECK, hasDeck);
+}
+
+void MainFrame::ApplyMenuIcons() {
+	if (this->menuBar == nullptr) {
+		return;
+	}
+	const bool invert = Theme::IsDarkAppearance();
+	auto setIcon = [this, invert](int id, const wxString& path) {
+		wxMenuItem* item = this->menuBar->FindItem(id);
+		if (item != nullptr) {
+			item->SetBitmap(IconButton::LoadIconBundle(path, 16, invert));
+		}
+	};
+	setIcon(wxID_NEW, "UI/assets/add_icon.png");
+	setIcon(ID_EDIT_DECK, "UI/assets/edit_icon.png");
+	setIcon(ID_DELETE_DECK, "UI/assets/delete_icon.png");
+	setIcon(ID_STUDY, "UI/assets/study_icon.png");
+	setIcon(ID_AI, "UI/assets/ai_study_icon.png");
+}
+
 void MainFrame::ReloadDecks() {
 	if (auto* decks = dynamic_cast<DeckPanelList*>(this->sidebarPanel)) {
 		decks->LoadDecks();
+		this->selectedDeckId = decks->GetSelectedDeckId();
+		this->UpdateDeckMenus();
 	}
 }
 
@@ -187,6 +217,7 @@ void MainFrame::ApplyTheme() {
 		this->currentPanel->SetBackgroundColour(theme.color.window);
 		this->currentPanel->Refresh();
 	}
+	this->ApplyMenuIcons();
 	this->Refresh();
 }
 
@@ -250,6 +281,24 @@ void MainFrame::SetSidebarPanel(wxPanel* newPanel) {
 }
 
 //=============== EVENT HANDLERS ================================== EVENT HANDLERS =============
+
+void MainFrame::OnAddDeck(wxCommandEvent& event) {
+	if (auto* decks = dynamic_cast<DeckPanelList*>(this->sidebarPanel)) {
+		decks->OnAddDeck(event);
+	}
+}
+
+void MainFrame::OnEditDeck(wxCommandEvent& event) {
+	if (auto* decks = dynamic_cast<DeckPanelList*>(this->sidebarPanel)) {
+		decks->OnEditDeck(event);
+	}
+}
+
+void MainFrame::OnDeleteDeck(wxCommandEvent& event) {
+	if (auto* decks = dynamic_cast<DeckPanelList*>(this->sidebarPanel)) {
+		decks->OnDeleteDeck(event);
+	}
+}
 
 void MainFrame::OnNew(wxCommandEvent& event) {						// FILE
 	wxLogStatus("NEW");
@@ -419,9 +468,14 @@ void MainFrame::OnSettings(wxCommandEvent& event) {					// TOOLS
 	event.Skip();
 }
 
-void MainFrame::OnAbout(wxCommandEvent& event) {					// HELP
-	wxLogStatus("ABOUT");
-	event.Skip();
+void MainFrame::OnAbout(wxCommandEvent&) {
+	wxAboutDialogInfo info;
+	info.SetName("Merken");
+	info.SetDescription(
+		"Merken is a flash-card study app. Create decks, add cards, and review them "
+		"with spaced practice or AI-guided study sessions."
+	);
+	wxAboutBox(info, this);
 }
 
 void MainFrame::OnMouseEvent(wxMouseEvent& event) {					// MOUSE

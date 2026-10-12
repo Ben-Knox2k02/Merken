@@ -122,7 +122,7 @@ FlashCardList::FlashCardList(wxWindow* parent, int deckId)
 	this->headerButtonSizer->Add(this->aiStudyButton, 0);
 
 	wxBoxSizer* headerRow = new wxBoxSizer(wxHORIZONTAL);
-	headerRow->Add(this->header, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL | wxRIGHT, this->FromDIP(Theme::Get().space.md));
+	headerRow->Add(this->header, 1, wxEXPAND | wxRIGHT, this->FromDIP(Theme::Get().space.md));
 	headerRow->Add(this->headerButtonSizer, 0, wxALIGN_TOP);
 
 	wxBoxSizer* headerBlock = new wxBoxSizer(wxVERTICAL);

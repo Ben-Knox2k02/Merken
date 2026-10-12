@@ -16,7 +16,9 @@ enum {									// CUSTOM IDs
 	ID_TODAYS_PROGRESS,
 	ID_SHOW_ANSWER,
 	ID_PREVIOUS_CARD,
-	ID_NEXT_CARD
+	ID_NEXT_CARD,
+	ID_EDIT_DECK,
+	ID_DELETE_DECK
 };
 
 class MainFrame : public wxFrame {
@@ -40,6 +42,8 @@ class MainFrame : public wxFrame {
 		wxMenu* editMenu;
 		wxMenu* searchMenu;
 		wxMenu* viewMenu;
+		wxMenu* studyMenu;
+		wxMenu* calendarMenu;
 		wxMenu* toolsMenu;
 		wxMenu* helpMenu;
 		
@@ -56,9 +60,14 @@ class MainFrame : public wxFrame {
 		void SetCurrentPanel(wxPanel* newPanel);		// LAYOUT METHODS
 		void SetSidebarPanel(wxPanel* newPanel);
 		
+		void UpdateDeckMenus();
+		void ApplyMenuIcons();
 		void OnNew(wxCommandEvent& event);				// FILE
 		void OnOpen(wxCommandEvent& event);
 		void OnSave(wxCommandEvent& event);
+		void OnAddDeck(wxCommandEvent& event);
+		void OnEditDeck(wxCommandEvent& event);
+		void OnDeleteDeck(wxCommandEvent& event);
 		void OnExit(wxCommandEvent& event);
 		
 		void OnUndo(wxCommandEvent& event);				// EDIT
