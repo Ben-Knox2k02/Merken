@@ -42,8 +42,8 @@ OnboardingDialog::OnboardingDialog(wxWindow* parent)
 	const int gapWelcome = this->FromDIP(28);
 
 	this->welcomePanel = MakePage(this);
-	wxStaticText* welcomeTitle = MakeTitle(this->welcomePanel, "Merken", 10);
-	wxStaticText* welcomeBody = MakeBody(this->welcomePanel, "Merken is a flash-card study app.");
+	wxStaticText* welcomeTitle = MakeTitle(this->welcomePanel, "Welcome to Merken", 14);
+	wxStaticText* welcomeBody = MakeBody(this->welcomePanel, "Your companion flash-card study app.");
 	wxButton* continueButton = new wxButton(this->welcomePanel, wxID_ANY, "Continue");
 	continueButton->SetDefault();
 	wxBoxSizer* welcome = new wxBoxSizer(wxVERTICAL);
@@ -95,10 +95,8 @@ OnboardingDialog::OnboardingDialog(wxWindow* parent)
 	root->Add(this->goalPanel, 1, wxEXPAND | wxALL, gapXl);
 	this->SetSizer(root);
 	this->SetMinSize(this->FromDIP(wxSize(520, 360)));
-	this->SetSize(this->FromDIP(wxSize(560, 400)));
 	Theme::Get().StyleDialog(this);
 	this->ShowStep(Step::Welcome);
-	this->Centre();
 
 	continueButton->Bind(wxEVT_BUTTON, &OnboardingDialog::OnWelcomeContinue, this);
 	nameContinue->Bind(wxEVT_BUTTON, &OnboardingDialog::OnNameContinue, this);
@@ -108,13 +106,35 @@ OnboardingDialog::OnboardingDialog(wxWindow* parent)
 	goal30->Bind(wxEVT_BUTTON, &OnboardingDialog::OnGoalChosen, this);
 	goalSkip->Bind(wxEVT_BUTTON, &OnboardingDialog::OnGoalSkip, this);
 	this->Bind(wxEVT_CLOSE_WINDOW, &OnboardingDialog::OnClose, this);
+	this->Bind(wxEVT_SHOW, [this](wxShowEvent& event) {
+		event.Skip();
+		if (!event.IsShown()) {
+			return;
+		}
+		const Step step = this->goalPanel->IsShown()
+			? Step::Goal
+			: (this->namePanel->IsShown() ? Step::Name : Step::Welcome);
+		this->ApplyChrome(step);
+	});
 }
 
 void OnboardingDialog::ShowStep(Step step) {
 	this->welcomePanel->Show(step == Step::Welcome);
 	this->namePanel->Show(step == Step::Name);
 	this->goalPanel->Show(step == Step::Goal);
+	const bool roomy = step == Step::Welcome || step == Step::Name;
+	const wxSize size = roomy ? wxSize(800, 600) : wxSize(560, 400);
+	this->ApplyChrome(step);
+	this->SetSize(this->FromDIP(size));
 	this->Layout();
+	this->Centre();
+	this->ApplyChrome(step);
+}
+
+void OnboardingDialog::ApplyChrome(Step step) {
+	const bool titled = step == Step::Goal;
+	this->SetTitle(titled ? "Merken" : wxString());
+	this->SetBackgroundColour(Theme::Get().color.window);
 }
 
 void OnboardingDialog::Finish() {

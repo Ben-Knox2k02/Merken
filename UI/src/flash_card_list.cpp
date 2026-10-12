@@ -3,12 +3,14 @@
 #include "centered_message.h"
 #include "mainframe.h"
 #include "theme.h"
+#include "guide_highlight.h"
 #include "app.h"
 #include "../../Application/UseCases/Deck/GetCards/get_cards_usecase.h"
 #include "../../Application/UseCases/Deck/GetDecks/get_decks_usecase.h"
 #include "../../Application/UseCases/Deck/CreateCard/create_card_usecase.h"
 #include "../../Application/UseCases/Deck/UpdateCard/update_card_usecase.h"
 #include "../../Application/UseCases/Deck/DeleteCard/delete_card_usecase.h"
+#include "../../Application/UseCases/Profile/GetUserProfile/get_user_profile_usecase.h"
 #include <wx/dcgraph.h>
 #include <wx/tokenzr.h>
 
@@ -117,8 +119,8 @@ FlashCardList::FlashCardList(wxWindow* parent, int deckId)
 		wxLEFT
 	);
 	this->aiStudyButton->SetBitmapMargins(this->FromDIP(6), 0);
-	this->headerButtonSizer->Add(this->addButton, 0, wxRIGHT, this->FromDIP(Theme::Get().space.xs));
-	this->headerButtonSizer->Add(this->studyButton, 0, wxRIGHT, this->FromDIP(Theme::Get().space.xs));
+	this->headerButtonSizer->Add(this->addButton, 0, wxRIGHT | wxALIGN_BOTTOM, this->FromDIP(Theme::Get().space.xs));
+	this->headerButtonSizer->Add(this->studyButton, 0, wxRIGHT | wxALIGN_BOTTOM, this->FromDIP(Theme::Get().space.xs));
 	this->headerButtonSizer->Add(this->aiStudyButton, 0);
 
 	wxBoxSizer* headerRow = new wxBoxSizer(wxHORIZONTAL);
@@ -217,6 +219,7 @@ void FlashCardList::LoadCards() {
 	this->scroller->Layout();
 	this->ShowEmptyState(this->cards.empty());
 	this->UpdateStudyButtons();
+	this->RefreshGuide();
 
 	this->CallAfter([this]() {
 		this->lastHeaderWrap = 0;
@@ -229,6 +232,32 @@ void FlashCardList::LoadCards() {
 		this->scroller->Layout();
 		this->scroller->FitInside();
 	});
+}
+
+void FlashCardList::RefreshGuide() {
+	auto useCase = wxGetApp().GetInjector().create<GetUserProfileUseCase>();
+	GetUserProfileResponse profile = useCase.Execute();
+	const bool guided = profile.ok && !profile.guideFinished && this->deckId != 0;
+	if (guided && this->cards.empty()) {
+		GuideHighlight::SetBorder(this->studyButton, false);
+		GuideHighlight::Announce(
+			this->addButton,
+			GuidePrompt::AddCard,
+			"Let's add a flash-card to the deck. Write the front and the back, and add any tags that help you remember."
+		);
+		return;
+	}
+	if (guided) {
+		GuideHighlight::SetBorder(this->addButton, false);
+		GuideHighlight::Announce(
+			this->studyButton,
+			GuidePrompt::StudyDeck,
+			"Let's study it together. The front comes up first, and then you can reveal the back."
+		);
+		return;
+	}
+	GuideHighlight::SetBorder(this->addButton, false);
+	GuideHighlight::SetBorder(this->studyButton, false);
 }
 
 void FlashCardList::UpdateDeckHeader() {
@@ -277,6 +306,7 @@ void FlashCardList::ApplyTheme() {
 	for (FlashCard* card : this->cards) {
 		card->ApplyTheme();
 	}
+	this->RefreshGuide();
 	this->Refresh();
 }
 
