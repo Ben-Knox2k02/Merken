@@ -6,6 +6,7 @@ wxIMPLEMENT_APP(App);
 bool App::OnInit() {
 	try {
 		std::cout << "[TRACE] Entering OnInit..." << std::endl;
+		wxInitAllImageHandlers();
 		this->EnsureInjector();
 		std::cout << "[TRACE] Injector ensured successfully." << std::endl;
 	

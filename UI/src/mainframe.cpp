@@ -4,8 +4,8 @@
 #include <filesystem>
 #include <fstream>
 #include <algorithm>
-#include "card_list_panel.h"
-#include "deck_panel.h"
+#include "flash_card_list.h"
+#include "deck_panel_list.h"
 #include "study_panel.h"
 #include "calendar_panel.h"
 #include "ai_panel.h"
@@ -94,10 +94,9 @@ MainFrame::MainFrame(const wxString& title)
 	
 	this->rootSizer = new wxBoxSizer(wxHORIZONTAL);
 	
-	this->sidebarPanel = new DeckPanel(this);
-	
 	this->contentPanel = new wxPanel(this, wxID_ANY);
-	this->SetCurrentPanel(new CardListPanel(this->contentPanel, 0));
+	this->SetCurrentPanel(new FlashCardList(this->contentPanel, 0));
+	this->sidebarPanel = new DeckPanelList(this);
 	
 	this->rootSizer->Add(this->sidebarPanel, 30, wxEXPAND | wxALL, 0);
 	this->rootSizer->Add(this->contentPanel, 70, wxEXPAND | wxALL, 0);
@@ -155,13 +154,13 @@ MainFrame::MainFrame(const wxString& title)
 
 void MainFrame::OnDeckSelected(int deckId) {
 	this->selectedDeckId = deckId;
-	if(auto cardPanel = dynamic_cast<CardListPanel*>(this->currentPanel)) {
+	if(auto cardPanel = dynamic_cast<FlashCardList*>(this->currentPanel)) {
 		cardPanel->SetDeck(deckId);
 	}
 }
 
 void MainFrame::ShowCardList() {
-	this->SetCurrentPanel(new CardListPanel(this->contentPanel, this->selectedDeckId));
+	this->SetCurrentPanel(new FlashCardList(this->contentPanel, this->selectedDeckId));
 }
 
 void MainFrame::ShowStudyDeck() {
@@ -442,22 +441,16 @@ void MainFrame::ApplyPanelWidths() {
 	this->contentPanel->SetMinSize(wxSize(cardWidth, -1));
 	this->contentPanel->SetMaxSize(wxSize(cardWidth, -1));
 
-	if(auto* decks = dynamic_cast<DeckPanel*>(this->sidebarPanel)) {
-		if(decks->deckList != nullptr && decks->deckList->GetColumnCount() >= 2) {
-			const int inner = deckWidth > 20 ? deckWidth - 20 : deckWidth;
-			const int nameWidth = inner / 2;
-			decks->deckList->GetColumn(0)->SetWidth(nameWidth);
-			decks->deckList->GetColumn(1)->SetWidth(inner - nameWidth);
-		}
-	}
-
-	if(auto* cards = dynamic_cast<CardListPanel*>(this->currentPanel)) {
-		if(cards->cardList != nullptr && cards->cardList->GetColumnCount() >= 3) {
+	if(auto* cards = dynamic_cast<FlashCardList*>(this->currentPanel)) {
+		if(cards->cardList != nullptr && cards->cardList->GetColumnCount() >= 4) {
 			const int inner = cardWidth > 20 ? cardWidth - 20 : cardWidth;
-			const int columnWidth = inner / 3;
-			cards->cardList->GetColumn(0)->SetWidth(columnWidth);
+			const int iconWidth = cards->FromDIP(56);
+			const int rest = inner > iconWidth ? inner - iconWidth : 0;
+			const int columnWidth = rest / 3;
+			cards->cardList->GetColumn(0)->SetWidth(iconWidth);
 			cards->cardList->GetColumn(1)->SetWidth(columnWidth);
-			cards->cardList->GetColumn(2)->SetWidth(inner - (columnWidth * 2));
+			cards->cardList->GetColumn(2)->SetWidth(columnWidth);
+			cards->cardList->GetColumn(3)->SetWidth(rest - (columnWidth * 2));
 		}
 	}
 }
