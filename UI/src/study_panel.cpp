@@ -173,9 +173,16 @@ class StudyCard : public wxPanel {
 			  side(StudyCardSide::Neutral),
 			  lastWrap(-1),
 			  wrapping(false),
-			  visualScale(1) {
+			  visualScale(1),
+			  paintAll(false) {
 			this->SetBackgroundStyle(wxBG_STYLE_PAINT);
-			this->Create(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE);
+			this->Create(
+				parent,
+				wxID_ANY,
+				wxDefaultPosition,
+				wxDefaultSize,
+				wxBORDER_NONE | wxFULL_REPAINT_ON_RESIZE
+			);
 			this->SetWindowStyleFlag(this->GetWindowStyleFlag() & ~wxCLIP_CHILDREN);
 
 			const Theme& theme = Theme::Get();
@@ -358,6 +365,7 @@ class StudyCard : public wxPanel {
 		int lastWrap;
 		bool wrapping;
 		double visualScale;
+		bool paintAll;
 
 		int ContentPad() const {
 			return this->FromDIP(Theme::Get().size.cardPad + 12);
@@ -504,12 +512,31 @@ class StudyCard : public wxPanel {
 		}
 
 		void OnPaint(wxPaintEvent&) {
-			wxPaintDC dc(this);
-			wxGCDC gc(dc);
 			const wxSize size = this->GetClientSize();
 			if (size.GetWidth() < 2 || size.GetHeight() < 2) {
+				wxPaintDC dc(this);
 				return;
 			}
+			// A move invalidates a strip. wxGCDC then clears the rest of the card,
+			// so the body disappears and the text looks detached.
+			const wxRect damaged = this->GetUpdateRegion().GetBox();
+			const bool coversAll = damaged.GetWidth() >= size.GetWidth()
+				&& damaged.GetHeight() >= size.GetHeight();
+			if (!coversAll) {
+				wxPaintDC dc(this);
+				if (!this->paintAll) {
+					this->paintAll = true;
+					this->CallAfter([this]() {
+						this->paintAll = false;
+						if (this->IsShown()) {
+							this->Refresh(false);
+						}
+					});
+				}
+				return;
+			}
+			wxPaintDC dc(this);
+			wxGCDC gc(dc);
 			const Theme& theme = Theme::Get();
 			if (std::abs(this->visualScale - 1.0) > 0.001) {
 				theme.FillCanvas(gc, this, size);
@@ -546,7 +573,8 @@ StudyPanel::StudyPanel(wxWindow* parent, int deckId)
 	  cardHost(nullptr),
 	  pageElapsed(-1),
 	  spreading(false),
-	  guideReadyForBack(false) {
+	  guideReadyForBack(false),
+	  spreadHostSize(0, 0) {
 	this->rootSizer = new wxBoxSizer(wxVERTICAL);
 
 	const Theme& theme = Theme::Get();
@@ -559,8 +587,18 @@ StudyPanel::StudyPanel(wxWindow* parent, int deckId)
 	this->header->SetForegroundColour(theme.color.label);
 	this->rootSizer->Add(this->header, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 10);
 
-	this->cardHost = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE);
+	this->cardHost = new wxPanel();
+	this->cardHost->SetBackgroundStyle(wxBG_STYLE_PAINT);
+	this->cardHost->Create(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE | wxCLIP_CHILDREN);
+	this->cardHost->SetDoubleBuffered(true);
 	this->cardHost->SetBackgroundColour(theme.color.window);
+	this->cardHost->Bind(wxEVT_ERASE_BACKGROUND, [](wxEraseEvent&) {});
+	this->cardHost->Bind(wxEVT_PAINT, [this](wxPaintEvent&) {
+		wxPaintDC dc(this->cardHost);
+		dc.SetPen(*wxTRANSPARENT_PEN);
+		dc.SetBrush(wxBrush(this->cardHost->GetBackgroundColour()));
+		dc.DrawRectangle(this->cardHost->GetClientRect());
+	});
 	this->backCard = new StudyCard(this->cardHost);
 	this->card = new StudyCard(this->cardHost);
 	this->backCard->Hide();
@@ -600,6 +638,11 @@ StudyPanel::StudyPanel(wxWindow* parent, int deckId)
 	this->Bind(wxEVT_TIMER, &StudyPanel::OnPageTick, this, this->pageTimer.GetId());
 	this->cardHost->Bind(wxEVT_SIZE, [this](wxSizeEvent& event) {
 		event.Skip();
+		const wxSize size = event.GetSize();
+		if (size == this->spreadHostSize) {
+			return;
+		}
+		this->spreadHostSize = size;
 		this->CallAfter([this]() { this->ApplySpread(); });
 	});
 
@@ -611,6 +654,35 @@ namespace {
 double EaseOut(double t) {
 	t = std::clamp(t, 0.0, 1.0);
 	return 1.0 - (1.0 - t) * (1.0 - t);
+}
+
+void PlaceStudyCard(wxWindow* card, int x, int y, int width, int height, bool show) {
+	if (card == nullptr) {
+		return;
+	}
+	if (!show) {
+		if (card->IsShown()) {
+			card->Hide();
+		}
+		return;
+	}
+	const wxPoint nextPos(x, y);
+	const wxSize nextSize(width, height);
+	const bool shown = card->IsShown();
+	const bool sameSize = shown && card->GetSize() == nextSize;
+	const bool samePlace = sameSize && card->GetPosition() == nextPos;
+	if (!shown || !sameSize) {
+		card->SetSize(nextPos.x, nextPos.y, nextSize.x, nextSize.y);
+		if (!shown) {
+			card->Show();
+		}
+	} else if (!samePlace) {
+		card->Move(nextPos);
+	} else {
+		return;
+	}
+	card->Refresh(false);
+	card->Update();
 }
 }
 
@@ -656,22 +728,20 @@ void StudyPanel::ApplySpread() {
 
 	this->card->SetBaseWidth(cardW);
 	this->backCard->SetBaseWidth(cardW);
-	this->card->Show();
-	this->card->SetSize(frontLeft, frontTop, cardW, cardH);
-	this->card->Raise();
 
+	PlaceStudyCard(this->card, frontLeft, frontTop, cardW, cardH, true);
 	if (backSlide <= 0.001) {
-		this->backCard->Hide();
+		PlaceStudyCard(this->backCard, slidLeft, frontTop, cardW, cardH, false);
 	} else {
 		const int backDest = slidLeft + cardW + gutter;
 		const int backTravel = std::max(0, cardW - gutter);
 		const int backLeft = backDest - static_cast<int>((1.0 - backSlide) * backTravel);
-		const int backTop = (hostH - cardH) / 2;
-		this->backCard->Show();
-		this->backCard->SetSize(backLeft, backTop, cardW, cardH);
-		this->card->Raise();
+		const bool backArriving = !this->backCard->IsShown();
+		PlaceStudyCard(this->backCard, backLeft, frontTop, cardW, cardH, true);
+		if (backArriving) {
+			this->card->Raise();
+		}
 	}
-	this->cardHost->Refresh();
 	this->spreading = false;
 }
 

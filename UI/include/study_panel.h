@@ -49,6 +49,7 @@ class StudyPanel : public wxPanel {
 		int pageElapsed;
 		bool spreading;
 		bool guideReadyForBack;
+		wxSize spreadHostSize;
 
 		void ApplySpread();
 		void ClosePage();
