@@ -1,5 +1,7 @@
 #include "app.h"
 #include "mainframe.h"
+#include "onboarding_dialog.h"
+#include "../../Application/UseCases/Profile/GetUserProfile/get_user_profile_usecase.h"
 
 wxIMPLEMENT_APP(App);
 
@@ -10,6 +12,13 @@ bool App::OnInit() {
 		wxInitAllImageHandlers();
 		this->EnsureInjector();
 		std::cout << "[TRACE] Injector ensured successfully." << std::endl;
+
+		auto profileUseCase = this->GetInjector().create<GetUserProfileUseCase>();
+		GetUserProfileResponse profile = profileUseCase.Execute();
+		if (profile.ok && !profile.onboardingFinished) {
+			OnboardingDialog onboarding(nullptr);
+			onboarding.ShowModal();
+		}
 	
 		this->SCREEN_WIDTH = wxSystemSettings::GetMetric(wxSYS_SCREEN_X);
 		this->SCREEN_HEIGHT = wxSystemSettings::GetMetric(wxSYS_SCREEN_Y);
