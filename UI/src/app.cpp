@@ -14,12 +14,12 @@ bool App::OnInit() {
 		this->SCREEN_WIDTH = wxSystemSettings::GetMetric(wxSYS_SCREEN_X);
 		this->SCREEN_HEIGHT = wxSystemSettings::GetMetric(wxSYS_SCREEN_Y);
 	
-		this->windowWidth = this->SCREEN_WIDTH * 4 / 5;
-		this->windowHeight = this->SCREEN_HEIGHT * 4 / 5;
-	
 		MainFrame* mainFrame = new MainFrame("Merken");
 		std::cout << "[TRACE] MainFrame constructed successfully." << std::endl;
-		mainFrame->SetSize(this->windowWidth, this->windowHeight);
+		const wxSize initialSize = mainFrame->FromDIP(wxSize(1366, 768));
+		this->windowWidth = initialSize.GetWidth();
+		this->windowHeight = initialSize.GetHeight();
+		mainFrame->SetClientSize(initialSize);
 		mainFrame->Center();
 		mainFrame->Show();
 		std::cout << "[TRACE] MainFrame shown." << std::endl;
