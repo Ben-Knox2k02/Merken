@@ -132,4 +132,4 @@ Oldest first. Same rule: one commit, then a Windows build and run.
 - [x] `0cfdecc` Update header font to a specific wxFont configuration
 - [x] `e18a8fa` Replace `activePanel` with `contentPanel` in MainFrame
 - [x] `ae162af` Adjust padding in study panel layout
-- [ ] Confirm find/replace, undo/redo, rich text, deck-delete confirmation, and the replayed UIWork behavior still work
+- [x] Confirm find/replace, undo/redo, rich text, deck-delete confirmation, and the replayed UIWork behavior still work
