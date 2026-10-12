@@ -22,9 +22,9 @@ class DeckCardIcon : public wxPanel {
 			this->SetBackgroundStyle(wxBG_STYLE_PAINT);
 			this->Create(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE);
 			this->SetWindowStyleFlag(this->GetWindowStyleFlag() & ~wxCLIP_CHILDREN);
-			this->SetMinSize(wxSize(-1, kCardHeight));
 
-			wxBoxSizer* mainSizer = new wxBoxSizer(wxHORIZONTAL);
+			const int pad = this->FromDIP(10);
+			const int iconGap = this->FromDIP(2);
 
 			wxStaticBitmap* cardImage = new wxStaticBitmap();
 			cardImage->SetBackgroundStyle(wxBG_STYLE_TRANSPARENT);
@@ -33,9 +33,6 @@ class DeckCardIcon : public wxPanel {
 				wxID_ANY,
 				LoadIconBundle(imagePath.IsEmpty() ? DefaultIconPath() : imagePath, kIconSize)
 			);
-			mainSizer->Add(cardImage, 0, wxALIGN_CENTER_VERTICAL | wxLEFT | wxRIGHT, 10);
-
-			wxBoxSizer* textSizer = new wxBoxSizer(wxVERTICAL);
 
 			this->titleCtrl = new wxStaticText();
 			this->titleCtrl->SetBackgroundStyle(wxBG_STYLE_TRANSPARENT);
@@ -48,12 +45,20 @@ class DeckCardIcon : public wxPanel {
 			this->descCtrl->Wrap(200);
 			this->ApplyTextColours();
 
-			textSizer->AddStretchSpacer(1);
-			textSizer->Add(this->titleCtrl, 0, wxBOTTOM, 2);
-			textSizer->Add(this->descCtrl, 0, wxEXPAND);
-			textSizer->AddStretchSpacer(1);
+			wxBoxSizer* titleRow = new wxBoxSizer(wxHORIZONTAL);
+			titleRow->Add(cardImage, 0, wxALIGN_TOP | wxLEFT, pad);
+			titleRow->Add(this->titleCtrl, 1, wxALIGN_TOP | wxLEFT | wxRIGHT, pad);
 
-			mainSizer->Add(textSizer, 1, wxEXPAND | wxLEFT | wxRIGHT, 12);
+			wxBoxSizer* descRow = new wxBoxSizer(wxHORIZONTAL);
+			descRow->AddSpacer(pad + this->FromDIP(kIconSize) + pad);
+			descRow->Add(this->descCtrl, 1, wxEXPAND | wxRIGHT, pad);
+
+			wxBoxSizer* contentSizer = new wxBoxSizer(wxVERTICAL);
+			contentSizer->Add(titleRow, 0, wxEXPAND);
+			contentSizer->Add(descRow, 0, wxEXPAND | wxTOP, iconGap);
+
+			wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
+			mainSizer->Add(contentSizer, 0, wxEXPAND | wxTOP | wxBOTTOM, pad);
 			this->SetSizer(mainSizer);
 
 			this->Bind(wxEVT_PAINT, &DeckCardIcon::OnPaint, this);
@@ -82,8 +87,7 @@ class DeckCardIcon : public wxPanel {
 		}
 
 	private:
-		static constexpr int kCardHeight = 64;
-		static constexpr int kIconSize = 28;
+		static constexpr int kIconSize = 18;
 		static constexpr int kCornerRadius = 5;
 
 		wxStaticText* titleCtrl;
@@ -124,7 +128,7 @@ class DeckCardIcon : public wxPanel {
 			}
 
 			gc.SetBrush(wxBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT)));
-			gc.DrawRoundedRectangle(0, 0, size.GetWidth(), size.GetHeight(), kCornerRadius);
+			gc.DrawRoundedRectangle(0, 0, size.GetWidth(), size.GetHeight(), this->FromDIP(kCornerRadius));
 		}
 
 		static wxString DefaultIconPath() {

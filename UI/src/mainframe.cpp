@@ -98,7 +98,7 @@ MainFrame::MainFrame(const wxString& title)
 	this->SetCurrentPanel(new FlashCardList(this->contentPanel, 0));
 	this->sidebarPanel = new DeckPanelList(this);
 	
-	this->rootSizer->Add(this->sidebarPanel, 30, wxEXPAND | wxALL, 0);
+	this->rootSizer->Add(this->sidebarPanel, 30, wxEXPAND | wxALL, this->FromDIP(10));
 	this->rootSizer->Add(this->contentPanel, 70, wxEXPAND | wxALL, 0);
 	
 	this->SetSizer(this->rootSizer);
@@ -434,8 +434,13 @@ void MainFrame::ApplyPanelWidths() {
 		return;
 	}
 
-	const int deckWidth = clientWidth * 30 / 100;
-	const int cardWidth = clientWidth - deckWidth;
+	const int outerPad = this->FromDIP(10);
+	const int deckSlot = clientWidth * 30 / 100;
+	const int deckWidth = deckSlot - outerPad * 2;
+	const int cardWidth = clientWidth - deckSlot;
+	if(deckWidth <= 0 || cardWidth <= 0) {
+		return;
+	}
 	this->sidebarPanel->SetMinSize(wxSize(deckWidth, -1));
 	this->sidebarPanel->SetMaxSize(wxSize(deckWidth, -1));
 	this->contentPanel->SetMinSize(wxSize(cardWidth, -1));
