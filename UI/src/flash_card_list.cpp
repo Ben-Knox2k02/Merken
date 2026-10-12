@@ -7,7 +7,6 @@
 #include "../../Application/UseCases/Deck/CreateCard/create_card_usecase.h"
 #include "../../Application/UseCases/Deck/UpdateCard/update_card_usecase.h"
 #include "../../Application/UseCases/Deck/DeleteCard/delete_card_usecase.h"
-#include <wx/statline.h>
 #include <wx/dcgraph.h>
 
 wxDECLARE_APP(App);
@@ -139,14 +138,10 @@ void FlashCardList::LoadCards() {
 }
 
 void FlashCardList::AddCard(int cardId, const wxString& front, const wxString& back, const wxString& tags) {
-	if (!this->cards.empty()) {
-		wxStaticLine* separator = new wxStaticLine(this->scroller, wxID_ANY);
-		this->listSizer->Add(separator, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP | wxBOTTOM, 4);
-	}
-
 	FlashCard* card = new FlashCard(this->scroller, front, back, tags);
 	card->SetCursor(wxCURSOR_HAND);
-	this->listSizer->Add(card, 0, wxEXPAND);
+	const int topGap = this->cards.empty() ? 0 : this->FromDIP(8);
+	this->listSizer->Add(card, 0, wxEXPAND | wxTOP, topGap);
 	this->cards.push_back(card);
 	this->cardIds.push_back(cardId);
 	this->BindClicks(card, cardId);
@@ -262,16 +257,18 @@ void FlashCardList::OnDelete(wxCommandEvent&) {
 		ShowCenteredMessage(this, "No card selected.", "Delete Card", wxOK | wxICON_WARNING);
 		return;
 	}
-
-	const int confirm = wxMessageBox(
-		"Are you sure you want to delete this card?",
-		"Confirm Delete",
-		wxYES_NO | wxICON_QUESTION,
-		this
-	);
-	if (confirm != wxYES) {
+	if (this->deckId == 0) {
+		ShowCenteredMessage(this, "Select a deck first.", "Delete Card", wxOK | wxICON_WARNING);
 		return;
 	}
+
+	const int confirmed = ShowCenteredMessage(
+		this,
+		"Delete this card?",
+		"Delete Card",
+		wxYES_NO | wxICON_QUESTION
+	);
+	if (confirmed != wxID_YES) { return; }
 
 	DeleteCardRequest request;
 	request.deckId = this->deckId;
@@ -282,7 +279,6 @@ void FlashCardList::OnDelete(wxCommandEvent&) {
 		return;
 	}
 
-	this->selectedCardId = 0;
 	this->LoadCards();
 }
 

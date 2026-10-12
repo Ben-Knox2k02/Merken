@@ -105,12 +105,13 @@ void DeckPanelList::LoadDecks() {
 	this->scroller->FitInside();
 	this->scroller->Layout();
 
-	if (previouslySelected != 0) {
+	if (previouslySelected != 0 && this->FindCard(previouslySelected) != nullptr) {
 		this->SelectDeck(previouslySelected, false);
 	} else if (firstDeckId != 0) {
 		this->SelectDeck(firstDeckId, true);
 	} else {
 		this->selectedDeckId = 0;
+		this->NotifyDeckSelected(0);
 	}
 }
 
@@ -165,7 +166,6 @@ void DeckPanelList::RefreshSelection() {
 }
 
 void DeckPanelList::NotifyDeckSelected(int deckId) {
-	if (deckId == 0) { return; }
 	if (auto* frame = dynamic_cast<MainFrame*>(this->GetParent())) {
 		frame->OnDeckSelected(deckId);
 	}
@@ -247,15 +247,17 @@ void DeckPanelList::OnDeleteDeck(wxCommandEvent&) {
 		return;
 	}
 
-	const int confirm = wxMessageBox(
-		"Are you sure you want to delete this deck?",
-		"Confirm Delete",
-		wxYES_NO | wxICON_QUESTION,
-		this
-	);
-	if (confirm != wxYES) {
-		return;
+	wxString name = "this deck";
+	if (DeckCardIcon* card = this->FindCard(deckId)) {
+		name = card->GetTitle();
 	}
+	const int confirmed = ShowCenteredMessage(
+		this,
+		"Delete \"" + name + "\" and all of its cards?",
+		"Delete Deck",
+		wxYES_NO | wxICON_QUESTION
+	);
+	if (confirmed != wxID_YES) { return; }
 
 	DeleteDeckRequest request;
 	request.deckId = deckId;
@@ -265,6 +267,5 @@ void DeckPanelList::OnDeleteDeck(wxCommandEvent&) {
 		return;
 	}
 
-	this->selectedDeckId = 0;
 	this->LoadDecks();
 }
