@@ -445,19 +445,6 @@ void MainFrame::ApplyPanelWidths() {
 	this->sidebarPanel->SetMaxSize(wxSize(deckWidth, -1));
 	this->contentPanel->SetMinSize(wxSize(cardWidth, -1));
 	this->contentPanel->SetMaxSize(wxSize(cardWidth, -1));
-
-	if(auto* cards = dynamic_cast<FlashCardList*>(this->currentPanel)) {
-		if(cards->cardList != nullptr && cards->cardList->GetColumnCount() >= 4) {
-			const int inner = cardWidth > 20 ? cardWidth - 20 : cardWidth;
-			const int iconWidth = cards->FromDIP(56);
-			const int rest = inner > iconWidth ? inner - iconWidth : 0;
-			const int columnWidth = rest / 3;
-			cards->cardList->GetColumn(0)->SetWidth(iconWidth);
-			cards->cardList->GetColumn(1)->SetWidth(columnWidth);
-			cards->cardList->GetColumn(2)->SetWidth(columnWidth);
-			cards->cardList->GetColumn(3)->SetWidth(rest - (columnWidth * 2));
-		}
-	}
 }
 
 void MainFrame::OnWindowResized(wxSizeEvent& event) {				// WINDOW
