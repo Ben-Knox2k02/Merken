@@ -34,10 +34,16 @@ class IconButton : public wxBitmapButton {
 			const int padX = this->FromDIP(24);
 			const int width = this->FromDIP(kIconSize) + padX * 2;
 			this->SetMinSize(wxSize(width, height));
+			this->CenterIcon();
+			this->Bind(wxEVT_SIZE, [this](wxSizeEvent& event) {
+				event.Skip();
+				this->CenterIcon();
+			});
 		}
 
 		void ApplyTheme() {
-			this->SetBitmap(LoadIconBundle(this->imagePath, kIconSize, this->forceInvert || IsDarkTheme()));
+			this->SetBitmapLabel(LoadIconBundle(this->imagePath, kIconSize, this->forceInvert || IsDarkTheme()));
+			this->CenterIcon();
 		}
 
 		static wxBitmapBundle LoadIconBundle(const wxString& path, int dipSize, bool invert) {
@@ -76,6 +82,12 @@ class IconButton : public wxBitmapButton {
 
 		static bool IsDarkTheme() {
 			return Theme::IsDarkAppearance();
+		}
+
+		void CenterIcon() {
+			// macOS draws NSImageOnly in the middle of the button.
+			// wxBitmapButton on Windows already centers its bitmap.
+			(void)this;
 		}
 
 		static wxImage ScaledIcon(const wxImage& source, int pixels, bool invert) {

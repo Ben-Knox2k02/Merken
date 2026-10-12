@@ -112,6 +112,7 @@ class Theme {
 
 		static const Theme& Get();
 		static bool IsDarkAppearance();
+		static void UseDark(bool dark);
 		static int Dip(const wxWindow* window, int value);
 		static wxColour Hex(unsigned int rgb, unsigned char alpha = 255);
 
@@ -142,7 +143,25 @@ inline wxColour Theme::Hex(unsigned int rgb, unsigned char alpha) {
 	);
 }
 
+struct ThemeChoiceState {
+	bool chosen = false;
+	bool dark = false;
+};
+
+inline ThemeChoiceState& ThemeChoice() {
+	static ThemeChoiceState state;
+	return state;
+}
+
+inline void Theme::UseDark(bool dark) {
+	ThemeChoice().chosen = true;
+	ThemeChoice().dark = dark;
+}
+
 inline bool Theme::IsDarkAppearance() {
+	if (ThemeChoice().chosen) {
+		return ThemeChoice().dark;
+	}
 	return wxSystemSettings::GetAppearance().IsDark();
 }
 

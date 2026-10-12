@@ -1,6 +1,7 @@
 #include "app.h"
 #include "mainframe.h"
 #include "onboarding_dialog.h"
+#include "theme_preference.h"
 #include "../../Application/UseCases/Profile/GetUserProfile/get_user_profile_usecase.h"
 
 wxIMPLEMENT_APP(App);
@@ -11,6 +12,7 @@ bool App::OnInit() {
 		this->SetAppearance(Appearance::System);
 		wxInitAllImageHandlers();
 		this->EnsureInjector();
+		ApplyStoredTheme();
 		std::cout << "[TRACE] Injector ensured successfully." << std::endl;
 
 		auto profileUseCase = this->GetInjector().create<GetUserProfileUseCase>();
