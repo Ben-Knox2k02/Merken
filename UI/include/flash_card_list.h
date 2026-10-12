@@ -14,6 +14,8 @@ class FlashCardList : public wxPanel {
 		wxStaticText* header;
 		wxStaticText* description;
 		wxScrolledWindow* scroller;
+		wxPanel* emptyPanel;
+		wxStaticText* emptyMessage;
 		wxBoxSizer* listSizer;
 		wxBoxSizer* leftCol;
 		wxBoxSizer* rightCol;
@@ -45,6 +47,7 @@ class FlashCardList : public wxPanel {
 		FlashCard* FindCard(int cardId) const;
 		void UpdateDeckHeader();
 		void UpdateStudyButtons();
+		void ShowEmptyState(bool empty);
 		void WrapHeader();
 		void OnPaint(wxPaintEvent& event);
 		void OnSize(wxSizeEvent& event);
