@@ -59,6 +59,14 @@ static std::string ExtractGoogleErrorMessage(const std::string& body){
 	return body.substr(0, 200);
 }
 
+//describe why a request failed
+static std::string DescribeFailure(const HttpResponse& response){
+	if(!response.error.empty()){
+		return response.error;
+	}
+	return ExtractGoogleErrorMessage(response.body);
+}
+
 // Helper function to parse a Google Calendar event JSON object into a CalendarEvent instance (created with help from Gemini)
 CalendarEvent ParseGoogleEventJson(const nlohmann::json& json){
 	if(!json.is_object()){
@@ -114,18 +122,21 @@ CalendarEvent GoogleCalendarService::CreateEvent(const CalendarEvent& event, con
 
 		HttpResponse response = this->httpClient.PostJson(kEventsUrl, payload.dump(), AuthHeaders(accessToken));
 
-		if ((response.statusCode == 200 || response.statusCode == 201) && !response.body.empty()) {
-			nlohmann::json jsonResponse = nlohmann::json::parse(response.body);
-			if (jsonResponse.contains("id") && jsonResponse["id"].is_string()) {
-				CalendarEvent createdEvent = event;
-				createdEvent.SetGoogleEventId(jsonResponse["id"].get<std::string>());
-				return createdEvent;
-			}
+		if (!IsSuccessStatus(response.statusCode)){
+			LogCalendarError("CreateEvent", response.statusCode, DescribeFailure(response));
+			return event;
 		}
+		nlohmann::json jsonResponse = nlohmann::json::parse(response.body, nullptr, false);
+		std::string id = GetStringField(jsonResponse, "id");
+		if (id.empty()){
+			LogCalendarError("CreateEvent", response.statusCode, "Failed to retrieve event ID from response");
+			return event;
+		}
+		CalendarEvent createdEvent = event;
+		createdEvent.SetGoogleEventId(id);
+		return createdEvent;
 	} catch (const std::exception& e) {
-		//log the exception if needed
-		(void)e; //suppress unused variable warning
-
+		LogCalendarError("CreateEvent", 0, e.what());
 	}
 	return event;
 	
@@ -133,6 +144,7 @@ CalendarEvent GoogleCalendarService::CreateEvent(const CalendarEvent& event, con
 
 std::optional<CalendarEvent> GoogleCalendarService::GetEvent(const std::string& googleEventId, const std::string& accessToken) {
 	if (googleEventId.empty() || accessToken.empty()) {
+		LogCalendarError("GetEvent", 0, "No Google Event ID or access token provided");
 		return std::nullopt;
 	}
 	
@@ -141,14 +153,18 @@ std::optional<CalendarEvent> GoogleCalendarService::GetEvent(const std::string& 
 
 		HttpResponse response = this->httpClient.Get(url, AuthHeaders(accessToken));
 
-		if (response.statusCode == 200 && !response.body.empty()) {
-			nlohmann::json jsonResponse = nlohmann::json::parse(response.body);
-			CalendarEvent event = ParseGoogleEventJson(jsonResponse);
-			return event;
+		if (!IsSuccessStatus(response.statusCode) || response.body.empty()){
+			LogCalendarError("GetEvent", response.statusCode, DescribeFailure(response));
+			return std::nullopt;
 		}
+		nlohmann::json jsonResponse = nlohmann::json::parse(response.body, nullptr, false);
+		if(!jsonResponse.is_object()){
+			LogCalendarError("GetEvent", response.statusCode, "Response was not valid JSON");
+			return std::nullopt;
+		}
+		return ParseGoogleEventJson(jsonResponse);
 	} catch (const std::exception& e) {
-		//log the exception if needed
-		(void)e; //suppress unused variable warning
+		LogCalendarError("GetEvent", 0, e.what());
 	}
 	return std::nullopt;
 }
@@ -156,6 +172,7 @@ std::optional<CalendarEvent> GoogleCalendarService::GetEvent(const std::string& 
 std::vector<CalendarEvent> GoogleCalendarService::GetEvents(const std::string& accessToken) {
 	std::vector<CalendarEvent> events;
 	if (accessToken.empty()) {
+		LogCalendarError("GetEvents", 0, "No access token provided");
 		return events;
 	}
 
@@ -163,18 +180,24 @@ std::vector<CalendarEvent> GoogleCalendarService::GetEvents(const std::string& a
 	std::string pageToken;
 
 	try {
+		int pagesFetched = 0;
 		do {
-			std::string url = "https://www.googleapis.com/calendar/v3/calendars/primary/events";
+			std::string url = kEventsUrl;
 			if (!pageToken.empty()) {
-				url += "?pageToken=" + pageToken;
+				url += "?pageToken=" + UrlEncode(pageToken);
 			}
 			HttpResponse response = this->httpClient.Get(url, headers);
 
-			if (!response.Ok() || response.body.empty()) {
+			if(!IsSuccessStatus(response.statusCode) || response.body.empty()){
+				LogCalendarError("GetEvents", response.statusCode, DescribeFailure(response));
 				break;
 			}
 
-			nlohmann::json jsonResponse = nlohmann::json::parse(response.body);
+			nlohmann::json jsonResponse = nlohmann::json::parse(response.body, nullptr, false);
+			if(!jsonResponse.is_object()){
+				LogCalendarError("GetEvents", response.statusCode, "Response was not valid JSON");
+				break;
+			}
 
 			if (jsonResponse.contains("items") && jsonResponse["items"].is_array()){
 				for (const auto& item : jsonResponse["items"]){
@@ -186,10 +209,14 @@ std::vector<CalendarEvent> GoogleCalendarService::GetEvents(const std::string& a
 			}
 
 			pageToken = jsonResponse.value("nextPageToken", "");
-		} while (!pageToken.empty());
+			++pagesFetched;
+			
+		} while (!pageToken.empty() && pagesFetched < kMaxPages);
+		if(pagesFetched >= kMaxPages && !pageToken.empty()){
+			LogCalendarError("GetEvents", 0, "Stopped after reaching page limit. Some events may be missing");
+		}
 	} catch (const std::exception& e) {
-		//log the exception if needed
-		(void)e; //suppress unused variable warning
+		LogCalendarError("GetEvents", 0, e.what());
 	}
 	return events;
 }
