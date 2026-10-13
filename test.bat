@@ -26,8 +26,12 @@ for /R Application %%F in (*.cpp) do (
     if errorlevel 1 exit /b 1
 )
 
+echo Infrastructure\GoogleCalendar\google_calendar_service.cpp
+g++ -std=c++17 -c Infrastructure\GoogleCalendar\google_calendar_service.cpp -I ThirdParty\doctest -o obj\google_calendar_service.o
+if errorlevel 1 exit /b 1
+
 echo Linking...
-g++ obj\main.o obj\*_tests.o obj\*_usecase.o -o %OUT%
+g++ obj\main.o obj\*_tests.o obj\*_usecase.o obj\google_calendar_service.o -o %OUT%
 if errorlevel 1 exit /b 1
 
 echo Running %OUT%
