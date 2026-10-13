@@ -16,6 +16,20 @@ TEST_CASE("SaveAppSettingsUseCase stores API keys") {
 	CHECK(appSettings.settings.aiApiKey == "ai-key");
 }
 
+TEST_CASE("SaveAppSettingsUseCase keeps the saved theme") {
+	FakeAppSettingsService appSettings;
+	appSettings.settings.theme = "dark";
+	SaveAppSettingsUseCase useCase(appSettings);
+
+	SaveAppSettingsRequest request;
+	request.calendarApiKey = "cal-key";
+	request.aiApiKey = "ai-key";
+
+	CHECK(useCase.Execute(request));
+	CHECK(appSettings.settings.theme == "dark");
+	CHECK(appSettings.settings.aiApiKey == "ai-key");
+}
+
 TEST_CASE("SaveAppSettingsUseCase returns false when save fails") {
 	FakeAppSettingsService appSettings;
 	appSettings.saveSucceeds = false;

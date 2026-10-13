@@ -1,20 +1,21 @@
-#include "deck_panel.h"
-#include "deck_dialog.h"
-#include "centered_message.h"
 #include "mainframe.h"
-#include "app.h"
-#include "../../Application/UseCases/Deck/GetDecks/get_decks_usecase.h"
+#include "deck_panel.h"
+#include "dialog.h"
+#include "centered_message.h"
 #include "../../Application/UseCases/Deck/CreateDeck/create_deck_usecase.h"
+#include "../../Application/UseCases/Deck/GetDecks/get_decks_usecase.h"
 #include "../../Application/UseCases/Deck/UpdateDeck/update_deck_usecase.h"
-
-wxDECLARE_APP(App);
+#include "../../Application/UseCases/Deck/DeleteDeck/delete_deck_usecase.h"
 
 DeckPanel::DeckPanel(wxWindow* parent) : wxPanel(parent) {
 	this->rootSizer = new wxBoxSizer(wxVERTICAL);
 	this->SetMinSize(wxSize(240, -1));
+	
+	this->SetBackgroundStyle(wxBG_STYLE_PAINT);
+	this->SetBackgroundColour(wxColour(*wxWHITE));
 
 	this->header = new wxStaticText(this, wxID_ANY, "Decks");
-	this->header->SetFont(this->header->GetFont().Bold());
+	this->header->SetFont(wxFont(14, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD));
 	this->rootSizer->Add(this->header, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 10);
 
 	this->deckList = new wxDataViewCtrl(this, wxID_ANY);
@@ -39,7 +40,11 @@ DeckPanel::DeckPanel(wxWindow* parent) : wxPanel(parent) {
 	this->rootSizer->Add(this->buttonSizer, 0, wxEXPAND | wxALL, 10);
 	this->SetSizer(this->rootSizer);
 	this->LoadDecks();
-
+	
+	//=========== BIND EVENT HANDLERS =================================================
+	this->Bind(wxEVT_PAINT, &DeckPanel::OnPaint, this);
+	this->Bind(wxEVT_ERASE_BACKGROUND, [](wxEraseEvent&){});
+	
 	this->addDeckButton->Bind(wxEVT_BUTTON, &DeckPanel::OnAddDeck, this);
 	this->editDeckButton->Bind(wxEVT_BUTTON, &DeckPanel::OnEditDeck, this);
 	this->deleteDeckButton->Bind(wxEVT_BUTTON, &DeckPanel::OnDeleteDeck, this);
@@ -56,7 +61,7 @@ void DeckPanel::LoadDecks() {
 	GetDecksResponse response = useCase.Execute();
 
 	int firstDeckId = 0;
-	for (const DeckResponse& deck : response.decks) {
+	for(const DeckResponse& deck : response.decks) {
 		wxVector<wxVariant> row;
 		row.push_back(wxVariant(wxString(deck.name)));
 		row.push_back(wxVariant(wxString(deck.description)));
@@ -64,9 +69,10 @@ void DeckPanel::LoadDecks() {
 		if (firstDeckId == 0) { firstDeckId = deck.deckId; }
 	}
 
-	if (previouslySelected != 0) {
+	if(previouslySelected != 0) {
 		this->SelectDeck(previouslySelected);
-	} else if (firstDeckId != 0) {
+	} 
+	else if (firstDeckId != 0) {
 		this->SelectDeck(firstDeckId);
 		this->NotifyDeckSelected(firstDeckId);
 	}
@@ -80,9 +86,9 @@ int DeckPanel::GetSelectedDeckId() const {
 
 void DeckPanel::SelectDeck(int deckId) {
 	const unsigned int count = this->deckViewModel->GetCount();
-	for (unsigned int row = 0; row < count; ++row) {
+	for(unsigned int row = 0; row < count; ++row) {
 		wxDataViewItem item = this->deckViewModel->GetItem(row);
-		if (static_cast<int>(this->deckViewModel->GetItemData(item)) == deckId) {
+		if(static_cast<int>(this->deckViewModel->GetItemData(item)) == deckId) {
 			this->deckList->Select(item);
 			return;
 		}
@@ -90,18 +96,26 @@ void DeckPanel::SelectDeck(int deckId) {
 }
 
 void DeckPanel::NotifyDeckSelected(int deckId) {
-	if (deckId == 0) { return; }
-	if (auto* frame = dynamic_cast<MainFrame*>(this->GetParent())) {
+	if(deckId == 0) { return; }
+	if(auto* frame = dynamic_cast<MainFrame*>(this->GetParent())) {
 		frame->OnDeckSelected(deckId);
 	}
 }
 
-void DeckPanel::OnAddDeck(wxCommandEvent&) {
+//============= EVENT HANDLERS =============================== EVENT HANDLERS ==================
+
+void DeckPanel::OnPaint(wxPaintEvent& event) {				// PAINT METHOD FOR DOUBLE BUFFERING
+	wxAutoBufferedPaintDC dc(this);
+	dc.SetBrush(wxBrush(this->GetBackgroundColour()));
+	dc.Clear();
+}
+
+void DeckPanel::OnAddDeck(wxCommandEvent& event) {
 	DeckDialog dialog(this, "Add Deck");
-	if (dialog.ShowModal() != wxID_OK) { return; }
+	if(dialog.ShowModal() != wxID_OK) { return; }
 
 	const std::string name = dialog.nameCtrl->GetValue().ToStdString();
-	if (name.empty()) {
+	if(name.empty()) {
 		ShowCenteredMessage(this, "Deck name is required.", "Add Deck", wxOK | wxICON_WARNING);
 		return;
 	}
@@ -114,7 +128,7 @@ void DeckPanel::OnAddDeck(wxCommandEvent&) {
 	// Call the CreateDeckUseCase to create a new deck.
 	auto useCase = wxGetApp().GetInjector().create<CreateDeckUseCase>();
 	CreateDeckResponse response = useCase.Execute(request);
-	if (response.deckId == 0) {
+	if(response.deckId == 0) {
 		ShowCenteredMessage(this, "Could not save deck.", "Add Deck", wxOK | wxICON_ERROR);
 		return;
 	}
@@ -122,9 +136,10 @@ void DeckPanel::OnAddDeck(wxCommandEvent&) {
 	this->LoadDecks();
 	this->SelectDeck(response.deckId);
 	this->NotifyDeckSelected(response.deckId);
+	event.Skip();
 }
 
-void DeckPanel::OnEditDeck(wxCommandEvent&) {
+void DeckPanel::OnEditDeck(wxCommandEvent& event) {
 	const int deckId = this->GetSelectedDeckId();
 	if (deckId == 0) {
 		ShowCenteredMessage(this, "No deck selected.", "Edit Deck", wxOK | wxICON_WARNING);
@@ -169,18 +184,48 @@ void DeckPanel::OnEditDeck(wxCommandEvent&) {
 
 	this->LoadDecks();
 	this->SelectDeck(deckId);
+	event.Skip();
 }
 
-void DeckPanel::OnDeleteDeck(wxCommandEvent&) {
-	ShowCenteredMessage(this, "Delete is not implemented yet.", "Delete Deck", wxOK | wxICON_INFORMATION);
+void DeckPanel::OnDeleteDeck(wxCommandEvent& event) {
+	const int deckId = this->GetSelectedDeckId();
+	if (deckId == 0) {
+		ShowCenteredMessage(this, "No deck selected.", "Delete Deck", wxOK | wxICON_WARNING);
+		return;
+	}
+
+	// Confirm deletion before proceeding
+	int confirm = wxMessageBox("Are you sure you want to delete this deck?", 
+	                           "Confirm Delete", 
+	                           wxYES_NO | wxICON_QUESTION, 
+	                           this);
+	if (confirm != wxYES) {
+		return;
+	}
+
+	// Prepare the request to delete the deck.
+	DeleteDeckRequest request;
+	request.deckId = deckId;
+
+	// Call the DeleteDeckUseCase to delete the deck.
+	auto useCase = wxGetApp().GetInjector().create<DeleteDeckUseCase>();
+	if (!useCase.Execute(request)) {
+		ShowCenteredMessage(this, "Could not delete deck.", "Delete Deck", wxOK | wxICON_ERROR);
+		return;
+	}
+
+	this->LoadDecks();
+	event.Skip();
 }
 
 void DeckPanel::OnDeckActivated(wxDataViewEvent& event) {
 	if (!event.GetItem().IsOk()) { return; }
 	this->NotifyDeckSelected(static_cast<int>(this->deckViewModel->GetItemData(event.GetItem())));
+	event.Skip();
 }
 
 void DeckPanel::OnDeckSelectionChanged(wxDataViewEvent& event) {
 	if (!event.GetItem().IsOk()) { return; }
 	this->NotifyDeckSelected(static_cast<int>(this->deckViewModel->GetItemData(event.GetItem())));
+	event.Skip();
 }

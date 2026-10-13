@@ -2,22 +2,33 @@
 #include "centered_message.h"
 #include "app.h"
 #include "../../Application/UseCases/Deck/GetCards/get_cards_usecase.h"
+#include "../../Application/UseCases/Deck/GetDecks/get_decks_usecase.h"
 #include "../../Application/UseCases/Deck/CreateCard/create_card_usecase.h"
 #include "../../Application/UseCases/Deck/UpdateCard/update_card_usecase.h"
-
-wxDECLARE_APP(App);
+#include "../../Application/UseCases/Deck/DeleteCard/delete_card_usecase.h"
+#include "../../Application/UseCases/Profile/GetUserProfile/get_user_profile_usecase.h"
 
 CardListPanel::CardListPanel(wxWindow* parent, int deckID) : wxPanel(parent), deckID(deckID) {
+	App& app = wxGetApp();
+	
 	this->rootSizer = new wxBoxSizer(wxVERTICAL);
+	
+	this->SetBackgroundStyle(wxBG_STYLE_PAINT);
+	this->SetBackgroundColour(wxColour(*wxWHITE));
 
-	this->header = new wxStaticText(this, wxID_ANY, "Cards in Deck");
-	this->header->SetFont(this->header->GetFont().Bold());
+	this->header = new wxStaticText(this, wxID_ANY, "Cards In Deck");				 // HEADER
+	this->header->SetBackgroundColour(wxColour(*wxWHITE));
+	this->header->SetForegroundColour(wxColour(*wxBLACK));
+	this->header->SetFont(wxFont(20, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD));
 	this->rootSizer->Add(this->header, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 10);
 
 	this->cardList = new wxDataViewCtrl(this, wxID_ANY);
-	this->cardList->AppendTextColumn("Front", 0, wxDATAVIEW_CELL_INERT, 300, wxALIGN_CENTER);
-	this->cardList->AppendTextColumn("Back", 1, wxDATAVIEW_CELL_INERT, 300, wxALIGN_CENTER);
-	this->cardList->AppendTextColumn("Tags", 2, wxDATAVIEW_CELL_INERT, 300, wxALIGN_CENTER);
+	this->cardList->SetBackgroundColour(wxColour(*wxBLUE));
+	this->cardList->SetForegroundColour(wxColour(*wxWHITE));
+	int columnWidth = app.GetWindowWidth() / 4;
+	this->cardList->AppendTextColumn("Front", 0, wxDATAVIEW_CELL_INERT, columnWidth, wxALIGN_CENTER);
+	this->cardList->AppendTextColumn("Back", 1, wxDATAVIEW_CELL_INERT, columnWidth, wxALIGN_CENTER);
+	this->cardList->AppendTextColumn("Tags", 2, wxDATAVIEW_CELL_INERT, columnWidth, wxALIGN_CENTER);
 
 	this->cardViewModel = new wxDataViewListStore();
 	this->cardList->AssociateModel(this->cardViewModel);
@@ -30,18 +41,22 @@ CardListPanel::CardListPanel(wxWindow* parent, int deckID) : wxPanel(parent), de
 	this->editButton = new wxButton(this, wxID_ANY, "Edit");
 	this->deleteButton = new wxButton(this, wxID_ANY, "Delete");
 
-	this->buttonSizer->Add(this->addButton, 0, wxRIGHT, 5);
-	this->buttonSizer->Add(this->editButton, 0, wxRIGHT, 5);
+	this->buttonSizer->Add(this->addButton, 0, wxRIGHT, 10);
+	this->buttonSizer->Add(this->editButton, 0, wxRIGHT, 10);
 	this->buttonSizer->Add(this->deleteButton, 0);
 
 	this->rootSizer->Add(this->buttonSizer, 0, wxALIGN_CENTER | wxALL, 10);
 	this->SetSizer(this->rootSizer);
 	this->LoadCards();
 
+	//========== BIND EVENT HANDLERS ============================================
+	this->Bind(wxEVT_PAINT, &CardListPanel::OnPaint, this);
 	this->addButton->Bind(wxEVT_BUTTON, &CardListPanel::OnAdd, this);
 	this->editButton->Bind(wxEVT_BUTTON, &CardListPanel::OnEdit, this);
 	this->deleteButton->Bind(wxEVT_BUTTON, &CardListPanel::OnDelete, this);
 }
+
+
 
 void CardListPanel::SetDeck(int deckId) {
 	this->deckID = deckId;
@@ -77,7 +92,16 @@ int CardListPanel::GetSelectedCardId() const {
 	return static_cast<int>(this->cardViewModel->GetItemData(item));
 }
 
-void CardListPanel::OnAdd(wxCommandEvent&) {
+//========= EVENT HANDLERS =================================== EVENT HANDLERS ====================
+
+void CardListPanel::OnPaint(wxPaintEvent& event) {								// PAINT METHOD FOR DOUBLE BUFFERING
+	wxAutoBufferedPaintDC dc(this);
+	dc.SetBrush(wxBrush(this->GetBackgroundColour()));
+	dc.SetPen(*wxTRANSPARENT_PEN);
+	dc.DrawRectangle(this->GetClientRect());
+}
+
+void CardListPanel::OnAdd(wxCommandEvent& event) {
 	if (this->deckID == 0) {
 		ShowCenteredMessage(this, "Select a deck first.", "Add Card", wxOK | wxICON_WARNING);
 		return;
@@ -109,9 +133,10 @@ void CardListPanel::OnAdd(wxCommandEvent&) {
 	}
 
 	this->LoadCards();
+	event.Skip();
 }
 
-void CardListPanel::OnEdit(wxCommandEvent&) {
+void CardListPanel::OnEdit(wxCommandEvent& event) {
 	const int cardId = this->GetSelectedCardId();
 	if (cardId == 0) {
 		ShowCenteredMessage(this, "No card selected.", "Edit Card", wxOK | wxICON_WARNING);
@@ -137,6 +162,7 @@ void CardListPanel::OnEdit(wxCommandEvent&) {
 		ShowCenteredMessage(this, "Front and back are required.", "Edit Card", wxOK | wxICON_WARNING);
 		return;
 	}
+	
 	// Prepare the request to update the card with the new information.
 	UpdateCardRequest request;
 	request.deckId = this->deckID;
@@ -153,8 +179,42 @@ void CardListPanel::OnEdit(wxCommandEvent&) {
 	}
 
 	this->LoadCards();
+	event.Skip();
 }
 
-void CardListPanel::OnDelete(wxCommandEvent&) {
-	ShowCenteredMessage(this, "Delete is not implemented yet.", "Delete Card", wxOK | wxICON_INFORMATION);
+void CardListPanel::OnDelete(wxCommandEvent& event) {
+	wxFrame* frame = wxDynamicCast(wxGetTopLevelParent(this), wxFrame);
+	if(frame) { frame->SetStatusText("Delete Card"); }
+	
+	const int cardId = this->GetSelectedCardId();
+    if (cardId == 0) {
+        ShowCenteredMessage(this, "No card selected.", "Delete Card", wxOK | wxICON_WARNING);
+        return;
+    }
+
+    // Confirm deletion before proceeding
+    int confirm = wxMessageBox("Are you sure you want to delete this card?", 
+                               "Confirm Delete", 
+                               wxYES_NO | wxICON_QUESTION, 
+                               this);
+    if (confirm != wxYES) {
+        return;
+    }
+
+    // Prepare the request to delete the card
+    DeleteCardRequest request;
+    request.deckId = this->deckID;
+    request.cardId = cardId;
+
+    // Call the DeleteCardUseCase via the DI container
+    auto useCase = wxGetApp().GetInjector().create<DeleteCardUseCase>();
+    if (!useCase.Execute(request)) {
+        ShowCenteredMessage(this, "Could not delete card.", "Delete Card", wxOK | wxICON_ERROR);
+        return;
+    }
+
+    // Refresh the card list and finish event propagation
+    this->LoadCards();
+	
+	event.Skip();
 }

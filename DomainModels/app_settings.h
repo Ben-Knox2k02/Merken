@@ -6,6 +6,7 @@
 struct AppSettings {
 	std::string calendarApiKey;
 	std::string aiApiKey;
+	std::string theme;
 };
 
 #endif

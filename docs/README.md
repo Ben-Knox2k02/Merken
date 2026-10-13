@@ -21,7 +21,7 @@ The sprint Gantt chart is in [MerkenGanttChart.pdf](MerkenGanttChart.pdf). The e
 
 ## Due tasks
 
-Open work for each role is a checklist next to this file. Check items off when done.
+Open work for each role is a checklist next to this file. The requirements those tasks come from are in [MERKEN_SRS.md](MERKEN_SRS.md). Check items off when done.
 
 | Role | Where to look |
 |---|---|
@@ -29,12 +29,13 @@ Open work for each role is a checklist next to this file. Check items off when d
 | Database | [DB_TODO.md](DB_TODO.md) |
 | Application | no open task list right now — study/review use cases are in |
 | APIs | [API_TODO.md](API_TODO.md) |
+| Requirements | [MERKEN_SRS.md](MERKEN_SRS.md) |
 
 ---
 
 ## Build, test, clean, uninstall
 
-Set up the compiler and wxWidgets first: [SETUP.md](SETUP.md). Windows app builds need MinGW-w64 `g++` on PATH and wxWidgets 3.2 from `build_wxWidgets.bat`.
+Set up the compiler and wxWidgets first: [SETUP.md](SETUP.md). Windows app builds need MinGW-w64 `g++` on PATH and wxWidgets 3.3 from `build_wxWidgets.bat`.
 
 Run these from the repo root.
 
@@ -71,7 +72,7 @@ void OnAddDeck(wxCommandEvent&) {
 - Fill a `*Request`, call `Execute`, read the `*Response`.
 - If a screen action has no use case yet, ask Application to add one.
 
-Existing use cases: `CreateDeckUseCase`, `UpdateDeckUseCase`, `GetDecksUseCase`, `StudyDeckUseCase`, `CreateCardUseCase`, `UpdateCardUseCase`, `GetCardsUseCase`, `ReviewCardUseCase`, `GetTodaysProgressUseCase`, `GetProgressHistoryUseCase`, `CreateEventUseCase`, `GetEventsUseCase`, `UpdateEventUseCase`, `AiStudyUseCase`, `RecordAiStudyGradeUseCase`, `SaveAppSettingsUseCase`.
+Existing use cases: `CreateDeckUseCase`, `UpdateDeckUseCase`, `DeleteDeckUseCase`, `GetDecksUseCase`, `StudyDeckUseCase`, `CreateCardUseCase`, `UpdateCardUseCase`, `DeleteCardUseCase`, `GetCardsUseCase`, `ReviewCardUseCase`, `GetTodaysProgressUseCase`, `GetProgressHistoryUseCase`, `CreateEventUseCase`, `GetEventsUseCase`, `UpdateEventUseCase`, `AiStudyUseCase`, `RecordAiStudyGradeUseCase`, `SaveAppSettingsUseCase`.
 
 `Deck` is the aggregate: cards are only loaded and changed through a deck. `GetDeck` loads the deck **and its cards**. `GetDecks` (the list) does not. Card add/list/update/review live under `Application/UseCases/Deck/`. Persist with `IDeckRepository.AddCard` / `UpdateCard`. There is no `ICardRepository`.
 

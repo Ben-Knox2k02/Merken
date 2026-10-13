@@ -48,6 +48,8 @@ std::string ToJson(const AppSettings& settings) {
 		+ EscapeJson(settings.calendarApiKey)
 		+ "\",\n    \"aiApiKey\": \""
 		+ EscapeJson(settings.aiApiKey)
+		+ "\",\n    \"theme\": \""
+		+ EscapeJson(settings.theme)
 		+ "\"\n}\n";
 }
 
@@ -55,6 +57,7 @@ AppSettings FromJson(const std::string& json) {
 	AppSettings settings;
 	settings.calendarApiKey = ExtractValue(json, "calendarApiKey");
 	settings.aiApiKey = ExtractValue(json, "aiApiKey");
+	settings.theme = ExtractValue(json, "theme");
 	return settings;
 }
 

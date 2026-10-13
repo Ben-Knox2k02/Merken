@@ -12,9 +12,11 @@ class DeckRepository : public IDeckRepository {
 		std::optional<Deck> GetDeck(int deckId) override;
 		int AddDeck(const Deck& deck) override;
 		bool UpdateDeck(const Deck& deck) override;
+		bool DeleteDeck(int deckId) override;
 
 		int AddCard(const Card& card) override;
 		bool UpdateCard(const Card& card) override;
+		bool DeleteCard(int deckId, int cardId) override;
 
 	private:
 		void LoadCards(Deck& deck);

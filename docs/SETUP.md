@@ -8,7 +8,7 @@ If Windows prints `g++ not found on PATH` or `'g++' is not recognized`, the comp
 
 ## Windows
 
-You need MinGW-w64 (`g++`, `gcc`, `windres`, `mingw32-make`) and wxWidgets 3.2.x built with that same compiler.
+You need MinGW-w64 (`g++`, `gcc`, `windres`, `mingw32-make`) and wxWidgets 3.3.x built with that same compiler.
 
 ### 1. Install g++
 
@@ -56,9 +56,9 @@ Standalone MinGW-w64 (for example [WinLibs](https://winlibs.com/)) also works: p
 
 ### 2. Install and build wxWidgets
 
-`build.bat` links **static** MinGW wxWidgets **3.2** (`libwxmsw32u_*.a`). Pre-built Visual Studio binaries and wxWidgets 3.3 will not work. Do this after `g++` is on PATH.
+`build.bat` links **static** MinGW wxWidgets **3.3** (`libwxmsw33u_*.a`). Pre-built Visual Studio binaries and wxWidgets 3.3 will not work. Do this after `g++` is on PATH.
 
-1. Download the **Windows source** archive `wxWidgets-3.2.x.zip` (or `.7z`) from [wxwidgets.org/downloads](https://www.wxwidgets.org/downloads/) or the [3.2 GitHub releases](https://github.com/wxWidgets/wxWidgets/releases).
+1. Download the **Windows source** archive `wxWidgets-3.3.x.zip` (or `.7z`) from [wxwidgets.org/downloads](https://www.wxwidgets.org/downloads/) or the [3.3 GitHub releases](https://github.com/wxWidgets/wxWidgets/releases).
 
    Do **not** use the GitHub “Source code” zip (it is missing third-party sources). Do **not** use `wxMSW-*-Setup.exe` as an installed binary — it is sources only, and this project expects the unzipped tree.
 
@@ -68,7 +68,7 @@ Standalone MinGW-w64 (for example [WinLibs](https://winlibs.com/)) also works: p
    C:\wxWidgets\build\msw\makefile.gcc
    ```
 
-   If the zip created `C:\wxWidgets\wxWidgets-3.2.x\`, either move the inner folder’s contents up to `C:\wxWidgets` or set `WXWIN` to that inner folder. Avoid spaces in the path.
+   If the zip created `C:\wxWidgets\wxWidgets-3.3.x\`, either move the inner folder’s contents up to `C:\wxWidgets` or set `WXWIN` to that inner folder. Avoid spaces in the path.
 
    To use a different location (new terminal after this):
 
@@ -87,15 +87,31 @@ Standalone MinGW-w64 (for example [WinLibs](https://winlibs.com/)) also works: p
 4. Confirm these files exist:
 
    ```
-   C:\wxWidgets\lib\gcc_lib\libwxmsw32u_core.a
-   C:\wxWidgets\lib\gcc_lib\libwxbase32u.a
-   C:\wxWidgets\lib\gcc_lib\libwxbase32u_net.a
+   C:\wxWidgets\lib\gcc_lib\libwxmsw33u_core.a
+   C:\wxWidgets\lib\gcc_lib\libwxbase33u.a
+   C:\wxWidgets\lib\gcc_lib\libwxbase33u_net.a
    C:\wxWidgets\lib\gcc_lib\mswu\wx\setup.h
    ```
 
 If you change compiler (UCRT64 vs MINGW64, or a new MinGW), delete `%WXWIN%\lib\gcc_lib` and `%WXWIN%\build\msw\gcc_mswu` and run `build_wxWidgets.bat` again with the same `g++` you will use for `build.bat`.
 
-### 3. Build Merken
+## 3. Install Custom Archive
+```
+The custom archive file resolves subclass linker errors when building the application
+Make sure libcomctl32_subclass.a and comctl32_subclass.def are located in C:\path\to\your\MinGW\lib
+
+Example: C:\mingw-w64\lib\libcomctl32_subclass.a
+         C:\mingw-w64\lib\comctl32_subclass.def
+
+If the downloaded libcomctl32_subclass.a isn't working (i.e. "file format not recognized" during link time)
+navigate to C:\path\to\your\MinGW\lib and run these commands to generate a fresh archive.
+
+del libcomctl32_subclass.a
+dlltool -d comctl32_subclass.def -l libcomctl32_subclass.a
+
+```
+
+### 4. Build Merken
 
 From the repo root:
 
@@ -105,6 +121,9 @@ test.bat
 ```
 
 `build.bat` produces `Merken.exe`. `test.bat` produces and runs `merken_tests.exe`.
+Note: 
+   `C:/mingw-w64/bin/../lib/gcc/x86_64-w64-mingw32/16.2.0/../../../../x86_64-w64-mingw32/bin/ld.exe: .rsrc merge failure: multiple non-default manifests`
+   is harmless
 
 ---
 
@@ -135,8 +154,9 @@ Do not use `sudo`. On success you get `Merken.app`.
 ---
 
 ## Linux
+### (Debian/Ubuntu):
 
-Install a C++17 compiler and wxWidgets 3.2 (Debian/Ubuntu):
+Install a C++17 compiler and wxWidgets 3.2
 
 ```
 sudo apt-get update
@@ -144,6 +164,36 @@ sudo apt-get install -y build-essential pkg-config libwxgtk3.2-dev
 ```
 
 `libwxgtk3.2-dev` provides `wx-config`. Then from the repo root:
+
+```
+./build.sh
+./test.sh
+```
+
+`wx-config` must be on PATH. The binary is `./Merken`.
+
+
+### (Arch/CachyOS)
+
+Install core c++ compilers and build utilities
+
+```
+sudo pacman -S --needed base-devel pkgconf
+```
+
+Install wxWidgets 3.3.3 from the AUR
+
+```
+paru -S wxwidgets-gtk3-unstable
+```
+
+Since the build script looks for "wx-config", create a symlink to 3.3.
+
+```
+sudo ln -sf /usr/bin/wx-config-3.3.3 /usr/local/bin/wx-config
+```
+
+Run build scripts from the repo root:
 
 ```
 ./build.sh

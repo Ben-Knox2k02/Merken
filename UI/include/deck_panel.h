@@ -3,6 +3,7 @@
 
 #include <wx/wx.h>
 #include <wx/dataview.h>
+#include <wx/dcbuffer.h>
 
 class DeckPanel : public wxPanel {
 	public:
@@ -10,18 +11,22 @@ class DeckPanel : public wxPanel {
 
 		wxBoxSizer* rootSizer;
 		wxBoxSizer* buttonSizer;
+		
 		wxStaticText* header;
+		
 		wxDataViewCtrl* deckList;
 		wxDataViewListStore* deckViewModel;
+		
 		wxButton* addDeckButton;
 		wxButton* editDeckButton;
 		wxButton* deleteDeckButton;
 
-		void LoadDecks();
 		int GetSelectedDeckId() const;
+		void LoadDecks();
 		void SelectDeck(int deckId);
 		void NotifyDeckSelected(int deckId);
 
+		void OnPaint(wxPaintEvent& event);
 		void OnAddDeck(wxCommandEvent& event);
 		void OnEditDeck(wxCommandEvent& event);
 		void OnDeleteDeck(wxCommandEvent& event);
