@@ -95,8 +95,9 @@ CalendarEvent ParseGoogleEventJson(const nlohmann::json& json){
 }
 
 // Calls calendar API to create a new event and returns the created event with the Google Event ID set. If the API call fails, it returns the original event without any modifications.
-CalendarEvent GoogleCalendarService::CreateEvent(const CalendarEvent& event, const std::string& apiKey) {
-	if (apiKey.empty()) {
+CalendarEvent GoogleCalendarService::CreateEvent(const CalendarEvent& event, const std::string& accessToken) {
+	if (accessToken.empty()) {
+		LogCalendarError("CreateEvent", 0, "No access token provided");
 		return event;
 	}
 	
@@ -110,9 +111,8 @@ CalendarEvent GoogleCalendarService::CreateEvent(const CalendarEvent& event, con
 		payload["reminders"]["overrides"] = nlohmann::json::array(
 			{{{"method", "popup"},{"minutes", event.GetReminderMinutes()}}});
 
-		std::string url = "https://www.googleapis.com/calendar/v3/calendars/primary/events?key=" + apiKey;
 
-		HttpResponse response = this->httpClient.PostJson(url, payload.dump());
+		HttpResponse response = this->httpClient.PostJson(kEventsUrl, payload.dump(), AuthHeaders(accessToken));
 
 		if ((response.statusCode == 200 || response.statusCode == 201) && !response.body.empty()) {
 			nlohmann::json jsonResponse = nlohmann::json::parse(response.body);
@@ -131,15 +131,15 @@ CalendarEvent GoogleCalendarService::CreateEvent(const CalendarEvent& event, con
 	
 }
 
-std::optional<CalendarEvent> GoogleCalendarService::GetEvent(const std::string& googleEventId, const std::string& apiKey) {
-	if (googleEventId.empty() || apiKey.empty()) {
+std::optional<CalendarEvent> GoogleCalendarService::GetEvent(const std::string& googleEventId, const std::string& accessToken) {
+	if (googleEventId.empty() || accessToken.empty()) {
 		return std::nullopt;
 	}
 	
 	try {
-		std::string url = "https://www.googleapis.com/calendar/v3/calendars/primary/events/" + googleEventId + "?key=" + apiKey;
+		std::string url = kEventsUrl + "/" + UrlEncode(googleEventId);
 
-		HttpResponse response = this->httpClient.Get(url);
+		HttpResponse response = this->httpClient.Get(url, AuthHeaders(accessToken));
 
 		if (response.statusCode == 200 && !response.body.empty()) {
 			nlohmann::json jsonResponse = nlohmann::json::parse(response.body);
@@ -153,13 +153,13 @@ std::optional<CalendarEvent> GoogleCalendarService::GetEvent(const std::string& 
 	return std::nullopt;
 }
 
-std::vector<CalendarEvent> GoogleCalendarService::GetEvents(const std::string& apiKey) {
+std::vector<CalendarEvent> GoogleCalendarService::GetEvents(const std::string& accessToken) {
 	std::vector<CalendarEvent> events;
-	if (apiKey.empty()) {
+	if (accessToken.empty()) {
 		return events;
 	}
 
-	std::vector<HttpHeader> headers = { { "Authorization", "Bearer " + apiKey } };
+	std::vector<HttpHeader> headers = AuthHeaders(accessToken);
 	std::string pageToken;
 
 	try {
@@ -194,9 +194,9 @@ std::vector<CalendarEvent> GoogleCalendarService::GetEvents(const std::string& a
 	return events;
 }
 
-bool GoogleCalendarService::UpdateEvent(const CalendarEvent& event, const std::string& apiKey) {
+bool GoogleCalendarService::UpdateEvent(const CalendarEvent& event, const std::string& accessToken) {
 	(void)event;
-	(void)apiKey;
+	(void)accessToken;
 	(void)this->httpClient;
 	return false;
 }
