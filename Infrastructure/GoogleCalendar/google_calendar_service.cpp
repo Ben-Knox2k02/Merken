@@ -65,20 +65,11 @@ CalendarEvent ParseGoogleEventJson(const nlohmann::json& json){
 		return CalendarEvent(0, "", "", "");
 	}
 	
-	std::string summary = (json.contains("summary") && json["summary"].is_string()) ? json["summary"].get<std::string>() : "";
-	std::string description = (json.contains("description") && json["description"].is_string()) ? json["description"].get<std::string>() : "";
+	std::string summary = GetStringField(json, "summary");
+	std::string description = GetStringField(json, "description");
 
-	std::string startTime = "";
-	if (json.contains("start") && json["start"].is_object() &&
-		json["start"].contains("dateTime") && json["start"]["dateTime"].is_string()){
-			startTime = json["start"]["dateTime"].get<std::string>();
-		}
-
-	std::string endTime = "";
-	if (json.contains("end") && json["end"].is_object() &&
-		json["end"].contains("dateTime") && json["end"]["dateTime"].is_string()){
-			endTime = json["end"]["dateTime"].get<std::string>();
-		}
+	std::string startTime = GetEventTime(json, "start");
+	std::string endTime = GetEventTime(json, "end");
 	int reminderMinutes = 0;
 	if (json.contains("reminders") && json["reminders"].is_object() && json["reminders"].contains("overrides")
 		&& json["reminders"]["overrides"].is_array()) {
@@ -95,8 +86,10 @@ CalendarEvent ParseGoogleEventJson(const nlohmann::json& json){
 		event.UpdateDescription(description);
 	}
 	event.UpdateReminderMinutes(reminderMinutes);
-	if (json.contains("id") && json["id"].is_string()) {
-		event.SetGoogleEventId(json["id"].get<std::string>());
+
+	std::string id = GetStringField(json, "id");
+	if (!id.empty()) {
+		event.SetGoogleEventId(id);
 	}
 	return event;
 }
