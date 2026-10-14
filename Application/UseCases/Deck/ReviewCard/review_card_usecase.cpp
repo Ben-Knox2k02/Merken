@@ -23,7 +23,7 @@ ReviewCardResponse ReviewCardUseCase::Execute(const ReviewCardRequest& request) 
 	const Date today = this->dateProviderService.GetCurrentDate();
 	card->RecordReview(request.remembered, today);
 	card->SetNextReviewDate(today.AddDays(card->GetIntervalDays()));
-	if (!this->deckRepository.UpdateCard(*card)) {
+	if (!this->deckRepository.RecordReview(*card, request.remembered, today)) {
 		return response;
 	}
 
