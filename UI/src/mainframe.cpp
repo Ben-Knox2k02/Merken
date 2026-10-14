@@ -157,6 +157,7 @@ MainFrame::MainFrame(const wxString& title)
 	this->Bind(wxEVT_LEAVE_WINDOW, &MainFrame::OnMouseEvent, this);
 	this->Bind(wxEVT_CLOSE_WINDOW, &MainFrame::OnWindowClosed, this);
 	this->Bind(wxEVT_SYS_COLOUR_CHANGED, &MainFrame::OnSysColourChanged, this);
+	Theme::ApplyTitleBar(this);
 }
 
 void MainFrame::OnDeckSelected(int deckId) {
@@ -254,7 +255,9 @@ void MainFrame::ApplyTheme() {
 		this->currentPanel->Refresh();
 	}
 	this->ApplyMenuIcons();
+	Theme::ApplyTitleBar(this);
 	this->Refresh();
+	this->Update();
 }
 
 void MainFrame::OnSysColourChanged(wxSysColourChangedEvent& event) {

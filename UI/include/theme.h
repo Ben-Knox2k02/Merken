@@ -113,6 +113,7 @@ class Theme {
 		static const Theme& Get();
 		static bool IsDarkAppearance();
 		static void UseDark(bool dark);
+		static void ApplyTitleBar(wxWindow* window);
 		static int Dip(const wxWindow* window, int value);
 		static wxColour Hex(unsigned int rgb, unsigned char alpha = 255);
 
@@ -148,10 +149,10 @@ struct ThemeChoiceState {
 	bool dark = false;
 };
 
-inline ThemeChoiceState& ThemeChoice() {
-	static ThemeChoiceState state;
-	return state;
-}
+// Defined in one translation unit. An inline copy is not one shared flag
+// under MinGW, so a saved Light theme would style new dialogs and leave the
+// main window on the dark palette.
+ThemeChoiceState& ThemeChoice();
 
 inline void Theme::UseDark(bool dark) {
 	ThemeChoice().chosen = true;
@@ -356,6 +357,7 @@ inline void Theme::StyleDialog(wxWindow* root) const {
 		window->SetBackgroundColour(this->color.window);
 		window->SetForegroundColour(this->color.label);
 	});
+	ApplyTitleBar(root);
 	root->Refresh();
 }
 

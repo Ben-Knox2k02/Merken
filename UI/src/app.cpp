@@ -9,9 +9,10 @@ wxIMPLEMENT_APP(App);
 bool App::OnInit() {
 	try {
 		std::cout << "[TRACE] Entering OnInit..." << std::endl;
-		this->SetAppearance(Appearance::System);
 		wxInitAllImageHandlers();
 		this->EnsureInjector();
+		// Choose Light, Dark, or System once, before any window exists.
+		// wx refuses a later change, so this cannot follow SetAppearance(System).
 		ApplyStoredTheme();
 		std::cout << "[TRACE] Injector ensured successfully." << std::endl;
 

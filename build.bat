@@ -55,7 +55,10 @@ echo Using MinGW path: %MINGW%
 echo Using wxWidgets path: %WX%
 
 rem === INCLUDE / LIB PATHS =============================================
-set INC=-I UI\include -I ThirdParty\boost-di -I ThirdParty\wxSQLite3\include -I ThirdParty\wxSQLite3\src -I %WX%\lib\gcc_lib\mswu -I %WX%\include
+rem wx include directories come before wxSQLite3. That tree has its own wx\
+rem folder, and g++ treats a failed open there as a hard error instead of
+rem continuing on to the real wx headers.
+set INC=-I %WX%/lib/gcc_lib/mswu -I %WX%/include -I UI/include -I ThirdParty/boost-di -I ThirdParty/wxSQLite3/include -I ThirdParty/wxSQLite3/src
 rem Repo root is searched first so the committed libcomctl32_subclass.a wins.
 set LIB=-L "%~dp0." -L %WX%\lib\gcc_lib -L %MINGW%\lib
 
