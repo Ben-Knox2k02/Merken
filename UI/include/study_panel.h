@@ -2,6 +2,7 @@
 #define STUDY_PANEL_H
 
 #include <wx/wx.h>
+#include <wx/dcbuffer.h>
 #include <string>
 #include <vector>
 #include "../../Application/UseCases/Deck/GetCards/card_response.h"
@@ -33,6 +34,7 @@ class StudyPanel : public wxPanel {
 		void Grade(bool remembered);
 		void UpdateProgress();
 
+		void OnPaint(wxPaintEvent& event);
 		void OnShowAnswer(wxCommandEvent& event);
 		void OnRemembered(wxCommandEvent& event);
 		void OnForgot(wxCommandEvent& event);
