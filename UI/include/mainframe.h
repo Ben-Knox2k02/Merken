@@ -5,7 +5,7 @@
 #include <wx/wx.h>
 #include <wx/fdrepdlg.h>
 
-#define NUM_SHORTCUTS 16
+#define NUM_SHORTCUTS 17
 
 enum {									// CUSTOM IDs
 	ID_CARDS = wxID_HIGHEST + 1,
