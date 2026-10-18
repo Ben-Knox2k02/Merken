@@ -51,12 +51,13 @@ MainFrame::MainFrame(const wxString& title)
 	 
 	this->viewMenu = nullptr;
 	this->studyMenu = new wxMenu;										// STUDY
+	this->studyMenu->Append(ID_CARDS, "View Cards\tF1");
 	this->studyMenu->Append(ID_STUDY, "Study Deck\tF2");
-	this->studyMenu->Append(ID_AI, "AI Study Deck\tF4");
-	this->studyMenu->Append(ID_TODAYS_PROGRESS, "Today's Progress");
+	this->studyMenu->Append(ID_AI, "AI Study Deck\tF3");
+	this->studyMenu->Append(ID_TODAYS_PROGRESS, "View Progress\tF4");
 
 	this->calendarMenu = new wxMenu;									// CALENDAR
-	this->calendarMenu->Append(ID_CALENDAR, "View Calendar\tF3");
+	this->calendarMenu->Append(ID_CALENDAR, "View Calendar\tF5");
 
 	this->toolsMenu = nullptr;
 	
@@ -88,10 +89,11 @@ MainFrame::MainFrame(const wxString& title)
 	
 	this->shortcuts[12].Set(wxACCEL_NORMAL, WXK_F1, ID_CARDS);
 	this->shortcuts[13].Set(wxACCEL_NORMAL, WXK_F2, ID_STUDY);
-	this->shortcuts[14].Set(wxACCEL_NORMAL, WXK_F3, ID_CALENDAR);
-	this->shortcuts[15].Set(wxACCEL_NORMAL, WXK_F4, ID_AI);
+	this->shortcuts[14].Set(wxACCEL_NORMAL, WXK_F3, ID_AI);
+	this->shortcuts[15].Set(wxACCEL_NORMAL, WXK_F4, ID_TODAYS_PROGRESS);
+	this->shortcuts[16].Set(wxACCEL_NORMAL, WXK_F5, ID_CALENDAR);
 	
-	wxAcceleratorTable accel(15, this->shortcuts);
+	wxAcceleratorTable accel(16, this->shortcuts);
 	this->SetAcceleratorTable(accel);
 	
 	//============ ATTACH WIDGETS ==================================== ATTACH WIDGETS ========================= 
@@ -119,12 +121,13 @@ MainFrame::MainFrame(const wxString& title)
 	this->Layout();
 	
 	//========= BIND EVENT HANDLERS ==================================== BIND EVENT HANDLERS ===================
-	this->Bind(wxEVT_MENU, &MainFrame::OnAddDeck, this, wxID_NEW);				// FILE
+	this->Bind(wxEVT_MENU, &MainFrame::OnAddDeck, this, wxID_NEW);					// FILE
 	this->Bind(wxEVT_MENU, &MainFrame::OnEditDeck, this, ID_EDIT_DECK);
 	this->Bind(wxEVT_MENU, &MainFrame::OnDeleteDeck, this, ID_DELETE_DECK);
+	this->Bind(wxEVT_MENU, &MainFrame::OnSettings, this, ID_SETTINGS);					
 	this->Bind(wxEVT_MENU, &MainFrame::OnExit, this, wxID_EXIT);
 	
-	this->Bind(wxEVT_MENU, &MainFrame::OnUndo, this, wxID_UNDO);					// EDIT
+	this->Bind(wxEVT_MENU, &MainFrame::OnUndo, this, wxID_UNDO);						// EDIT
 	this->Bind(wxEVT_MENU, &MainFrame::OnRedo, this, wxID_REDO);
 	this->Bind(wxEVT_UPDATE_UI, &MainFrame::OnUpdateUndo, this, wxID_UNDO);
 	this->Bind(wxEVT_UPDATE_UI, &MainFrame::OnUpdateRedo, this, wxID_REDO);
@@ -133,28 +136,27 @@ MainFrame::MainFrame(const wxString& title)
 	this->Bind(wxEVT_MENU, &MainFrame::OnPaste, this, wxID_PASTE);
 	this->Bind(wxEVT_MENU, &MainFrame::OnSelectAll, this, wxID_SELECTALL);
 	
-	this->Bind(wxEVT_MENU, &MainFrame::OnFind, this, wxID_FIND);					// SEARCH
+	this->Bind(wxEVT_MENU, &MainFrame::OnFind, this, wxID_FIND);							// SEARCH
 	this->Bind(wxEVT_MENU, &MainFrame::OnReplace, this, wxID_REPLACE);
 	
-	this->Bind(wxEVT_MENU, &MainFrame::OnCards, this, ID_CARDS);					// VIEW
+	this->Bind(wxEVT_MENU, &MainFrame::OnCards, this, ID_CARDS);							// STUDY
 	this->Bind(wxEVT_MENU, &MainFrame::OnStudy, this, ID_STUDY);
 	this->Bind(wxEVT_MENU, &MainFrame::OnTodaysProgress, this, ID_TODAYS_PROGRESS);
-	this->Bind(wxEVT_MENU, &MainFrame::OnCalendar, this, ID_CALENDAR);
 	this->Bind(wxEVT_MENU, &MainFrame::OnAI, this, ID_AI);
 	
-	this->Bind(wxEVT_MENU, &MainFrame::OnSettings, this, ID_SETTINGS);			// TOOLS
+	this->Bind(wxEVT_MENU, &MainFrame::OnCalendar, this, ID_CALENDAR);				// CALENDAR
 	
-	this->Bind(wxEVT_MENU, &MainFrame::OnAbout, this, wxID_ABOUT);				// HELP
+	this->Bind(wxEVT_MENU, &MainFrame::OnAbout, this, wxID_ABOUT);					// HELP
 		
-	this->Bind(wxEVT_KEY_DOWN, &MainFrame::OnKeyEvent, this);						// KEY EVENTS
+	this->Bind(wxEVT_KEY_DOWN, &MainFrame::OnKeyEvent, this);								// KEY EVENTS
 					
 	this->Bind(wxEVT_ENTER_WINDOW, &MainFrame::OnMouseEvent, this);				// MOUSE EVENTS
 	this->Bind(wxEVT_LEAVE_WINDOW, &MainFrame::OnMouseEvent, this);
 	
-	this->Bind(wxEVT_SIZE, &MainFrame::OnWindowResized, this);					// WINDOW EVENTS
+	this->Bind(wxEVT_SIZE, &MainFrame::OnWindowResized, this);								// WINDOW EVENTS
 	this->Bind(wxEVT_CLOSE_WINDOW, &MainFrame::OnWindowClosed, this);
 	
-	this->Bind(wxEVT_SIZE, &MainFrame::OnWindowResized, this);					// WINDOW EVENTS
+	this->Bind(wxEVT_SIZE, &MainFrame::OnWindowResized, this);								// WINDOW EVENTS
 	this->Bind(wxEVT_ENTER_WINDOW, &MainFrame::OnMouseEvent, this);
 	this->Bind(wxEVT_LEAVE_WINDOW, &MainFrame::OnMouseEvent, this);
 	this->Bind(wxEVT_CLOSE_WINDOW, &MainFrame::OnWindowClosed, this);
@@ -255,7 +257,7 @@ void MainFrame::ApplyTheme() {
 	if(auto* cards = dynamic_cast<FlashCardList*>(this->currentPanel)) {
 		cards->ApplyTheme();
 	} 
-	else if(this->currentPanel != nullptr) {
+	if(this->currentPanel != nullptr) {
 		this->currentPanel->SetBackgroundColour(theme.color.window);
 		this->currentPanel->Refresh();
 	}
@@ -304,6 +306,8 @@ void MainFrame::ShowAiStudy() {
 }
 
 void MainFrame::SetCurrentPanel(wxPanel* newPanel) {
+	//this->Freeze();
+	
 	if(this->currentPanel != NULL) { 
 		this->currentPanel->Destroy();
 		this->currentPanel = NULL;
@@ -322,7 +326,15 @@ void MainFrame::SetCurrentPanel(wxPanel* newPanel) {
 	this->contentPanel->Layout();
 	this->ApplyPanelWidths();
 	
+	/*if(this->sidebarPanel != nullptr) {
+		this->sidebarPanel->Layout();
+		this->sidebarPanel->Refresh(false);
+		this->sidebarPanel->Update();
+	} */
 	this->currentPanel->SetFocus();
+	
+	//this->Thaw();
+	//this->Refresh(false);
 }
 
 void MainFrame::SetCurrentSidebarPanel(wxPanel* newPanel) {
