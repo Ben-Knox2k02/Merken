@@ -51,9 +51,10 @@ DeckPanelList::DeckPanelList(wxWindow* parent)
 	this->rootSizer->Add(rule, 0, wxEXPAND | wxLEFT | wxRIGHT, pad);
 	this->rootSizer->AddSpacer(this->FromDIP(Theme::Get().space.md));
 
-	this->addDeckButton = new IconButton(this, "UI/assets/add_icon.png", "Add", true);
-	this->editDeckButton = new IconButton(this, "UI/assets/edit_icon.png", "Edit", true);
-	this->deleteDeckButton = new IconButton(this, "UI/assets/delete_icon.png", "Delete", true);
+	const bool isDark = Theme::IsDarkAppearance();
+	this->addDeckButton = new IconButton(this, "UI/assets/add_icon.png", "Add", isDark);
+	this->editDeckButton = new IconButton(this, "UI/assets/edit_icon.png", "Edit", isDark);
+	this->deleteDeckButton = new IconButton(this, "UI/assets/delete_icon.png", "Delete", isDark);
 	const int buttonHeight = this->addDeckButton->GetMinHeight();
 	const wxSize sharedButtonSize(0, buttonHeight);
 	this->addDeckButton->SetMinSize(sharedButtonSize);
@@ -85,15 +86,24 @@ DeckPanelList::DeckPanelList(wxWindow* parent)
 
 void DeckPanelList::ApplyTheme() {
 	const Theme& theme = Theme::Get();
+	const bool invert = Theme::IsDarkAppearance();
+	
 	this->SetBackgroundColour(theme.color.primary);
 	this->profileHeader->ApplyTheme();
 	this->scroller->SetBackgroundColour(theme.color.primary);
+	
+	this->addDeckButton->SetBitmap(IconButton::LoadIconBundle("UI/assets/add_icon.png", 16, invert), wxLEFT);
+	this->editDeckButton->SetBitmap(IconButton::LoadIconBundle("UI/assets/edit_icon.png", 16, invert), wxLEFT);
+	this->deleteDeckButton->SetBitmap(IconButton::LoadIconBundle("UI/assets/delete_icon.png", 16, invert), wxLEFT);
+	
 	this->addDeckButton->ApplyTheme();
 	this->editDeckButton->ApplyTheme();
 	this->deleteDeckButton->ApplyTheme();
+	
 	for (DeckCard* card : this->cards) {
 		card->ApplyTheme();
 	}
+	
 	this->RefreshGuide();
 	this->Refresh();
 }
