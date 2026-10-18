@@ -232,8 +232,10 @@ void MainFrame::ApplyMenuIcons() {
 	setIcon(wxID_NEW, "UI/assets/add_icon.png");
 	setIcon(ID_EDIT_DECK, "UI/assets/edit_icon.png");
 	setIcon(ID_DELETE_DECK, "UI/assets/delete_icon.png");
+	setIcon(ID_CARDS, "UI/assets/flash_card_icon.png");
 	setIcon(ID_STUDY, "UI/assets/study_icon.png");
 	setIcon(ID_AI, "UI/assets/ai_study_icon.png");
+	setIcon(ID_TODAYS_PROGRESS, "UI/assets/progress.png");
 	setIcon(ID_CALENDAR, "UI/assets/calendar_icon.png");
 }
 
