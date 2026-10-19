@@ -173,9 +173,9 @@ void MainFrame::OnDeckSelected(int deckId) {
 
 void MainFrame::SetStudying(bool active) {
 	this->studying = active;
-	if(this->sidebarPanel != nullptr) {
+	/*if(this->sidebarPanel != nullptr) {
 		this->sidebarPanel->Enable(!active);
-	}
+	} */
 	this->UpdateDeckMenus();
 }
 
@@ -192,24 +192,26 @@ void MainFrame::UpdateDeckMenus() {
 	}
 	
 	const bool unlocked = !this->studying && !guiding;
+	const bool generalUnlocked = !guiding;
 	bool hasDecks = false;
 	if(auto* decks = dynamic_cast<DeckPanelList*>(this->sidebarPanel)) {
 		hasDecks = decks->HasDecks();
 	}
 	const bool canEditDeck = hasDecks && this->selectedDeckId != 0 && unlocked;
 	const bool canStudy = this->selectedCardCount > 0 && unlocked;
+	
 	this->fileMenu->Enable(wxID_NEW, unlocked);
 	this->fileMenu->Enable(ID_EDIT_DECK, canEditDeck);
 	this->fileMenu->Enable(ID_DELETE_DECK, canEditDeck);
 	this->fileMenu->Enable(ID_SETTINGS, unlocked);
 	
 	if(this->studyMenu != nullptr) {
-		this->studyMenu->Enable(ID_STUDY, canStudy);
-		this->studyMenu->Enable(ID_AI, canStudy);
-		this->studyMenu->Enable(ID_TODAYS_PROGRESS, unlocked);
+		this->studyMenu->Enable(ID_STUDY, generalUnlocked);
+		this->studyMenu->Enable(ID_AI,  generalUnlocked);
+		this->studyMenu->Enable(ID_TODAYS_PROGRESS, generalUnlocked);
 	}
 	if(this->calendarMenu != nullptr) {
-		this->calendarMenu->Enable(ID_CALENDAR, unlocked);
+		this->calendarMenu->Enable(ID_CALENDAR, generalUnlocked);
 	}
 }
 
