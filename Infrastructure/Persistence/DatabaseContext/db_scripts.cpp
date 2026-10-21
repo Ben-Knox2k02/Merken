@@ -3,7 +3,7 @@
 // Append a new SQL string. Do not edit or reorder scripts that already shipped.
 std::vector<std::string> DbScripts::GetScripts() const {
 	return {
-			R"(
+		R"(
 CREATE TABLE IF NOT EXISTS decks (
     deck_id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
@@ -36,23 +36,23 @@ CREATE TABLE IF NOT EXISTS daily_progress (
 );
 )",
 		R"(
-			CREATE TABLE IF NOT EXISTS user_profile (
-				profile_id INTEGER PRIMARY KEY CHECK (profile_id = 1),
-				display_name TEXT NOT NULL DEFAULT '',
-				note TEXT NOT NULL DEFAULT '',
-				image_path TEXT NOT NULL DEFAULT '',
-				start_date TEXT NOT NULL,
-				daily_goal INTEGER,
-				uses_ai_study INTEGER NOT NULL DEFAULT 0,
-				guide_finished INTEGER NOT NULL DEFAULT 0
-			);
-		)",
+CREATE TABLE IF NOT EXISTS user_profile (
+    profile_id INTEGER PRIMARY KEY CHECK (profile_id = 1),
+    display_name TEXT NOT NULL DEFAULT '',
+    note TEXT NOT NULL DEFAULT '',
+    image_path TEXT NOT NULL DEFAULT '',
+    start_date TEXT NOT NULL,
+    daily_goal INTEGER,
+    uses_ai_study INTEGER NOT NULL DEFAULT 0,
+    guide_finished INTEGER NOT NULL DEFAULT 0
+);
+)",
 		R"(
-			ALTER TABLE user_profile DROP COLUMN image_path;
-		)",
+ALTER TABLE user_profile DROP COLUMN image_path;
+)",
 		R"(
-			ALTER TABLE user_profile ADD COLUMN onboarding_finished INTEGER NOT NULL DEFAULT 0;
-		)",
+ALTER TABLE user_profile ADD COLUMN onboarding_finished INTEGER NOT NULL DEFAULT 0;
+)",
 		R"(
 CREATE TABLE IF NOT EXISTS review_events (
     review_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -67,12 +67,20 @@ CREATE TABLE IF NOT EXISTS review_events (
     FOREIGN KEY (deck_id) REFERENCES decks(deck_id),
     FOREIGN KEY (card_id) REFERENCES cards(card_id)
 );
+)",
+		R"(
 CREATE INDEX IF NOT EXISTS idx_cards_deck_next_review_date
     ON cards(deck_id, next_review_date, card_id);
+)",
+		R"(
 CREATE INDEX IF NOT EXISTS idx_review_events_card_date
     ON review_events(card_id, reviewed_on, review_id);
+)",
+		R"(
 CREATE INDEX IF NOT EXISTS idx_review_events_deck_date
     ON review_events(deck_id, reviewed_on, review_id);
+)",
+		R"(
 CREATE INDEX IF NOT EXISTS idx_review_events_date
     ON review_events(reviewed_on, review_id);
 )",
