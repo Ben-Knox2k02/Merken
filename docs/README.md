@@ -30,6 +30,7 @@ Open work for each role is a checklist next to this file. The requirements those
 | Application | no open task list right now — study/review use cases are in |
 | APIs | [API_TODO.md](API_TODO.md) |
 | Requirements | [MERKEN_SRS.md](MERKEN_SRS.md) |
+| `fix-ui-issues` | [FIX_UI_ISSUES.md](FIX_UI_ISSUES.md) |
 
 ---
 

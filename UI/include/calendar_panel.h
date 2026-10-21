@@ -1,36 +1,30 @@
 #ifndef CALENDAR_PANEL_H
 #define CALENDAR_PANEL_H
 
-#include "dialog.h"
 #include <wx/wx.h>
-#include <wx/calctrl.h>
-#include <wx/dcbuffer.h>
+#include <wx/dataview.h>
+#include <memory>
+#include "../../Application/UseCases/Calendar/GetEvents/get_events_response.h"
 
 class CalendarPanel : public wxPanel {
 	public:
-		CalendarPanel(wxWindow* parent);
-		
-		wxPanel* topPanel;
-		wxPanel* midPanel;
-		wxPanel* bottomPanel;
-	
+		explicit CalendarPanel(wxWindow* parent);
+		~CalendarPanel() override;
+
 		wxBoxSizer* rootSizer;
-		wxBoxSizer* topSizer;
-		wxBoxSizer* midSizer;
-		wxBoxSizer* bottomSizer;
-		
 		wxStaticText* header;
-		
-		wxCalendarCtrl* calendar;
-		
-		wxButton* createEventButton;
-		wxButton* editEventButton;
-		wxButton* deleteEventButton;
-		
+		wxStaticText* statusLabel;
+		wxDataViewCtrl* eventList;
+		wxDataViewListStore* eventViewModel;
+		wxButton* backButton;
+
+		void LoadEvents();
+		void ShowEvents(const GetEventsResponse& response);
 		void OnPaint(wxPaintEvent& event);
-		void OnCreateEvent(wxCommandEvent& event);
-		void OnEditEvent(wxCommandEvent& event);
-		void OnDeleteEvent(wxCommandEvent& event);
+		void OnBack(wxCommandEvent& event);
+
+	private:
+		std::shared_ptr<bool> alive;
 };
 
 #endif
