@@ -30,8 +30,12 @@ echo Infrastructure\GoogleCalendar\google_calendar_service.cpp
 g++ -std=c++17 -c Infrastructure\GoogleCalendar\google_calendar_service.cpp -I ThirdParty\doctest -o obj\google_calendar_service.o
 if errorlevel 1 exit /b 1
 
+echo Infrastructure\GeminiApi\gemini_api_service.cpp
+g++ -std=c++17 -c Infrastructure\GeminiApi\gemini_api_service.cpp -I ThirdParty\doctest -o obj\gemini_api_service.o
+if errorlevel 1 exit /b 1
+
 echo Linking...
-g++ obj\main.o obj\*_tests.o obj\*_usecase.o obj\google_calendar_service.o -o %OUT%
+g++ obj\main.o obj\*_tests.o obj\*_usecase.o obj\google_calendar_service.o obj\gemini_api_service.o -o %OUT%
 if errorlevel 1 exit /b 1
 
 echo Running %OUT%
