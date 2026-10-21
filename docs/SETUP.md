@@ -50,9 +50,9 @@ MSYS2 is the same toolchain family CI uses.
    gcc --version
    ```
 
-Standalone MinGW-w64 (for example [WinLibs](https://winlibs.com/)) also works: put its `mingw64\bin` on PATH, or set `MINGW_HOME` to the toolchain root (`bin\g++.exe` must exist under that root).
+Standalone MinGW-w64 (for example [WinLibs](https://winlibs.com/)) also works: put its `mingw64\bin` on PATH, or set `MINGW` or `MINGW_HOME` to the toolchain root (`bin\g++.exe` must exist under that root). A WinLibs tree unpacked at `C:\mingw-w64` is `C:\mingw-w64\mingw64`.
 
-`build.bat` and `build_wxWidgets.bat` also look in common install folders. `test.bat` needs `g++` on PATH.
+`build.bat` and `build_wxWidgets.bat` also look in common install folders, including `C:\mingw-w64\mingw64`. `test.bat` needs `g++` on PATH.
 
 ### 2. Install and build wxWidgets
 
@@ -96,19 +96,14 @@ Standalone MinGW-w64 (for example [WinLibs](https://winlibs.com/)) also works: p
 If you change compiler (UCRT64 vs MINGW64, or a new MinGW), delete `%WXWIN%\lib\gcc_lib` and `%WXWIN%\build\msw\gcc_mswu` and run `build_wxWidgets.bat` again with the same `g++` you will use for `build.bat`.
 
 ## 3. Install Custom Archive
+
+The custom archive resolves subclass linker errors. `build.bat` searches the repo root first (`libcomctl32_subclass.a` and `comctl32_subclass.def` next to `build.bat`), then `%MINGW%\lib`.
+
+If that archive's format is not recognized at link time, regenerate it from the repo root with the same `g++` you use to build:
+
 ```
-The custom archive file resolves subclass linker errors when building the application
-Make sure libcomctl32_subclass.a and comctl32_subclass.def are located in C:\path\to\your\MinGW\lib
-
-Example: C:\mingw-w64\lib\libcomctl32_subclass.a
-         C:\mingw-w64\lib\comctl32_subclass.def
-
-If the downloaded libcomctl32_subclass.a isn't working (i.e. "file format not recognized" during link time)
-navigate to C:\path\to\your\MinGW\lib and run these commands to generate a fresh archive.
-
 del libcomctl32_subclass.a
 dlltool -d comctl32_subclass.def -l libcomctl32_subclass.a
-
 ```
 
 ### 4. Build Merken
@@ -121,9 +116,8 @@ test.bat
 ```
 
 `build.bat` produces `Merken.exe`. `test.bat` produces and runs `merken_tests.exe`.
-Note: 
-   `C:/mingw-w64/bin/../lib/gcc/x86_64-w64-mingw32/16.2.0/../../../../x86_64-w64-mingw32/bin/ld.exe: .rsrc merge failure: multiple non-default manifests`
-   is harmless
+
+`build.bat` compiles `UI\resources\manifest.rc` to `obj\manifest\default-manifest.o` and passes that directory to `g++ -B`, replacing GCC's default manifest. A second manifest object beside the other `.o` files makes `ld.exe` stop with `.rsrc merge failure: multiple non-default manifests`.
 
 ---
 

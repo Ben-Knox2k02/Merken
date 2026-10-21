@@ -259,7 +259,11 @@ class FlashCard : public wxPanel {
 
 		wxStaticText* MakeBody(wxWindow* parent, const wxString& value) {
 			wxStaticText* text = new wxStaticText();
+<<<<<<< HEAD
 			text->SetBackgroundStyle(wxBG_STYLE_TRANSPARENT);
+=======
+			text->SetBackgroundStyle(wxBG_STYLE_COLOUR);
+>>>>>>> 431e121ef7eafad3a1a7b376066a71e7a2d05be2
 			text->Create(parent, wxID_ANY, value);
 			text->SetMinSize(wxSize(0, -1));
 			return text;
@@ -491,12 +495,27 @@ class FlashCard : public wxPanel {
 		}
 
 		void ApplyTextColours() {
+<<<<<<< HEAD
 			const wxColour caption = Theme::Get().LabelOn(this->selected);
+=======
+			const Theme& theme = Theme::Get();
+			const wxColour caption = theme.LabelOn(this->selected);
+			const wxColour fill = this->selected ? theme.color.selectedFill : theme.color.card;
+>>>>>>> 431e121ef7eafad3a1a7b376066a71e7a2d05be2
 			this->frontCaption->SetForegroundColour(caption);
 			this->backCaption->SetForegroundColour(caption);
 			this->tagsCaption->SetForegroundColour(caption);
 			this->frontCtrl->SetForegroundColour(caption);
 			this->backCtrl->SetForegroundColour(caption);
+<<<<<<< HEAD
+=======
+			this->frontCtrl->SetBackgroundColour(fill);
+			this->backCtrl->SetBackgroundColour(fill);
+			this->frontWell->SetBackgroundColour(fill);
+			this->backWell->SetBackgroundColour(fill);
+			this->frontCtrl->Refresh();
+			this->backCtrl->Refresh();
+>>>>>>> 431e121ef7eafad3a1a7b376066a71e7a2d05be2
 			this->SetBackgroundColour(wxNullColour);
 		}
 };

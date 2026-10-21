@@ -1,23 +1,37 @@
 #include "app.h"
 #include "mainframe.h"
+#include "onboarding_dialog.h"
+#include "theme_preference.h"
+#include "../../Application/UseCases/Profile/GetUserProfile/get_user_profile_usecase.h"
 
 wxIMPLEMENT_APP(App);
 
 bool App::OnInit() {
 	try {
 		std::cout << "[TRACE] Entering OnInit..." << std::endl;
+		wxInitAllImageHandlers();
 		this->EnsureInjector();
+		// Choose Light, Dark, or System once, before any window exists.
+		// wx refuses a later change, so this cannot follow SetAppearance(System).
+		ApplyStoredTheme();
 		std::cout << "[TRACE] Injector ensured successfully." << std::endl;
+
+		auto profileUseCase = this->GetInjector().create<GetUserProfileUseCase>();
+		GetUserProfileResponse profile = profileUseCase.Execute();
+		if (profile.ok && !profile.onboardingFinished) {
+			OnboardingDialog onboarding(nullptr);
+			onboarding.ShowModal();
+		}
 	
 		this->SCREEN_WIDTH = wxSystemSettings::GetMetric(wxSYS_SCREEN_X);
 		this->SCREEN_HEIGHT = wxSystemSettings::GetMetric(wxSYS_SCREEN_Y);
 	
-		this->windowWidth = this->SCREEN_WIDTH * 4 / 5;
-		this->windowHeight = this->SCREEN_HEIGHT * 4 / 5;
-	
 		MainFrame* mainFrame = new MainFrame("Merken");
 		std::cout << "[TRACE] MainFrame constructed successfully." << std::endl;
-		mainFrame->SetSize(this->windowWidth, this->windowHeight);
+		const wxSize initialSize = mainFrame->FromDIP(wxSize(1366, 768));
+		this->windowWidth = initialSize.GetWidth();
+		this->windowHeight = initialSize.GetHeight();
+		mainFrame->SetClientSize(initialSize);
 		mainFrame->Center();
 		mainFrame->Show();
 		std::cout << "[TRACE] MainFrame shown." << std::endl;

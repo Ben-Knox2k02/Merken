@@ -4,15 +4,22 @@
 #include <filesystem>
 #include <fstream>
 #include <algorithm>
-#include "card_list_panel.h"
-#include "deck_panel.h"
+#include "flash_card_list.h"
+#include "deck_panel_list.h"
 #include "study_panel.h"
 #include "calendar_panel.h"
 #include "ai_panel.h"
+#include "ai_study_panel.h"
+#include "progress_panel.h"
+#include "settings_dialog.h"
+#include "centered_message.h"
+#include "theme.h"
+#include "icon_button.h"
+#include "../../Application/UseCases/Profile/GetUserProfile/get_user_profile_usecase.h"
 
 MainFrame::MainFrame(const wxString& title)
     : wxFrame(nullptr, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE),
-      app(wxGetApp()), currentPanel(nullptr), sidebarPanel(nullptr), findDialog(nullptr)
+      app(wxGetApp()), currentPanel(nullptr), sidebarPanel(nullptr), selectedDeckId(0), selectedCardCount(0), studying(false), findDialog(nullptr)
 {
 	std::cout << "[TRACE] Entering MainFrame constructor..." << std::endl;
 	//=========== INITIALIZE WIDGETS ===================================== INITIALIZE WIDGETS ================================
@@ -21,11 +28,13 @@ MainFrame::MainFrame(const wxString& title)
 	this->menuBar = new wxMenuBar;						// MENU BAR
 	 
 	this->fileMenu = new wxMenu;										// FILE
-	this->fileMenu->Append(wxID_NEW, "&New\tCtrl+N");		
-	this->fileMenu->Append(wxID_OPEN, "&Open\tCtrl+O");
-	this->fileMenu->Append(wxID_SAVE, "&Save\tCtrl+S");
+	this->fileMenu->Append(wxID_NEW, "Add Deck");
+	this->fileMenu->Append(ID_EDIT_DECK, "Edit Deck");
+	this->fileMenu->Append(ID_DELETE_DECK, "Delete Deck");
 	this->fileMenu->AppendSeparator();
-	this->fileMenu->Append(wxID_EXIT, "&Exit\tAlt+F4");
+	this->fileMenu->Append(ID_SETTINGS, "Settings");
+	this->fileMenu->AppendSeparator();
+	this->fileMenu->Append(wxID_EXIT, "Exit");
 	 
 	this->editMenu = new wxMenu;										// EDIT		
 	this->editMenu->Append(wxID_UNDO, "&Undo\tCtrl+Z");
@@ -40,23 +49,26 @@ MainFrame::MainFrame(const wxString& title)
 	this->searchMenu->Append(wxID_FIND, "&Find\tCtrl+F");
 	this->searchMenu->Append(wxID_REPLACE, "&Replace\tCtrl+H");
 	 
-	this->viewMenu = new wxMenu;										// VIEW
-	this->viewMenu->Append(ID_CARDS, "&Cards\tF1");
-	this->viewMenu->Append(ID_STUDY, "&Study\tF2");
-	this->viewMenu->Append(ID_CALENDAR, "&Calendar\tF3");
-	this->viewMenu->Append(ID_AI, "&AI\tF4");
-	
-	this->toolsMenu = new wxMenu;										// TOOLS
-	this->toolsMenu->Append(ID_SETTINGS, "Settings");
+	this->viewMenu = nullptr;
+	this->studyMenu = new wxMenu;										// STUDY
+	this->studyMenu->Append(ID_CARDS, "View Cards\tF1");
+	this->studyMenu->Append(ID_STUDY, "Study Deck\tF2");
+	this->studyMenu->Append(ID_AI, "AI Study Deck\tF3");
+	this->studyMenu->Append(ID_TODAYS_PROGRESS, "View Progress\tF4");
+
+	this->calendarMenu = new wxMenu;									// CALENDAR
+	this->calendarMenu->Append(ID_CALENDAR, "View Calendar\tF5");
+
+	this->toolsMenu = nullptr;
 	
 	this->helpMenu = new wxMenu;										// HELP		
-	this->helpMenu->Append(wxID_ABOUT, "About");
+	this->helpMenu->Append(wxID_ABOUT, "About Merken");
 	 
 	this->menuBar->Append(fileMenu, "File");							// ATTACH MENUS
 	this->menuBar->Append(editMenu, "Edit");
 	this->menuBar->Append(searchMenu, "Search");
-	this->menuBar->Append(viewMenu, "View");
-	this->menuBar->Append(toolsMenu, "Tools");
+	this->menuBar->Append(studyMenu, "Study");
+	this->menuBar->Append(calendarMenu, "Calendar");
 	this->menuBar->Append(helpMenu, "Help");
 	
 	//======== KEYBOARD SHORTCUTS ================================== KEYBOARD SHORTCUTS ======================
@@ -77,33 +89,39 @@ MainFrame::MainFrame(const wxString& title)
 	
 	this->shortcuts[12].Set(wxACCEL_NORMAL, WXK_F1, ID_CARDS);
 	this->shortcuts[13].Set(wxACCEL_NORMAL, WXK_F2, ID_STUDY);
-	this->shortcuts[14].Set(wxACCEL_NORMAL, WXK_F3, ID_CALENDAR);
-	this->shortcuts[15].Set(wxACCEL_NORMAL, WXK_F4, ID_AI);
+	this->shortcuts[14].Set(wxACCEL_NORMAL, WXK_F3, ID_AI);
+	this->shortcuts[15].Set(wxACCEL_NORMAL, WXK_F4, ID_TODAYS_PROGRESS);
+	this->shortcuts[16].Set(wxACCEL_NORMAL, WXK_F5, ID_CALENDAR);
 	
-	wxAcceleratorTable accel(15, this->shortcuts);
+	wxAcceleratorTable accel(NUM_SHORTCUTS, this->shortcuts);
 	this->SetAcceleratorTable(accel);
 	
 	//============ ATTACH WIDGETS ==================================== ATTACH WIDGETS ========================= 
-	this->SetMenuBar(this->menuBar);									
+	this->SetMenuBar(this->menuBar);
+	this->ApplyMenuIcons();
 	this->CreateStatusBar();
+	this->SetBackgroundColour(Theme::Get().color.window);
 	
 	this->rootSizer = new wxBoxSizer(wxHORIZONTAL);
 	
-	this->sidebarPanel = new DeckPanel(this);
-	
 	this->contentPanel = new wxPanel(this, wxID_ANY);
-	this->SetCurrentPanel(new CardListPanel(this->contentPanel, 0));
-	
-	this->rootSizer->Add(this->sidebarPanel, 0, wxEXPAND | wxALL, 0);
-	this->rootSizer->Add(this->contentPanel, 1, wxEXPAND | wxALL, 0);
+	this->contentPanel->SetBackgroundColour(Theme::Get().color.window);
+	this->SetCurrentPanel(new FlashCardList(this->contentPanel, 0));
+	this->sidebarPanel = new DeckPanelList(this);
+
+	const int edge = this->FromDIP(Theme::Get().size.panelPad);
+	const int gap = this->FromDIP(Theme::Get().space.md);
+	this->rootSizer->Add(this->sidebarPanel, 30, wxEXPAND | wxTOP | wxBOTTOM | wxLEFT, edge);
+	this->rootSizer->AddSpacer(gap);
+	this->rootSizer->Add(this->contentPanel, 70, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, edge);
 	
 	this->SetSizer(this->rootSizer);
 	this->Layout();
 	
 	//========= BIND EVENT HANDLERS ==================================== BIND EVENT HANDLERS ===================
-	this->Bind(wxEVT_MENU, &MainFrame::OnNew, this, wxID_NEW);					// FILE
-	this->Bind(wxEVT_MENU, &MainFrame::OnOpen, this, wxID_OPEN);
-	this->Bind(wxEVT_MENU, &MainFrame::OnSave, this, wxID_SAVE);
+	this->Bind(wxEVT_MENU, &MainFrame::OnAddDeck, this, wxID_NEW);				// FILE
+	this->Bind(wxEVT_MENU, &MainFrame::OnEditDeck, this, ID_EDIT_DECK);
+	this->Bind(wxEVT_MENU, &MainFrame::OnDeleteDeck, this, ID_DELETE_DECK);
 	this->Bind(wxEVT_MENU, &MainFrame::OnExit, this, wxID_EXIT);
 	
 	this->Bind(wxEVT_MENU, &MainFrame::OnUndo, this, wxID_UNDO);					// EDIT
@@ -120,6 +138,7 @@ MainFrame::MainFrame(const wxString& title)
 	
 	this->Bind(wxEVT_MENU, &MainFrame::OnCards, this, ID_CARDS);					// VIEW
 	this->Bind(wxEVT_MENU, &MainFrame::OnStudy, this, ID_STUDY);
+	this->Bind(wxEVT_MENU, &MainFrame::OnTodaysProgress, this, ID_TODAYS_PROGRESS);
 	this->Bind(wxEVT_MENU, &MainFrame::OnCalendar, this, ID_CALENDAR);
 	this->Bind(wxEVT_MENU, &MainFrame::OnAI, this, ID_AI);
 	
@@ -135,22 +154,155 @@ MainFrame::MainFrame(const wxString& title)
 	this->Bind(wxEVT_SIZE, &MainFrame::OnWindowResized, this);					// WINDOW EVENTS
 	this->Bind(wxEVT_CLOSE_WINDOW, &MainFrame::OnWindowClosed, this);
 	
-	this->Bind(wxEVT_MENU, &MainFrame::OnNew, this, wxID_NEW);					// MENU EVENTS
-	this->Bind(wxEVT_MENU, &MainFrame::OnOpen, this, wxID_OPEN);
-	this->Bind(wxEVT_MENU, &MainFrame::OnSave, this, wxID_SAVE);
-	this->Bind(wxEVT_MENU, &MainFrame::OnAbout, this, wxID_ABOUT);
-	this->Bind(wxEVT_MENU, &MainFrame::OnExit, this, wxID_EXIT);
-
 	this->Bind(wxEVT_SIZE, &MainFrame::OnWindowResized, this);					// WINDOW EVENTS
 	this->Bind(wxEVT_ENTER_WINDOW, &MainFrame::OnMouseEvent, this);
 	this->Bind(wxEVT_LEAVE_WINDOW, &MainFrame::OnMouseEvent, this);
 	this->Bind(wxEVT_CLOSE_WINDOW, &MainFrame::OnWindowClosed, this);
+	this->Bind(wxEVT_SYS_COLOUR_CHANGED, &MainFrame::OnSysColourChanged, this);
+	Theme::ApplyTitleBar(this);
 }
 
 void MainFrame::OnDeckSelected(int deckId) {
-	if(auto cardPanel = dynamic_cast<CardListPanel*>(this->currentPanel)) {
+	this->selectedDeckId = deckId;
+	this->UpdateDeckMenus();
+	if(auto cardPanel = dynamic_cast<FlashCardList*>(this->currentPanel)) {
 		cardPanel->SetDeck(deckId);
 	}
+}
+
+void MainFrame::SetStudying(bool active) {
+	this->studying = active;
+	if (this->sidebarPanel != nullptr) {
+		this->sidebarPanel->Enable(!active);
+	}
+	this->UpdateDeckMenus();
+}
+
+void MainFrame::UpdateDeckMenus() {
+	if (this->fileMenu == nullptr) {
+		return;
+	}
+	bool guiding = false;
+	if (!this->studying) {
+		auto useCase = wxGetApp().GetInjector().create<GetUserProfileUseCase>();
+		GetUserProfileResponse profile = useCase.Execute();
+		guiding = profile.ok && !profile.guideFinished;
+	}
+	const bool unlocked = !this->studying && !guiding;
+	bool hasDecks = false;
+	if (auto* decks = dynamic_cast<DeckPanelList*>(this->sidebarPanel)) {
+		hasDecks = decks->HasDecks();
+	}
+	const bool canEditDeck = hasDecks && this->selectedDeckId != 0 && unlocked;
+	const bool canStudy = this->selectedCardCount > 0 && unlocked;
+	this->fileMenu->Enable(wxID_NEW, unlocked);
+	this->fileMenu->Enable(ID_EDIT_DECK, canEditDeck);
+	this->fileMenu->Enable(ID_DELETE_DECK, canEditDeck);
+	this->fileMenu->Enable(ID_SETTINGS, unlocked);
+	if (this->studyMenu != nullptr) {
+		this->studyMenu->Enable(ID_CARDS, unlocked);
+		this->studyMenu->Enable(ID_STUDY, canStudy);
+		this->studyMenu->Enable(ID_AI, canStudy);
+		this->studyMenu->Enable(ID_TODAYS_PROGRESS, unlocked);
+	}
+	if (this->calendarMenu != nullptr) {
+		this->calendarMenu->Enable(ID_CALENDAR, unlocked);
+	}
+}
+
+void MainFrame::SetSelectedCardCount(int count) {
+	this->selectedCardCount = count;
+	this->UpdateDeckMenus();
+}
+
+void MainFrame::ApplyMenuIcons() {
+	if (this->menuBar == nullptr) {
+		return;
+	}
+	const bool invert = Theme::IsDarkAppearance();
+	auto setIcon = [this, invert](int id, const wxString& path) {
+		wxMenuItem* item = this->menuBar->FindItem(id);
+		if (item != nullptr) {
+			item->SetBitmap(IconButton::LoadIconBundle(path, 16, invert));
+		}
+	};
+	setIcon(wxID_NEW, "UI/assets/add_icon.png");
+	setIcon(ID_EDIT_DECK, "UI/assets/edit_icon.png");
+	setIcon(ID_DELETE_DECK, "UI/assets/delete_icon.png");
+	setIcon(ID_CARDS, "UI/assets/flash_card_icon.png");
+	setIcon(ID_STUDY, "UI/assets/study_icon.png");
+	setIcon(ID_AI, "UI/assets/ai_study_icon.png");
+	setIcon(ID_TODAYS_PROGRESS, "UI/assets/progress.png");
+	setIcon(ID_CALENDAR, "UI/assets/calendar_icon.png");
+}
+
+void MainFrame::ReloadDecks() {
+	if (auto* decks = dynamic_cast<DeckPanelList*>(this->sidebarPanel)) {
+		decks->LoadDecks();
+		this->selectedDeckId = decks->GetSelectedDeckId();
+		this->UpdateDeckMenus();
+	}
+}
+
+void MainFrame::ApplyTheme() {
+	const Theme& theme = Theme::Get();
+	this->SetBackgroundColour(theme.color.window);
+	if (this->contentPanel != nullptr) {
+		this->contentPanel->SetBackgroundColour(theme.color.window);
+	}
+	if (auto* decks = dynamic_cast<DeckPanelList*>(this->sidebarPanel)) {
+		decks->ApplyTheme();
+	}
+	if (auto* cards = dynamic_cast<FlashCardList*>(this->currentPanel)) {
+		cards->ApplyTheme();
+	} else if (this->currentPanel != nullptr) {
+		this->currentPanel->SetBackgroundColour(theme.color.window);
+		this->currentPanel->Refresh();
+	}
+	this->ApplyMenuIcons();
+	Theme::ApplyTitleBar(this);
+	this->Refresh();
+	this->Update();
+}
+
+void MainFrame::OnSysColourChanged(wxSysColourChangedEvent& event) {
+	this->ApplyTheme();
+	event.Skip();
+}
+
+void MainFrame::ShowCardList() {
+	this->SetStudying(false);
+	if (auto* decks = dynamic_cast<DeckPanelList*>(this->sidebarPanel)) {
+		decks->RefreshGuide();
+	}
+	this->SetCurrentPanel(new FlashCardList(this->contentPanel, this->selectedDeckId));
+	this->UpdateDeckMenus();
+}
+
+void MainFrame::ShowStudyDeck() {
+	if(this->selectedDeckId == 0) {
+		ShowCenteredMessage(this, "Select a deck first.", "Study Deck", wxOK | wxICON_WARNING);
+		return;
+	}
+	this->SetCurrentPanel(new StudyPanel(this->contentPanel, this->selectedDeckId));
+	this->SetStudying(true);
+}
+
+void MainFrame::ShowTodaysProgress() {
+	this->SetCurrentPanel(new ProgressPanel(this->contentPanel));
+}
+
+void MainFrame::ShowCalendar() {
+	this->SetCurrentPanel(new CalendarPanel(this->contentPanel));
+}
+
+void MainFrame::ShowAiStudy() {
+	if(this->selectedDeckId == 0) {
+		ShowCenteredMessage(this, "Select a deck first.", "AI Study", wxOK | wxICON_WARNING);
+		return;
+	}
+	this->SetCurrentPanel(new AiStudyPanel(this->contentPanel, this->selectedDeckId));
+	this->SetStudying(true);
 }
 
 void MainFrame::SetCurrentPanel(wxPanel* newPanel) {
@@ -163,13 +315,14 @@ void MainFrame::SetCurrentPanel(wxPanel* newPanel) {
 	
 	this->currentPanel = newPanel;
 	this->currentPanel->SetBackgroundStyle(wxBG_STYLE_PAINT);
-    this->currentPanel->SetBackgroundColour(*wxWHITE);
+	this->currentPanel->SetBackgroundColour(Theme::Get().color.window);
 	
 	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
 	sizer->Add(this->currentPanel, 1, wxEXPAND);
 	
 	this->contentPanel->SetSizer(sizer);
 	this->contentPanel->Layout();
+	this->ApplyPanelWidths();
 	
 	this->currentPanel->SetFocus();
 }
@@ -179,6 +332,24 @@ void MainFrame::SetSidebarPanel(wxPanel* newPanel) {
 }
 
 //=============== EVENT HANDLERS ================================== EVENT HANDLERS =============
+
+void MainFrame::OnAddDeck(wxCommandEvent& event) {
+	if (auto* decks = dynamic_cast<DeckPanelList*>(this->sidebarPanel)) {
+		decks->OnAddDeck(event);
+	}
+}
+
+void MainFrame::OnEditDeck(wxCommandEvent& event) {
+	if (auto* decks = dynamic_cast<DeckPanelList*>(this->sidebarPanel)) {
+		decks->OnEditDeck(event);
+	}
+}
+
+void MainFrame::OnDeleteDeck(wxCommandEvent& event) {
+	if (auto* decks = dynamic_cast<DeckPanelList*>(this->sidebarPanel)) {
+		decks->OnDeleteDeck(event);
+	}
+}
 
 void MainFrame::OnNew(wxCommandEvent& event) {						// FILE
 	wxLogStatus("NEW");
@@ -318,36 +489,92 @@ void MainFrame::OnReplace(wxCommandEvent& event) {
 
 void MainFrame::OnCards(wxCommandEvent& event) {					// VIEW
 	wxLogStatus("CARDS");
-	this->SetCurrentPanel(new CardListPanel(this->contentPanel, 0));
+	this->ShowCardList();
 	event.Skip();
 }
 
 void MainFrame::OnStudy(wxCommandEvent& event) {
 	wxLogStatus("STUDY");
-	this->SetCurrentPanel(new StudyPanel(this->contentPanel, 0));
+	this->ShowStudyDeck();
+	event.Skip();
+}
+
+void MainFrame::OnTodaysProgress(wxCommandEvent& event) {
+	wxLogStatus("TODAY'S PROGRESS");
+	this->ShowTodaysProgress();
 	event.Skip();
 }
 
 void MainFrame::OnCalendar(wxCommandEvent& event) {
 	wxLogStatus("CALENDAR");
-	this->SetCurrentPanel(new CalendarPanel(this->contentPanel));
+	this->ShowCalendar();
 	event.Skip();
 }
 
 void MainFrame::OnAI(wxCommandEvent& event) {
 	wxLogStatus("AI");
-	this->SetCurrentPanel(new AIPanel(this->contentPanel));
+	this->ShowAiStudy();
 	event.Skip();
 }
 
 void MainFrame::OnSettings(wxCommandEvent& event) {					// TOOLS
 	wxLogStatus("SETTINGS");
+	SettingsDialog dialog(this);
+	dialog.ShowModal();
 	event.Skip();
 }
 
-void MainFrame::OnAbout(wxCommandEvent& event) {					// HELP
-	wxLogStatus("ABOUT");
-	event.Skip();
+void MainFrame::OnAbout(wxCommandEvent&) {
+	wxDialog dialog(
+		this,
+		wxID_ANY,
+		"About Merken",
+		wxDefaultPosition,
+		wxDefaultSize,
+		wxDEFAULT_DIALOG_STYLE
+	);
+
+	wxStaticText* name = new wxStaticText(&dialog, wxID_ANY, "Merken");
+	wxFont nameFont = name->GetFont();
+	nameFont.SetPointSize(nameFont.GetPointSize() + 3);
+	name->SetFont(nameFont);
+
+	wxStaticText* description = new wxStaticText(
+		&dialog,
+		wxID_ANY,
+		"Merken is a flash-card study app. Create decks, add cards, and review them "
+		"with spaced practice or AI-guided study sessions."
+	);
+	description->Wrap(dialog.FromDIP(360));
+
+	wxStdDialogButtonSizer* buttons = new wxStdDialogButtonSizer();
+	buttons->AddButton(new wxButton(&dialog, wxID_OK));
+	buttons->Realize();
+
+	dialog.Bind(wxEVT_BUTTON, [&dialog](wxCommandEvent& event) {
+		const int id = event.GetId();
+		if (id == wxID_OK || id == wxID_CANCEL) {
+			dialog.EndModal(id);
+			return;
+		}
+		event.Skip();
+	});
+
+	const Theme& theme = Theme::Get();
+	const int pad = dialog.FromDIP(16);
+	wxBoxSizer* root = new wxBoxSizer(wxVERTICAL);
+	root->Add(name, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, pad);
+	root->Add(description, 0, wxEXPAND | wxALL, pad);
+	root->Add(buttons, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, pad);
+
+	dialog.SetSizer(root);
+	dialog.SetMinSize(dialog.FromDIP(wxSize(420, 160)));
+	theme.StyleDialog(&dialog);
+	description->SetForegroundColour(theme.color.secondaryLabel);
+	dialog.Fit();
+	dialog.Layout();
+	dialog.CentreOnParent();
+	dialog.ShowModal();
 }
 
 void MainFrame::OnMouseEvent(wxMouseEvent& event) {					// MOUSE
@@ -390,13 +617,35 @@ void MainFrame::OnKeyEvent(wxKeyEvent& event) {						// KEY
 	event.Skip();
 }
 
+void MainFrame::ApplyPanelWidths() {
+	const int clientWidth = this->GetClientSize().GetWidth();
+	if(clientWidth <= 0 || this->sidebarPanel == nullptr || this->contentPanel == nullptr) {
+		return;
+	}
+
+	const int edge = this->FromDIP(Theme::Get().size.panelPad);
+	const int gap = this->FromDIP(Theme::Get().space.md);
+	const int inner = clientWidth - edge - gap - edge;
+	if(inner <= 0) {
+		return;
+	}
+	const int deckWidth = inner * 30 / 100;
+	const int cardWidth = inner - deckWidth;
+	if(deckWidth <= 0 || cardWidth <= 0) {
+		return;
+	}
+	this->sidebarPanel->SetMinSize(wxSize(deckWidth, -1));
+	this->sidebarPanel->SetMaxSize(wxSize(deckWidth, -1));
+	this->contentPanel->SetMinSize(wxSize(cardWidth, -1));
+	this->contentPanel->SetMaxSize(wxSize(cardWidth, -1));
+}
+
 void MainFrame::OnWindowResized(wxSizeEvent& event) {				// WINDOW
-	wxLogStatus("WINDOW RESIZED");
 	wxSize size = event.GetSize();
 	
 	this->app.SetWindowWidth(size.GetWidth());
 	this->app.SetWindowHeight(size.GetHeight());
-	//this->app.Print();
+	this->ApplyPanelWidths();
 	
 	event.Skip();
 }
