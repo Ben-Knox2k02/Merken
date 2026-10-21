@@ -11,6 +11,8 @@ class FakeDeckRepository : public IDeckRepository {
 		int nextCardId = 1;
 		bool updateDeckSucceeds = true;
 		bool updateCardSucceeds = true;
+		bool deleteDeckSucceeds = true;
+		bool deleteCardSucceeds = true;
 		std::vector<Deck> addedDecks;
 		std::vector<Card> addedCards;
 		std::vector<Deck> decks;
@@ -98,6 +100,31 @@ class FakeDeckRepository : public IDeckRepository {
 				return false;
 			}
 			*stored = card;
+			return true;
+		}
+
+		bool DeleteDeck(int deckId) override {
+			if (!this->deleteDeckSucceeds) {
+				return false;
+			}
+			for (auto it = this->decks.begin(); it != this->decks.end(); ++it) {
+				if (it->GetDeckId() == deckId) {
+					this->decks.erase(it);
+					return true;
+				}
+			}
+			return false;
+		}
+
+		bool DeleteCard(int deckId, int cardId) override {
+			if (!this->deleteCardSucceeds) {
+				return false;
+			}
+			Deck* deck = this->FindDeck(deckId);
+			if (deck == nullptr || deck->FindCard(cardId) == nullptr) {
+				return false;
+			}
+			deck->RemoveCard(cardId);
 			return true;
 		}
 

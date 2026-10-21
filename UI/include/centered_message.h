@@ -3,12 +3,66 @@
 
 #include <wx/wx.h>
 #include <wx/artprov.h>
+#include <wx/display.h>
+#include "theme.h"
+
+inline void PlaceClearOf(wxDialog& dialog, wxWindow* avoid, wxWindow* avoidAlso) {
+	if (avoid == nullptr) {
+		dialog.CentreOnParent();
+		return;
+	}
+
+	wxRect target = avoid->GetScreenRect();
+	if (avoidAlso != nullptr && avoidAlso->IsShown()) {
+		target.Union(avoidAlso->GetScreenRect());
+	}
+	const wxSize box = dialog.GetSize();
+	const int gap = avoid->FromDIP(16);
+	const wxRect screen = wxDisplay(avoid).GetClientArea();
+
+	auto clampPoint = [&](wxPoint pos) {
+		const int maxX = screen.GetRight() - box.GetWidth();
+		const int maxY = screen.GetBottom() - box.GetHeight();
+		if (pos.x < screen.GetLeft()) { pos.x = screen.GetLeft(); }
+		if (pos.y < screen.GetTop()) { pos.y = screen.GetTop(); }
+		if (pos.x > maxX) { pos.x = maxX; }
+		if (pos.y > maxY) { pos.y = maxY; }
+		return pos;
+	};
+	auto overlap = [&](wxPoint pos) {
+		const wxRect placed(pos, box);
+		const wxRect shared = placed.Intersect(target);
+		if (shared.IsEmpty()) {
+			return 0;
+		}
+		return shared.GetWidth() * shared.GetHeight();
+	};
+
+	const wxPoint candidates[] = {
+		clampPoint(wxPoint(target.GetLeft(), target.GetTop() - box.GetHeight() - gap)),
+		clampPoint(wxPoint(target.GetLeft(), target.GetBottom() + gap)),
+		clampPoint(wxPoint(target.GetRight() + gap, target.GetTop())),
+		clampPoint(wxPoint(target.GetLeft() - box.GetWidth() - gap, target.GetTop()))
+	};
+	wxPoint best = candidates[0];
+	int bestOverlap = overlap(best);
+	for (const wxPoint& candidate : candidates) {
+		const int area = overlap(candidate);
+		if (area < bestOverlap) {
+			best = candidate;
+			bestOverlap = area;
+		}
+	}
+	dialog.SetPosition(best);
+}
 
 inline int ShowCenteredMessage(
 	wxWindow* parent,
 	const wxString& message,
 	const wxString& caption,
-	long style = wxOK | wxICON_INFORMATION
+	long style = wxOK | wxICON_INFORMATION,
+	wxWindow* avoid = nullptr,
+	wxWindow* avoidAlso = nullptr
 ) {
 	wxWindow* owner = wxGetTopLevelParent(parent);
 	wxDialog dialog(
@@ -41,10 +95,21 @@ inline int ShowCenteredMessage(
 	if (style & wxYES_NO) {
 		buttons->AddButton(new wxButton(&dialog, wxID_YES));
 		buttons->AddButton(new wxButton(&dialog, wxID_NO));
+		dialog.SetAffirmativeId(wxID_YES);
+		dialog.SetEscapeId(wxID_NO);
 	} else {
 		buttons->AddButton(new wxButton(&dialog, wxID_OK));
 	}
 	buttons->Realize();
+
+	dialog.Bind(wxEVT_BUTTON, [&dialog](wxCommandEvent& event) {
+		const int id = event.GetId();
+		if (id == wxID_OK || id == wxID_CANCEL || id == wxID_YES || id == wxID_NO) {
+			dialog.EndModal(id);
+			return;
+		}
+		event.Skip();
+	});
 
 	wxBoxSizer* root = new wxBoxSizer(wxVERTICAL);
 	root->Add(content, 1, wxEXPAND | wxALL, 16);
@@ -52,9 +117,10 @@ inline int ShowCenteredMessage(
 
 	dialog.SetSizer(root);
 	dialog.SetMinSize(wxSize(420, 140));
+	Theme::Get().StyleDialog(&dialog);
 	dialog.Fit();
 	dialog.Layout();
-	dialog.CentreOnParent();
+	PlaceClearOf(dialog, avoid, avoidAlso);
 	return dialog.ShowModal();
 }
 

@@ -24,8 +24,23 @@ TEST_CASE("GetDecksUseCase maps stored decks") {
 	CHECK(response.decks[0].name == "Spanish");
 	CHECK(response.decks[0].description == "Vocabulary");
 	CHECK(response.decks[0].createdAt == "2026-09-12");
+	CHECK(response.decks[0].cardCount == 0);
 	CHECK(response.decks[1].deckId == 2);
 	CHECK(response.decks[1].name == "History");
 	CHECK(response.decks[1].description == "");
 	CHECK(response.decks[1].createdAt == "2026-01-01");
+	CHECK(response.decks[1].cardCount == 0);
+}
+
+TEST_CASE("GetDecksUseCase maps card counts") {
+	FakeDeckRepository deckRepository;
+	const int deckId = deckRepository.SeedDeck("Spanish");
+	deckRepository.SeedCard(deckId, "hola", "hello");
+	deckRepository.SeedCard(deckId, "adios", "goodbye");
+	GetDecksUseCase useCase(deckRepository);
+
+	GetDecksResponse response = useCase.Execute();
+
+	REQUIRE(response.decks.size() == 1);
+	CHECK(response.decks[0].cardCount == 2);
 }
