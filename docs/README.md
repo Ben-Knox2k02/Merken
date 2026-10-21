@@ -30,12 +30,13 @@ Open work for each role is a checklist next to this file. The requirements those
 | Application | no open task list right now — study/review use cases are in |
 | APIs | [API_TODO.md](API_TODO.md) |
 | Requirements | [MERKEN_SRS.md](MERKEN_SRS.md) |
+| `fix-ui-issues` | [FIX_UI_ISSUES.md](FIX_UI_ISSUES.md) |
 
 ---
 
 ## Build, test, clean, uninstall
 
-Set up the compiler and wxWidgets first: [SETUP.md](SETUP.md). Windows app builds need MinGW-w64 `g++` on PATH and wxWidgets 3.2 from `build_wxWidgets.bat`.
+Set up the compiler and wxWidgets first: [SETUP.md](SETUP.md). Windows app builds need MinGW-w64 `g++` on PATH and wxWidgets 3.3 from `build_wxWidgets.bat`.
 
 Run these from the repo root.
 

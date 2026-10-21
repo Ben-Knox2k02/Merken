@@ -18,21 +18,38 @@ echo.
 
 if not exist "%WX%\build\msw\makefile.gcc" (
     echo wxWidgets sources not found at %WX%
-    echo Extract wxWidgets 3.2.x there, or set WXWIN to your wxWidgets tree.
+    echo Extract wxWidgets sources there, or set WXWIN to your wxWidgets tree.
     exit /b 1
 )
 
+rem --- Detect wxWidgets Minor Version ---
+set "WX_MINOR_VERSION=2"
+if exist "%WX%\include\wx\version.h" (
+    for /f "tokens=3" %%V in ('findstr /C:"#define wxMINOR_VERSION" "%WX%\include\wx\version.h"') do (
+        set "WX_MINOR_VERSION=%%V"
+    )
+)
+
+echo Detected wxWidgets 3.%WX_MINOR_VERSION%.x
+
 set "WX_LIB=%WX%\lib\gcc_lib"
 set "WX_READY=1"
+
 if not exist "%WX_LIB%\mswu\wx\setup.h" set "WX_READY=0"
-if not exist "%WX_LIB%\libwxmsw32u_core.a" set "WX_READY=0"
-if not exist "%WX_LIB%\libwxbase32u.a" set "WX_READY=0"
-if not exist "%WX_LIB%\libwxbase32u_net.a" set "WX_READY=0"
+if not exist "%WX_LIB%\libwxmsw32u_core.a" if not exist "%WX_LIB%\libwxmsw33u_core.a" set "WX_READY=0"
+if not exist "%WX_LIB%\libwxbase32u.a" if not exist "%WX_LIB%\libwxbase33u.a" set "WX_READY=0"
+if not exist "%WX_LIB%\libwxbase32u_net.a" if not exist "%WX_LIB%\libwxbase33u_net.a" set "WX_READY=0"
 if not exist "%WX_LIB%\libwxpng.a" set "WX_READY=0"
 if not exist "%WX_LIB%\libwxjpeg.a" set "WX_READY=0"
 if not exist "%WX_LIB%\libwxzlib.a" set "WX_READY=0"
 if not exist "%WX_LIB%\libwxregexu.a" set "WX_READY=0"
 if not exist "%WX_LIB%\libwxexpat.a" set "WX_READY=0"
+
+rem 3.3+ checks
+if "%WX_MINOR_VERSION%"=="3" (
+    if not exist "%WX_LIB%\libwxwebp.a" set "WX_READY=0"
+    if not exist "%WX_LIB%\libwxtiff.a" set "WX_READY=0"
+)
 
 if "%WX_READY%"=="1" (
     echo Used wxWidgets libraries already built, skipping.
@@ -40,7 +57,17 @@ if "%WX_READY%"=="1" (
     exit /b 0
 )
 
-set "WX_MAKE_FLAGS=SHARED=0 BUILD=release UNICODE=1 MONOLITHIC=0 USE_OPENGL=1 USE_XRC=1 USE_AUI=1 USE_RIBBON=1 USE_STC=1 USE_MEDIA=1 USE_PROPGRID=1 USE_RICHTEXT=1 USE_DEBUGREPORT=1 USE_GLCANVAS=1 USE_LIBPNG=1 USE_LIBJPEG=1 USE_ZLIB=1 USE_EXPAT=1 USE_REGEX=1 USE_TIFF=0 USE_WEBVIEW=0 USE_WEBVIEW_EDGE=0"
+rem --- Configure Build Flags & Third-Party Targets ---
+set "THIRDPARTY_LIBS=..\..\lib\gcc_lib\libwxpng.a ..\..\lib\gcc_lib\libwxjpeg.a ..\..\lib\gcc_lib\libwxzlib.a ..\..\lib\gcc_lib\libwxregexu.a ..\..\lib\gcc_lib\libwxexpat.a"
+
+if "%WX_MINOR_VERSION%"=="3" (
+    set "THIRDPARTY_LIBS=%THIRDPARTY_LIBS% ..\..\lib\gcc_lib\libwxtiff.a ..\..\lib\gcc_lib\libwxwebp.a"
+    set "WEBP_TIFF_FLAGS=USE_LIBTIFF=1 USE_LIBWEBP=1"
+) else (
+    set "WEBP_TIFF_FLAGS=USE_LIBTIFF=0"
+)
+
+set "WX_MAKE_FLAGS=SHELL=cmd.exe SHARED=0 BUILD=release UNICODE=1 MONOLITHIC=0 USE_OPENGL=1 USE_XRC=1 USE_AUI=1 USE_RIBBON=1 USE_STC=1 USE_MEDIA=1 USE_PROPGRID=1 USE_RICHTEXT=1 USE_DEBUGREPORT=1 USE_GLCANVAS=1 USE_LIBPNG=1 USE_LIBJPEG=1 USE_ZLIB=1 USE_EXPAT=1 USE_REGEX=1 %WEBP_TIFF_FLAGS% USE_WEBVIEW=0 USE_WEBVIEW_EDGE=0"
 
 pushd "%WX%\build\msw"
 
@@ -57,16 +84,9 @@ if errorlevel 1 (
 rem Object dir is not created by setup_h; -j races if it is missing.
 if not exist gcc_mswu mkdir gcc_mswu
 
-echo Compiling used libraries with %NUMBER_OF_PROCESSORS% jobs:
-echo   wxbase wxcore wxnet png jpeg zlib regex expat
-rem Static wxcore does not depend on wxbase or the builtin image libs; name them.
+echo Compiling used libraries with %NUMBER_OF_PROCESSORS% jobs...
 %MAKE_CMD% -j%NUMBER_OF_PROCESSORS% -f makefile.gcc %WX_MAKE_FLAGS% ^
-  wxbase wxcore wxnet ^
-  ..\..\lib\gcc_lib\libwxpng.a ^
-  ..\..\lib\gcc_lib\libwxjpeg.a ^
-  ..\..\lib\gcc_lib\libwxzlib.a ^
-  ..\..\lib\gcc_lib\libwxregexu.a ^
-  ..\..\lib\gcc_lib\libwxexpat.a
+    wxbase wxcore wxnet %THIRDPARTY_LIBS%
 if errorlevel 1 (
     popd
     echo.
@@ -84,21 +104,23 @@ exit /b 0
 call :toolchain_ok
 if not errorlevel 1 exit /b 0
 
-if defined MINGW_HOME if exist "%MINGW_HOME%\bin\g++.exe" (
-    set "PATH=%MINGW_HOME%\bin;%PATH%"
-    call :toolchain_ok
-    if not errorlevel 1 exit /b 0
+rem Check MINGW / MINGW_HOME / custom environment variables first
+if defined MINGW (
+    if exist "%MINGW%\bin\g++.exe" set "PATH=%MINGW%\bin;%PATH%"
 )
-
-if exist "C:\mingw-w64\bin\g++.exe" set "PATH=C:\mingw-w64\bin;%PATH%"
-if exist "C:\mingw-w64\mingw64\bin\g++.exe" set "PATH=C:\mingw-w64\mingw64\bin;%PATH%"
+if defined MINGW_HOME (
+    if exist "%MINGW_HOME%\bin\g++.exe" set "PATH=%MINGW_HOME%\bin;%PATH%"
+)
 call :toolchain_ok
 if not errorlevel 1 exit /b 0
 
+rem Check common standalone & MSYS2 installation folders
 for %%D in (
     "C:\msys64\mingw64\bin"
     "C:\msys64\ucrt64\bin"
     "C:\mingw64\bin"
+    "C:\mingw-w64\bin"
+    "C:\mingw-w64\mingw64\bin"
     "C:\MinGW\bin"
     "C:\TDM-GCC-64\bin"
 ) do (
@@ -109,8 +131,8 @@ for %%D in (
     )
 )
 
-echo g++ not found on PATH.
-echo Put any MinGW-w64 bin folder on PATH, or set MINGW_HOME to the toolchain root.
+echo g++ or make not found on PATH.
+echo Put any MinGW-w64/MSYS2 bin folder on PATH, or set MINGW / MINGW_HOME environment variables.
 exit /b 1
 
 :toolchain_ok
