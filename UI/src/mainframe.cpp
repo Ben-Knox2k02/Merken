@@ -51,12 +51,13 @@ MainFrame::MainFrame(const wxString& title)
 	 
 	this->viewMenu = nullptr;
 	this->studyMenu = new wxMenu;										// STUDY
+	this->studyMenu->Append(ID_CARDS, "View Cards\tF1");
 	this->studyMenu->Append(ID_STUDY, "Study Deck\tF2");
-	this->studyMenu->Append(ID_AI, "AI Study Deck\tF4");
-	this->studyMenu->Append(ID_TODAYS_PROGRESS, "Today's Progress");
+	this->studyMenu->Append(ID_AI, "AI Study Deck\tF3");
+	this->studyMenu->Append(ID_TODAYS_PROGRESS, "View Progress\tF4");
 
 	this->calendarMenu = new wxMenu;									// CALENDAR
-	this->calendarMenu->Append(ID_CALENDAR, "View Calendar\tF3");
+	this->calendarMenu->Append(ID_CALENDAR, "View Calendar\tF5");
 
 	this->toolsMenu = nullptr;
 	
@@ -88,10 +89,11 @@ MainFrame::MainFrame(const wxString& title)
 	
 	this->shortcuts[12].Set(wxACCEL_NORMAL, WXK_F1, ID_CARDS);
 	this->shortcuts[13].Set(wxACCEL_NORMAL, WXK_F2, ID_STUDY);
-	this->shortcuts[14].Set(wxACCEL_NORMAL, WXK_F3, ID_CALENDAR);
-	this->shortcuts[15].Set(wxACCEL_NORMAL, WXK_F4, ID_AI);
+	this->shortcuts[14].Set(wxACCEL_NORMAL, WXK_F3, ID_AI);
+	this->shortcuts[15].Set(wxACCEL_NORMAL, WXK_F4, ID_TODAYS_PROGRESS);
+	this->shortcuts[16].Set(wxACCEL_NORMAL, WXK_F5, ID_CALENDAR);
 	
-	wxAcceleratorTable accel(15, this->shortcuts);
+	wxAcceleratorTable accel(NUM_SHORTCUTS, this->shortcuts);
 	this->SetAcceleratorTable(accel);
 	
 	//============ ATTACH WIDGETS ==================================== ATTACH WIDGETS ========================= 
@@ -198,6 +200,7 @@ void MainFrame::UpdateDeckMenus() {
 	this->fileMenu->Enable(ID_DELETE_DECK, canEditDeck);
 	this->fileMenu->Enable(ID_SETTINGS, unlocked);
 	if (this->studyMenu != nullptr) {
+		this->studyMenu->Enable(ID_CARDS, unlocked);
 		this->studyMenu->Enable(ID_STUDY, canStudy);
 		this->studyMenu->Enable(ID_AI, canStudy);
 		this->studyMenu->Enable(ID_TODAYS_PROGRESS, unlocked);
@@ -226,8 +229,10 @@ void MainFrame::ApplyMenuIcons() {
 	setIcon(wxID_NEW, "UI/assets/add_icon.png");
 	setIcon(ID_EDIT_DECK, "UI/assets/edit_icon.png");
 	setIcon(ID_DELETE_DECK, "UI/assets/delete_icon.png");
+	setIcon(ID_CARDS, "UI/assets/flash_card_icon.png");
 	setIcon(ID_STUDY, "UI/assets/study_icon.png");
 	setIcon(ID_AI, "UI/assets/ai_study_icon.png");
+	setIcon(ID_TODAYS_PROGRESS, "UI/assets/progress.png");
 	setIcon(ID_CALENDAR, "UI/assets/calendar_icon.png");
 }
 

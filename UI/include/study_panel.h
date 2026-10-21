@@ -33,6 +33,7 @@ class StudyPanel : public wxPanel {
 		void Grade(bool remembered);
 		void UpdateProgress();
 
+		void OnPaint(wxPaintEvent& event);
 		void OnShowAnswer(wxCommandEvent& event);
 		void OnRemembered(wxCommandEvent& event);
 		void OnForgot(wxCommandEvent& event);

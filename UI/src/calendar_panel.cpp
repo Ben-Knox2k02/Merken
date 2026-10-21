@@ -2,6 +2,7 @@
 #include "mainframe.h"
 #include "app.h"
 #include "../../Application/UseCases/Calendar/GetEvents/get_events_usecase.h"
+#include <wx/dcbuffer.h>
 #include <thread>
 
 wxDECLARE_APP(App);
@@ -9,6 +10,8 @@ wxDECLARE_APP(App);
 CalendarPanel::CalendarPanel(wxWindow* parent)
 	: wxPanel(parent),
 	  alive(std::make_shared<bool>(true)) {
+	this->SetBackgroundStyle(wxBG_STYLE_PAINT);
+	this->SetDoubleBuffered(true);
 	this->rootSizer = new wxBoxSizer(wxVERTICAL);
 
 	this->header = new wxStaticText(this, wxID_ANY, "Calendar");
@@ -33,6 +36,7 @@ CalendarPanel::CalendarPanel(wxWindow* parent)
 	this->rootSizer->Add(this->backButton, 0, wxALIGN_CENTER | wxALL, 10);
 
 	this->SetSizer(this->rootSizer);
+	this->Bind(wxEVT_PAINT, &CalendarPanel::OnPaint, this);
 	this->backButton->Bind(wxEVT_BUTTON, &CalendarPanel::OnBack, this);
 	this->LoadEvents();
 }
@@ -74,6 +78,12 @@ void CalendarPanel::ShowEvents(const GetEventsResponse& response) {
 		this->statusLabel->SetLabel(wxString::Format("%d events", static_cast<int>(response.events.size())));
 	}
 	this->Layout();
+}
+
+void CalendarPanel::OnPaint(wxPaintEvent&) {
+	wxAutoBufferedPaintDC dc(this);
+	dc.SetBackground(wxBrush(this->GetBackgroundColour()));
+	dc.Clear();
 }
 
 void CalendarPanel::OnBack(wxCommandEvent&) {

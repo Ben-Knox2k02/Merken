@@ -581,6 +581,8 @@ StudyPanel::StudyPanel(wxWindow* parent, int deckId)
 	this->rootSizer = new wxBoxSizer(wxVERTICAL);
 
 	const Theme& theme = Theme::Get();
+	this->SetBackgroundStyle(wxBG_STYLE_PAINT);
+	this->SetDoubleBuffered(true);
 	this->SetBackgroundColour(theme.color.window);
 
 	this->header = new wxStaticText(this, wxID_ANY, "Study");
@@ -634,6 +636,7 @@ StudyPanel::StudyPanel(wxWindow* parent, int deckId)
 
 	this->SetSizer(this->rootSizer);
 
+	this->Bind(wxEVT_PAINT, &StudyPanel::OnPaint, this);
 	this->showAnswerButton->Bind(wxEVT_BUTTON, &StudyPanel::OnShowAnswer, this);
 	this->rememberedButton->Bind(wxEVT_BUTTON, &StudyPanel::OnRemembered, this);
 	this->forgotButton->Bind(wxEVT_BUTTON, &StudyPanel::OnForgot, this);
@@ -913,6 +916,14 @@ void StudyPanel::Grade(bool remembered) {
 		return;
 	}
 	this->ShowCurrentCard();
+}
+
+void StudyPanel::OnPaint(wxPaintEvent&) {
+	// The header and Back sit outside the card host. A partial erase flashes
+	// through them while a card slides, so the panel background is one buffer.
+	wxAutoBufferedPaintDC dc(this);
+	dc.SetBackground(wxBrush(this->GetBackgroundColour()));
+	dc.Clear();
 }
 
 void StudyPanel::OnShowAnswer(wxCommandEvent&) {

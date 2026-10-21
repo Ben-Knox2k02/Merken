@@ -20,6 +20,7 @@ class CalendarPanel : public wxPanel {
 
 		void LoadEvents();
 		void ShowEvents(const GetEventsResponse& response);
+		void OnPaint(wxPaintEvent& event);
 		void OnBack(wxCommandEvent& event);
 
 	private:
