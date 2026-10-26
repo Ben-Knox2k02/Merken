@@ -6,6 +6,7 @@
 #include <algorithm>
 #include "flash_card_list.h"
 #include "deck_panel_list.h"
+#include "deck_home_panel.h"
 #include "study_panel.h"
 #include "calendar_panel.h"
 #include "ai_panel.h"
@@ -106,7 +107,7 @@ MainFrame::MainFrame(const wxString& title)
 	
 	this->contentPanel = new wxPanel(this, wxID_ANY);
 	this->contentPanel->SetBackgroundColour(Theme::Get().color.window);
-	this->SetCurrentPanel(new FlashCardList(this->contentPanel, 0));
+	this->SetCurrentPanel(new DeckHomePanel(this->contentPanel));
 	this->sidebarPanel = new DeckPanelList(this);
 
 	const int edge = this->FromDIP(Theme::Get().size.panelPad);
@@ -165,8 +166,11 @@ MainFrame::MainFrame(const wxString& title)
 void MainFrame::OnDeckSelected(int deckId) {
 	this->selectedDeckId = deckId;
 	this->UpdateDeckMenus();
-	if(auto cardPanel = dynamic_cast<FlashCardList*>(this->currentPanel)) {
+	if (auto* cardPanel = dynamic_cast<FlashCardList*>(this->currentPanel)) {
 		cardPanel->SetDeck(deckId);
+	} else if (auto* home = dynamic_cast<DeckHomePanel*>(this->currentPanel)) {
+		(void)home;
+		// Stay on deck home; pastel cards open FlashCardList explicitly.
 	}
 }
 
@@ -242,6 +246,9 @@ void MainFrame::ReloadDecks() {
 		this->selectedDeckId = decks->GetSelectedDeckId();
 		this->UpdateDeckMenus();
 	}
+	if (auto* home = dynamic_cast<DeckHomePanel*>(this->currentPanel)) {
+		home->LoadDecks();
+	}
 }
 
 void MainFrame::ApplyTheme() {
@@ -255,6 +262,8 @@ void MainFrame::ApplyTheme() {
 	}
 	if (auto* cards = dynamic_cast<FlashCardList*>(this->currentPanel)) {
 		cards->ApplyTheme();
+	} else if (auto* home = dynamic_cast<DeckHomePanel*>(this->currentPanel)) {
+		home->ApplyTheme();
 	} else if (this->currentPanel != nullptr) {
 		this->currentPanel->SetBackgroundColour(theme.color.window);
 		this->currentPanel->Refresh();
@@ -268,6 +277,15 @@ void MainFrame::ApplyTheme() {
 void MainFrame::OnSysColourChanged(wxSysColourChangedEvent& event) {
 	this->ApplyTheme();
 	event.Skip();
+}
+
+void MainFrame::ShowDeckHome() {
+	this->SetStudying(false);
+	if (auto* decks = dynamic_cast<DeckPanelList*>(this->sidebarPanel)) {
+		decks->RefreshGuide();
+	}
+	this->SetCurrentPanel(new DeckHomePanel(this->contentPanel));
+	this->UpdateDeckMenus();
 }
 
 void MainFrame::ShowCardList() {

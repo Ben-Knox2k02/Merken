@@ -53,10 +53,10 @@ class Theme {
 			int xs = 6;
 			int sm = 8;
 			int md = 16;
-			int lg = 14;
-			int well = 8;
+			int lg = 16;
+			int well = 10;
 			int chip = 11;
-			int row = 8;
+			int row = 10;
 		};
 
 		struct Space {
@@ -130,6 +130,7 @@ class Theme {
 		void DrawWell(wxGCDC& gc, wxWindow* window, const wxRect& rect) const;
 		void DrawBadge(wxGCDC& gc, wxWindow* window, const wxRect& rect) const;
 		void StyleDialog(wxWindow* window) const;
+		void StyleDialogChild(wxWindow* window) const;
 
 	private:
 		Theme();
@@ -203,24 +204,25 @@ inline Theme::Theme() {
 		this->color.tagLabel = Hex(0xE4F3F8);
 		this->color.tagBorder = Hex(0x2E5160);
 	} else {
-		this->color.primarySoft = Hex(0xE4EEF2);
-		this->color.window = Hex(0xF2F4F6);
-		this->color.grouped = Hex(0xF2F4F6);
+		// Frosted macOS-inspired light surfaces for deck/home restyle.
+		this->color.primarySoft = Hex(0xEEF1F6);
+		this->color.window = Hex(0xFAFAFC);
+		this->color.grouped = Hex(0xF8F8FA);
 		this->color.card = Hex(0xFFFFFF);
-		this->color.well = Hex(0xF7F9FA);
-		this->color.fill = Hex(0xE8EEF1);
-		this->color.label = Hex(0x0B2937);
-		this->color.secondaryLabel = Hex(0x5E717A);
-		this->color.tertiaryLabel = Hex(0x8A9AA1);
+		this->color.well = Hex(0xF7F8FA);
+		this->color.fill = Hex(0xEBEBF0);
+		this->color.label = Hex(0x282837);
+		this->color.secondaryLabel = Hex(0x5E5E6E);
+		this->color.tertiaryLabel = Hex(0x9696A5);
 		this->color.onSelected = Hex(0xFFFFFF);
-		this->color.separator = Hex(0xD5DEE2);
-		this->color.border = Hex(0xD0D9DD);
-		this->color.borderStrong = Hex(0xB7C4CA);
-		this->color.selected = this->color.accent;
-		this->color.selectedFill = this->color.accent;
-		this->color.tagFill = Hex(0xE8EEF1);
-		this->color.tagLabel = Hex(0x0B2937);
-		this->color.tagBorder = Hex(0xD0D9DD);
+		this->color.separator = Hex(0xE1E1E6);
+		this->color.border = Hex(0xDCDCE2);
+		this->color.borderStrong = Hex(0xC4C4CE);
+		this->color.selected = Hex(0x4682F0);
+		this->color.selectedFill = Hex(0x4682F0);
+		this->color.tagFill = Hex(0xEBEBF0);
+		this->color.tagLabel = Hex(0x282837);
+		this->color.tagBorder = Hex(0xDCDCE2);
 	}
 
 	this->color.studyFront = this->color.card;
@@ -332,6 +334,31 @@ inline void Theme::DrawBadge(wxGCDC& gc, wxWindow* window, const wxRect& rect) c
 	this->DrawRounded(gc, rect, Dip(window, this->radius.xs), this->color.fill, wxColour(0, 0, 0, 0));
 }
 
+inline void Theme::StyleDialogChild(wxWindow* window) const {
+	if (window == nullptr) {
+		return;
+	}
+	if (dynamic_cast<wxButton*>(window) != nullptr) {
+		return;
+	}
+	if (wxTextCtrl* field = dynamic_cast<wxTextCtrl*>(window)) {
+		field->SetBackgroundColour(this->color.card);
+		field->SetForegroundColour(this->color.label);
+		wxTextAttr attr;
+		attr.SetTextColour(this->color.label);
+		attr.SetBackgroundColour(this->color.card);
+		field->SetDefaultStyle(attr);
+		return;
+	}
+	window->SetBackgroundColour(this->color.window);
+	window->SetForegroundColour(this->color.label);
+	for (wxWindowList::compatibility_iterator node = window->GetChildren().GetFirst();
+		 node;
+		 node = node->GetNext()) {
+		this->StyleDialogChild(node->GetData());
+	}
+}
+
 inline void Theme::StyleDialog(wxWindow* root) const {
 	if (root == nullptr) {
 		return;
@@ -339,24 +366,11 @@ inline void Theme::StyleDialog(wxWindow* root) const {
 
 	root->SetBackgroundColour(this->color.window);
 	root->SetForegroundColour(this->color.label);
-	root->CallForEachChild([this](wxWindow* window) {
-		if (dynamic_cast<wxButton*>(window) != nullptr) {
-			return;
-		}
-
-		if (wxTextCtrl* field = dynamic_cast<wxTextCtrl*>(window)) {
-			field->SetBackgroundColour(this->color.card);
-			field->SetForegroundColour(this->color.label);
-			wxTextAttr attr;
-			attr.SetTextColour(this->color.label);
-			attr.SetBackgroundColour(this->color.card);
-			field->SetDefaultStyle(attr);
-			return;
-		}
-
-		window->SetBackgroundColour(this->color.window);
-		window->SetForegroundColour(this->color.label);
-	});
+	for (wxWindowList::compatibility_iterator node = root->GetChildren().GetFirst();
+		 node;
+		 node = node->GetNext()) {
+		this->StyleDialogChild(node->GetData());
+	}
 	ApplyTitleBar(root);
 	root->Refresh();
 }

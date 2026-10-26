@@ -53,6 +53,7 @@ class MainFrame : public wxFrame {
 		void ReloadDecks();
 		void ApplyTheme();
 
+		void ShowDeckHome();
 		void ShowCardList();
 		void ShowStudyDeck();
 		void ShowTodaysProgress();

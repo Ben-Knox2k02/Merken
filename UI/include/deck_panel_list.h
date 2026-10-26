@@ -36,15 +36,23 @@ class DeckPanelList : public wxPanel {
 		std::vector<DeckCard*> cards;
 		std::vector<int> cardIds;
 		int selectedDeckId;
+		int selectedNavId;
+		wxPanel* settingsGear = nullptr;
+		wxBoxSizer* contentSizer = nullptr;
 
-		static constexpr int kMinWidth = 320 * 2 / 3;
+		static constexpr int kMinWidth = 220;
 
+		void BuildChrome();
+		void AddSectionHeader(const wxString& title);
+		void AddNavRow(const wxString& label, int navId, bool accentBookmark = false);
 		void AddDeckCard(int deckId, const wxString& name, int cardCount);
 		void BindClicks(wxWindow* window, int deckId);
 		void RefreshSelection();
 		DeckCard* FindCard(int deckId) const;
 		void OnPaint(wxPaintEvent& event);
 		void OnSize(wxSizeEvent& event);
+		void OnNav(int navId);
+		void OnSettingsClick(wxMouseEvent& event);
 };
 
 #endif
