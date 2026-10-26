@@ -11,7 +11,7 @@ class DeckPanelList : public wxPanel {
 		explicit DeckPanelList(wxWindow* parent);
 
 		wxBoxSizer* rootSizer;
-		wxFlexGridSizer* buttonSizer;
+		wxBoxSizer* buttonSizer;
 		ProfileHeader* profileHeader;
 		wxScrolledWindow* scroller;
 		wxBoxSizer* listSizer;

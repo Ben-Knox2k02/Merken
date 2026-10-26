@@ -110,9 +110,9 @@ MainFrame::MainFrame(const wxString& title)
 
 	const int edge = this->FromDIP(Theme::Get().size.panelPad);
 	wxStaticLine* paneSplit = new wxStaticLine(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLI_VERTICAL);
-	this->rootSizer->Add(this->sidebarPanel, 57, wxEXPAND | wxTOP | wxBOTTOM | wxLEFT, edge);
+	this->rootSizer->Add(this->sidebarPanel, 25, wxEXPAND | wxTOP | wxBOTTOM | wxLEFT, edge);
 	this->rootSizer->Add(paneSplit, 0, wxEXPAND | wxTOP | wxBOTTOM, edge);
-	this->rootSizer->Add(this->contentPanel, 143, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, edge);
+	this->rootSizer->Add(this->contentPanel, 75, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, edge);
 	
 	this->SetSizer(this->rootSizer);
 	this->Layout();
@@ -524,8 +524,10 @@ void MainFrame::OnAbout(wxCommandEvent&) {
 	);
 	description->Wrap(dialog.FromDIP(360));
 
+	wxButton* okButton = new wxButton(&dialog, wxID_OK);
+	ApplyButtonPadding(okButton);
 	wxStdDialogButtonSizer* buttons = new wxStdDialogButtonSizer();
-	buttons->AddButton(new wxButton(&dialog, wxID_OK));
+	buttons->AddButton(okButton);
 	buttons->Realize();
 
 	dialog.Bind(wxEVT_BUTTON, [&dialog](wxCommandEvent& event) {
@@ -606,7 +608,7 @@ void MainFrame::ApplyPanelWidths() {
 	if(inner <= 0) {
 		return;
 	}
-	const int deckWidth = inner * 30 / 100 * 95 / 100;
+	const int deckWidth = inner * 25 / 100;
 	const int cardWidth = inner - deckWidth;
 	if(deckWidth <= 0 || cardWidth <= 0) {
 		return;

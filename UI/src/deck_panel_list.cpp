@@ -57,20 +57,17 @@ DeckPanelList::DeckPanelList(wxWindow* parent)
 	this->addDeckButton = new wxButton(this, wxID_ANY, "Add");
 	this->editDeckButton = new wxButton(this, wxID_ANY, "Edit");
 	this->deleteDeckButton = new wxButton(this, wxID_ANY, "Delete");
-	const wxSize sharedButtonSize(0, buttonHeight);
-	this->addDeckButton->SetMinSize(sharedButtonSize);
-	this->editDeckButton->SetMinSize(sharedButtonSize);
-	this->deleteDeckButton->SetMinSize(sharedButtonSize);
+	ApplyButtonPadding(this->addDeckButton);
+	ApplyButtonPadding(this->editDeckButton);
+	ApplyButtonPadding(this->deleteDeckButton);
 
-	this->buttonSizer = new wxFlexGridSizer(1, 3, 0, this->FromDIP(Theme::Get().space.xs));
-	this->buttonSizer->AddGrowableCol(0, 1);
-	this->buttonSizer->AddGrowableCol(1, 1);
-	this->buttonSizer->AddGrowableCol(2, 1);
-	this->buttonSizer->SetFlexibleDirection(wxHORIZONTAL);
-	this->buttonSizer->SetNonFlexibleGrowMode(wxFLEX_GROWMODE_NONE);
-	this->buttonSizer->Add(this->addDeckButton, 1, wxEXPAND);
-	this->buttonSizer->Add(this->editDeckButton, 1, wxEXPAND);
-	this->buttonSizer->Add(this->deleteDeckButton, 1, wxEXPAND);
+	const int gap = this->FromDIP(Theme::Get().space.xs);
+	this->buttonSizer = new wxBoxSizer(wxHORIZONTAL);
+	this->buttonSizer->AddStretchSpacer(1);
+	this->buttonSizer->Add(this->addDeckButton, 0, wxRIGHT, gap);
+	this->buttonSizer->Add(this->editDeckButton, 0, wxRIGHT, gap);
+	this->buttonSizer->Add(this->deleteDeckButton, 0);
+	this->buttonSizer->AddStretchSpacer(1);
 	this->rootSizer->Add(this->buttonSizer, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, pad);
 
 	this->SetSizer(this->rootSizer);
@@ -168,6 +165,9 @@ void DeckPanelList::RefreshGuide() {
 void DeckPanelList::AddDeckCard(int deckId, const wxString& name, int cardCount) {
 	DeckCard* card = new DeckCard(this->scroller, name, cardCount);
 	card->SetCursor(wxCURSOR_HAND);
+	if (!this->cards.empty()) {
+		this->listSizer->AddSpacer(this->FromDIP(Theme::Get().space.lg));
+	}
 	this->listSizer->Add(card, 0, wxEXPAND);
 	this->cards.push_back(card);
 	this->cardIds.push_back(deckId);

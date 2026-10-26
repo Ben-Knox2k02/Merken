@@ -22,7 +22,7 @@ class DeckCard : public wxPanel {
 			this->SetBackgroundColour(Theme::Get().color.window);
 
 			const int iconDip = Theme::Get().size.icon;
-			const int rowHeight = this->FromDIP(24);
+			const int rowHeight = this->FromDIP(44);
 			const int side = this->FromDIP(iconDip);
 			this->icon = new wxStaticBitmap();
 			this->icon->SetBackgroundStyle(wxBG_STYLE_TRANSPARENT);
@@ -32,8 +32,12 @@ class DeckCard : public wxPanel {
 
 			this->titleCtrl = new wxStaticText();
 			this->titleCtrl->SetBackgroundStyle(wxBG_STYLE_TRANSPARENT);
-			this->titleCtrl->Create(this, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxST_ELLIPSIZE_END);
+			this->titleCtrl->Create(this, wxID_ANY, title.Upper(), wxDefaultPosition, wxDefaultSize, wxST_ELLIPSIZE_END);
 			this->titleCtrl->SetMinSize(wxSize(0, -1));
+			wxFont titleFont = this->titleCtrl->GetFont();
+			titleFont.SetPointSize(10);
+			titleFont.SetWeight(wxFONTWEIGHT_NORMAL);
+			this->titleCtrl->SetFont(titleFont);
 			this->countBadge = new DeckCardNumber(this, cardCount, iconDip);
 			this->ApplyTextColours();
 
@@ -46,9 +50,7 @@ class DeckCard : public wxPanel {
 			row->Add(this->countBadge, 0, wxALIGN_CENTER_VERTICAL);
 
 			wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
-			mainSizer->AddStretchSpacer(1);
-			mainSizer->Add(row, 0, wxEXPAND | wxLEFT | wxRIGHT, pad);
-			mainSizer->AddStretchSpacer(1);
+			mainSizer->Add(row, 0, wxEXPAND | wxALL, pad);
 			this->SetSizer(mainSizer);
 			this->SetMinSize(wxSize(-1, rowHeight));
 			this->SetMaxSize(wxSize(-1, rowHeight));
@@ -76,7 +78,7 @@ class DeckCard : public wxPanel {
 		wxString GetTitle() const { return this->titleCtrl->GetLabel(); }
 
 		void SetTitle(const wxString& title) {
-			this->titleCtrl->SetLabel(title);
+			this->titleCtrl->SetLabel(title.Upper());
 			this->Layout();
 		}
 
@@ -113,15 +115,13 @@ class DeckCard : public wxPanel {
 			const wxSize size = this->GetClientSize();
 			const Theme& theme = Theme::Get();
 			theme.FillCanvas(gc, this, size);
-			if (!this->selected) {
-				return;
-			}
+			const wxColour fill = this->selected ? theme.color.selectedFill : theme.color.window;
 			theme.DrawRounded(
 				gc,
 				wxRect(0, 0, size.GetWidth(), size.GetHeight()),
-				this->FromDIP(theme.radius.row),
-				theme.color.selectedFill,
-				theme.color.selectedFill
+				this->FromDIP(theme.radius.md),
+				fill,
+				wxColour(0, 0, 0, 0)
 			);
 		}
 };
