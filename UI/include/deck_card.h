@@ -21,7 +21,9 @@ class DeckCard : public wxPanel {
 			this->SetWindowStyleFlag(this->GetWindowStyleFlag() & ~wxCLIP_CHILDREN);
 			this->SetBackgroundColour(Theme::Get().color.window);
 
-			const int side = this->FromDIP(18);
+			const int iconDip = Theme::Get().size.icon;
+			const int rowHeight = this->FromDIP(24);
+			const int side = this->FromDIP(iconDip);
 			this->icon = new wxStaticBitmap();
 			this->icon->SetBackgroundStyle(wxBG_STYLE_TRANSPARENT);
 			this->icon->Create(this, wxID_ANY, this->IconBundle());
@@ -32,7 +34,7 @@ class DeckCard : public wxPanel {
 			this->titleCtrl->SetBackgroundStyle(wxBG_STYLE_TRANSPARENT);
 			this->titleCtrl->Create(this, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxST_ELLIPSIZE_END);
 			this->titleCtrl->SetMinSize(wxSize(0, -1));
-			this->countBadge = new DeckCardNumber(this, cardCount);
+			this->countBadge = new DeckCardNumber(this, cardCount, iconDip);
 			this->ApplyTextColours();
 
 			const int gap = this->FromDIP(Theme::Get().space.sm);
@@ -44,8 +46,12 @@ class DeckCard : public wxPanel {
 			row->Add(this->countBadge, 0, wxALIGN_CENTER_VERTICAL);
 
 			wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
-			mainSizer->Add(row, 0, wxEXPAND | wxALL, pad);
+			mainSizer->AddStretchSpacer(1);
+			mainSizer->Add(row, 0, wxEXPAND | wxLEFT | wxRIGHT, pad);
+			mainSizer->AddStretchSpacer(1);
 			this->SetSizer(mainSizer);
+			this->SetMinSize(wxSize(-1, rowHeight));
+			this->SetMaxSize(wxSize(-1, rowHeight));
 
 			this->Bind(wxEVT_PAINT, &DeckCard::OnPaint, this);
 			this->Bind(wxEVT_SIZE, &DeckCard::OnSize, this);
@@ -89,7 +95,7 @@ class DeckCard : public wxPanel {
 		wxBitmapBundle IconBundle() const {
 			const wxColour label = this->TitleColour();
 			const bool invert = (label.Red() + label.Green() + label.Blue()) >= 3 * 128;
-			return IconButton::LoadIconBundle("UI/assets/deck_card_icon.png", 18, invert);
+			return IconButton::LoadIconBundle("UI/assets/deck_card_icon.png", Theme::Get().size.icon, invert);
 		}
 
 		void OnSize(wxSizeEvent& event) {

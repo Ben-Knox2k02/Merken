@@ -8,9 +8,10 @@
 
 class DeckCardNumber : public wxPanel {
 	public:
-		DeckCardNumber(wxWindow* parent, int number)
+		DeckCardNumber(wxWindow* parent, int number, int heightDip = -1)
 			: wxPanel(),
-			  label(wxString::Format("%d", number)) {
+			  label(wxString::Format("%d", number)),
+			  heightDip(heightDip) {
 			this->SetBackgroundStyle(wxBG_STYLE_TRANSPARENT);
 			this->Create(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE);
 			this->FitToLabel();
@@ -26,9 +27,11 @@ class DeckCardNumber : public wxPanel {
 
 	private:
 		wxString label;
+		int heightDip;
 
 		void FitToLabel() {
-			const int height = this->FromDIP(Theme::Get().size.chipHeight);
+			const int dip = this->heightDip > 0 ? this->heightDip : Theme::Get().size.chipHeight;
+			const int height = this->FromDIP(dip);
 			const int pad = this->FromDIP(Theme::Get().size.chipPad);
 			const wxSize extent = this->GetTextExtent(this->label);
 			const int width = std::max(height, extent.GetWidth() + pad * 2);
