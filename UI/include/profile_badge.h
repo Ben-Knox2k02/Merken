@@ -8,6 +8,8 @@
 
 class ProfileBadge : public wxPanel {
 	public:
+		static constexpr int kSide = 18;
+
 		explicit ProfileBadge(wxWindow* parent)
 			: wxPanel(),
 			  backdrop(Theme::Get().color.window),
@@ -16,7 +18,7 @@ class ProfileBadge : public wxPanel {
 			this->SetBackgroundStyle(wxBG_STYLE_PAINT);
 			this->Create(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE);
 			this->SetWindowStyleFlag(this->GetWindowStyleFlag() & ~wxCLIP_CHILDREN);
-			const int side = this->FromDIP(36);
+			const int side = this->FromDIP(kSide);
 			this->SetMinSize(wxSize(side, side));
 			this->SetMaxSize(wxSize(side, side));
 			this->Bind(wxEVT_PAINT, &ProfileBadge::OnPaint, this);
@@ -60,6 +62,7 @@ class ProfileBadge : public wxPanel {
 			g->DrawEllipse(x, y, side, side);
 			wxFont font = this->GetFont();
 			font.SetWeight(wxFONTWEIGHT_NORMAL);
+			font.SetPointSize(std::max(1, font.GetPointSize() / 2));
 			g->SetFont(font, this->ink);
 			const wxString label = this->initials.empty() ? wxString("P") : this->initials;
 			double textWidth = 0;

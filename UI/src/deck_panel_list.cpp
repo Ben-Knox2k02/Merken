@@ -11,6 +11,7 @@
 #include "../../Application/UseCases/Deck/DeleteDeck/delete_deck_usecase.h"
 #include "../../Application/UseCases/Profile/GetUserProfile/get_user_profile_usecase.h"
 #include <wx/dcgraph.h>
+#include <wx/statline.h>
 
 wxDECLARE_APP(App);
 
@@ -26,11 +27,19 @@ DeckPanelList::DeckPanelList(wxWindow* parent)
 	this->rootSizer = new wxBoxSizer(wxVERTICAL);
 
 	const int pad = this->FromDIP(Theme::Get().size.cardPad);
-	const int profileSpace = this->FromDIP(Theme::Get().space.xl);
-	this->rootSizer->AddSpacer(profileSpace);
+	const int profileHeight = this->FromDIP(ProfileBadge::kSide);
+	const int buttonHeight = wxButton::GetDefaultSize(this).GetHeight();
+	int beforeLine = buttonHeight - profileHeight;
+	if (beforeLine < 0) {
+		beforeLine = 0;
+	}
+	beforeLine += this->FromDIP(Theme::Get().space.sm);
+	this->rootSizer->AddSpacer(this->FromDIP(Theme::Get().size.panelPad));
 	this->profileHeader = new ProfileHeader(this);
 	this->rootSizer->Add(this->profileHeader, 0, wxEXPAND | wxLEFT | wxRIGHT, pad);
-	this->rootSizer->AddSpacer(profileSpace * 2);
+	this->rootSizer->AddSpacer(beforeLine);
+	this->rootSizer->Add(new wxStaticLine(this, wxID_ANY), 0, wxEXPAND);
+	this->rootSizer->AddSpacer(this->FromDIP(Theme::Get().space.sm));
 
 	this->scroller = new wxScrolledWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxVSCROLL);
 	this->SetWindowStyleFlag(this->GetWindowStyleFlag() & ~wxCLIP_CHILDREN);
@@ -48,7 +57,6 @@ DeckPanelList::DeckPanelList(wxWindow* parent)
 	this->addDeckButton = new wxButton(this, wxID_ANY, "Add");
 	this->editDeckButton = new wxButton(this, wxID_ANY, "Edit");
 	this->deleteDeckButton = new wxButton(this, wxID_ANY, "Delete");
-	const int buttonHeight = wxButton::GetDefaultSize(this).GetHeight();
 	const wxSize sharedButtonSize(0, buttonHeight);
 	this->addDeckButton->SetMinSize(sharedButtonSize);
 	this->editDeckButton->SetMinSize(sharedButtonSize);
