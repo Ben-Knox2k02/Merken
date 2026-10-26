@@ -13,6 +13,7 @@ class DeckPanelList : public wxPanel {
 		wxBoxSizer* rootSizer;
 		wxBoxSizer* buttonSizer;
 		ProfileHeader* profileHeader;
+		wxStaticText* decksHeading;
 		wxScrolledWindow* scroller;
 		wxBoxSizer* listSizer;
 		wxButton* addDeckButton;

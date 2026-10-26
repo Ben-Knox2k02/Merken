@@ -8,7 +8,7 @@
 
 class ProfileBadge : public wxPanel {
 	public:
-		static constexpr int kSide = 24;
+		static constexpr int kSide = 32;
 
 		explicit ProfileBadge(wxWindow* parent)
 			: wxPanel(),
@@ -62,7 +62,6 @@ class ProfileBadge : public wxPanel {
 			g->DrawEllipse(x, y, side, side);
 			wxFont font = this->GetFont();
 			font.SetWeight(wxFONTWEIGHT_NORMAL);
-			font.SetPointSize(std::max(1, font.GetPointSize() / 2));
 			g->SetFont(font, this->ink);
 			const wxString label = this->initials.empty() ? wxString("P") : this->initials;
 			double textWidth = 0;

@@ -2,10 +2,10 @@
 #define DECK_CARD_H
 
 #include <wx/wx.h>
+#include <wx/bmpbndl.h>
 #include <wx/dcgraph.h>
 #include <wx/statbmp.h>
-#include "deck_card_number.h"
-#include "icon_button.h"
+#include <wx/vector.h>
 #include "theme.h"
 
 class DeckCard : public wxPanel {
@@ -22,7 +22,7 @@ class DeckCard : public wxPanel {
 			this->SetBackgroundColour(Theme::Get().color.window);
 
 			const int iconDip = Theme::Get().size.icon;
-			const int rowHeight = this->FromDIP(44);
+			const int rowHeight = this->FromDIP(36);
 			const int side = this->FromDIP(iconDip);
 			this->icon = new wxStaticBitmap();
 			this->icon->SetBackgroundStyle(wxBG_STYLE_TRANSPARENT);
@@ -32,13 +32,16 @@ class DeckCard : public wxPanel {
 
 			this->titleCtrl = new wxStaticText();
 			this->titleCtrl->SetBackgroundStyle(wxBG_STYLE_TRANSPARENT);
-			this->titleCtrl->Create(this, wxID_ANY, title.Upper(), wxDefaultPosition, wxDefaultSize, wxST_ELLIPSIZE_END);
+			this->titleCtrl->Create(this, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxST_ELLIPSIZE_END);
 			this->titleCtrl->SetMinSize(wxSize(0, -1));
 			wxFont titleFont = this->titleCtrl->GetFont();
 			titleFont.SetPointSize(10);
 			titleFont.SetWeight(wxFONTWEIGHT_NORMAL);
 			this->titleCtrl->SetFont(titleFont);
-			this->countBadge = new DeckCardNumber(this, cardCount, iconDip);
+			this->countLabel = new wxStaticText();
+			this->countLabel->SetBackgroundStyle(wxBG_STYLE_TRANSPARENT);
+			this->countLabel->Create(this, wxID_ANY, wxString::Format("%d", cardCount));
+			this->countLabel->SetFont(titleFont);
 			this->ApplyTextColours();
 
 			const int gap = this->FromDIP(Theme::Get().space.sm);
@@ -47,10 +50,12 @@ class DeckCard : public wxPanel {
 			wxBoxSizer* row = new wxBoxSizer(wxHORIZONTAL);
 			row->Add(this->icon, 0, wxALIGN_CENTER_VERTICAL);
 			row->Add(this->titleCtrl, 1, wxALIGN_CENTER_VERTICAL | wxLEFT | wxRIGHT, gap);
-			row->Add(this->countBadge, 0, wxALIGN_CENTER_VERTICAL);
+			row->Add(this->countLabel, 0, wxALIGN_CENTER_VERTICAL);
 
 			wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
-			mainSizer->Add(row, 0, wxEXPAND | wxALL, pad);
+			mainSizer->AddStretchSpacer(1);
+			mainSizer->Add(row, 0, wxEXPAND | wxLEFT | wxRIGHT, pad);
+			mainSizer->AddStretchSpacer(1);
 			this->SetSizer(mainSizer);
 			this->SetMinSize(wxSize(-1, rowHeight));
 			this->SetMaxSize(wxSize(-1, rowHeight));
@@ -67,37 +72,75 @@ class DeckCard : public wxPanel {
 
 		void ApplyTheme() {
 			this->SetBackgroundColour(
-				this->selected ? Theme::Get().color.selectedFill : Theme::Get().color.window
+				this->selected ? SelectedFill() : Theme::Get().color.window
 			);
 			this->icon->SetBitmap(this->IconBundle());
 			this->ApplyTextColours();
-			this->countBadge->Refresh();
 			this->Refresh();
 		}
 
 		wxString GetTitle() const { return this->titleCtrl->GetLabel(); }
 
 		void SetTitle(const wxString& title) {
-			this->titleCtrl->SetLabel(title.Upper());
+			this->titleCtrl->SetLabel(title);
 			this->Layout();
 		}
 
 	private:
 		wxStaticBitmap* icon;
 		wxStaticText* titleCtrl;
-		DeckCardNumber* countBadge;
+		wxStaticText* countLabel;
 		bool selected;
 
+		static wxColour SelectedFill() {
+			return wxColour(70, 130, 240);
+		}
+
 		wxColour TitleColour() const {
-			return this->selected
-				? Theme::Get().color.onSelected
-				: Theme::Get().color.label;
+			return this->selected ? wxColour(255, 255, 255) : Theme::Get().color.label;
+		}
+
+		wxColour CountColour() const {
+			return this->selected ? wxColour(255, 255, 255) : Theme::Get().color.secondaryLabel;
+		}
+
+		wxColour FolderColour() const {
+			return this->selected ? wxColour(255, 255, 255) : Theme::Get().color.secondaryLabel;
+		}
+
+		static wxBitmap DrawFolder(int pixels, const wxColour& colour) {
+			wxBitmap bitmap(pixels, pixels);
+			bitmap.UseAlpha();
+			wxMemoryDC dc(bitmap);
+			dc.SetBackground(wxBrush(wxColour(0, 0, 0, 0)));
+			dc.Clear();
+			wxGCDC gc(dc);
+			wxGraphicsContext* g = gc.GetGraphicsContext();
+			if (g == nullptr) {
+				return bitmap;
+			}
+			g->SetPen(*wxTRANSPARENT_PEN);
+			g->SetBrush(wxBrush(colour));
+			const double width = pixels;
+			const double height = pixels;
+			const double radius = height * 0.14;
+			const double tabWidth = width * 0.46;
+			const double tabTop = height * 0.14;
+			const double bodyTop = height * 0.32;
+			g->DrawRoundedRectangle(width * 0.08, tabTop, tabWidth, bodyTop - tabTop + radius, radius);
+			g->DrawRoundedRectangle(width * 0.06, bodyTop, width * 0.88, height * 0.56, radius);
+			dc.SelectObject(wxNullBitmap);
+			return bitmap;
 		}
 
 		wxBitmapBundle IconBundle() const {
-			const wxColour label = this->TitleColour();
-			const bool invert = (label.Red() + label.Green() + label.Blue()) >= 3 * 128;
-			return IconButton::LoadIconBundle("UI/assets/deck_card_icon.png", Theme::Get().size.icon, invert);
+			const int dip = Theme::Get().size.icon;
+			const wxColour colour = this->FolderColour();
+			wxVector<wxBitmap> bitmaps;
+			bitmaps.push_back(DrawFolder(dip, colour));
+			bitmaps.push_back(DrawFolder(dip * 2, colour));
+			bitmaps.push_back(DrawFolder(dip * 3, colour));
+			return wxBitmapBundle::FromBitmaps(bitmaps);
 		}
 
 		void OnSize(wxSizeEvent& event) {
@@ -107,6 +150,7 @@ class DeckCard : public wxPanel {
 
 		void ApplyTextColours() {
 			this->titleCtrl->SetForegroundColour(this->TitleColour());
+			this->countLabel->SetForegroundColour(this->CountColour());
 		}
 
 		void OnPaint(wxPaintEvent&) {
@@ -115,12 +159,15 @@ class DeckCard : public wxPanel {
 			const wxSize size = this->GetClientSize();
 			const Theme& theme = Theme::Get();
 			theme.FillCanvas(gc, this, size);
-			const wxColour fill = this->selected ? theme.color.selectedFill : theme.color.window;
+			if (!this->selected) {
+				return;
+			}
+			const int inset = this->FromDIP(2);
 			theme.DrawRounded(
 				gc,
-				wxRect(0, 0, size.GetWidth(), size.GetHeight()),
+				wxRect(inset, inset, size.GetWidth() - inset * 2, size.GetHeight() - inset * 2),
 				this->FromDIP(theme.radius.md),
-				fill,
+				SelectedFill(),
 				wxColour(0, 0, 0, 0)
 			);
 		}

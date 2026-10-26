@@ -11,7 +11,6 @@
 #include "../../Application/UseCases/Deck/DeleteDeck/delete_deck_usecase.h"
 #include "../../Application/UseCases/Profile/GetUserProfile/get_user_profile_usecase.h"
 #include <wx/dcgraph.h>
-#include <wx/statline.h>
 
 wxDECLARE_APP(App);
 
@@ -27,19 +26,15 @@ DeckPanelList::DeckPanelList(wxWindow* parent)
 	this->rootSizer = new wxBoxSizer(wxVERTICAL);
 
 	const int pad = this->FromDIP(Theme::Get().size.cardPad);
-	const int profileHeight = this->FromDIP(ProfileBadge::kSide);
-	const int buttonHeight = wxButton::GetDefaultSize(this).GetHeight();
-	int beforeLine = buttonHeight - profileHeight;
-	if (beforeLine < 0) {
-		beforeLine = 0;
-	}
-	beforeLine += this->FromDIP(Theme::Get().space.sm);
 	this->rootSizer->AddSpacer(this->FromDIP(Theme::Get().size.panelPad));
 	this->profileHeader = new ProfileHeader(this);
 	this->rootSizer->Add(this->profileHeader, 0, wxEXPAND | wxLEFT | wxRIGHT, pad);
-	this->rootSizer->AddSpacer(beforeLine);
-	this->rootSizer->Add(new wxStaticLine(this, wxID_ANY), 0, wxEXPAND);
-	this->rootSizer->AddSpacer(this->FromDIP(Theme::Get().space.sm));
+	this->decksHeading = new wxStaticText(this, wxID_ANY, "My Decks");
+	wxFont headingFont = this->decksHeading->GetFont();
+	headingFont.SetWeight(wxFONTWEIGHT_NORMAL);
+	this->decksHeading->SetFont(headingFont);
+	this->decksHeading->SetForegroundColour(Theme::Get().color.secondaryLabel);
+	this->rootSizer->Add(this->decksHeading, 0, wxLEFT | wxRIGHT | wxTOP | wxBOTTOM, pad);
 
 	this->scroller = new wxScrolledWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxVSCROLL);
 	this->SetWindowStyleFlag(this->GetWindowStyleFlag() & ~wxCLIP_CHILDREN);
@@ -86,6 +81,7 @@ void DeckPanelList::ApplyTheme() {
 	const Theme& theme = Theme::Get();
 	this->SetBackgroundColour(theme.color.window);
 	this->profileHeader->ApplyTheme();
+	this->decksHeading->SetForegroundColour(theme.color.secondaryLabel);
 	this->scroller->SetBackgroundColour(theme.color.window);
 	for (DeckCard* card : this->cards) {
 		card->ApplyTheme();
@@ -165,9 +161,6 @@ void DeckPanelList::RefreshGuide() {
 void DeckPanelList::AddDeckCard(int deckId, const wxString& name, int cardCount) {
 	DeckCard* card = new DeckCard(this->scroller, name, cardCount);
 	card->SetCursor(wxCURSOR_HAND);
-	if (!this->cards.empty()) {
-		this->listSizer->AddSpacer(this->FromDIP(Theme::Get().space.lg));
-	}
 	this->listSizer->Add(card, 0, wxEXPAND);
 	this->cards.push_back(card);
 	this->cardIds.push_back(deckId);
