@@ -8,7 +8,7 @@
 
 class ProfileBadge : public wxPanel {
 	public:
-		static constexpr int kSide = 18;
+		static constexpr int kSide = 24;
 
 		explicit ProfileBadge(wxWindow* parent)
 			: wxPanel(),
