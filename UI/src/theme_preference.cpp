@@ -1,19 +1,11 @@
 #include "theme_preference.h"
 #include "theme.h"
 #include "app.h"
-<<<<<<< HEAD
-=======
 #include "mainframe.h"
->>>>>>> 431e121ef7eafad3a1a7b376066a71e7a2d05be2
 #include "../../Application/Services/app_settings_service.h"
 #include "../../DomainModels/app_settings.h"
 
 namespace {
-<<<<<<< HEAD
-void ApplyAppearance(bool dark) {
-	Theme::UseDark(dark);
-	wxGetApp().SetAppearance(dark ? wxApp::Appearance::Dark : wxApp::Appearance::Light);
-=======
 void RefreshOpenFrames() {
 	for (wxWindowList::compatibility_iterator it = wxTopLevelWindows.GetFirst(); it; it = it.GetNext()) {
 		wxWindow* window = it.GetData();
@@ -32,7 +24,6 @@ void ApplyAppearance(bool dark) {
 	// custom palette, then the open frames repaint.
 	wxGetApp().SetAppearance(dark ? wxApp::Appearance::Dark : wxApp::Appearance::Light);
 	RefreshOpenFrames();
->>>>>>> 431e121ef7eafad3a1a7b376066a71e7a2d05be2
 }
 }
 
@@ -56,11 +47,7 @@ void ApplyStoredTheme() {
 	}
 	if (theme == "light") {
 		ApplyAppearance(false);
-<<<<<<< HEAD
-	}
-=======
 		return;
 	}
 	wxGetApp().SetAppearance(wxApp::Appearance::System);
->>>>>>> 431e121ef7eafad3a1a7b376066a71e7a2d05be2
 }

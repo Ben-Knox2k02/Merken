@@ -436,11 +436,11 @@ void MainFrame::OnPaste(wxCommandEvent& event) {
 void MainFrame::OnSelectAll(wxCommandEvent& event) {
 	wxLogStatus("SELECT ALL");
 	wxWindow* focused = wxWindow::FindFocus();
-    wxTextCtrl* textCtrl = wxDynamicCast(focused, wxTextCtrl);
-    if(textCtrl) {
-        textCtrl->SelectAll();
-        return;
-    }
+	wxTextCtrl* textCtrl = wxDynamicCast(focused, wxTextCtrl);
+	if (textCtrl) {
+		textCtrl->SelectAll();
+		return;
+	}
 	event.Skip();
 }
 
