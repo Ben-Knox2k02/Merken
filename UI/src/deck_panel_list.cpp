@@ -298,7 +298,10 @@ void DeckPanelList::OnDeleteDeck(wxCommandEvent&) {
 		this,
 		"Delete \"" + name + "\" and all of its cards?",
 		"Delete Deck",
-		wxYES_NO | wxICON_QUESTION
+		wxYES_NO | wxICON_QUESTION,
+		nullptr,
+		nullptr,
+		true
 	);
 	if (confirmed != wxID_YES) { return; }
 

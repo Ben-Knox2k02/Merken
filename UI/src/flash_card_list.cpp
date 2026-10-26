@@ -487,7 +487,10 @@ void FlashCardList::DeleteCard(int cardId) {
 		this,
 		"Delete this card?",
 		"Delete Card",
-		wxYES_NO | wxICON_QUESTION
+		wxYES_NO | wxICON_QUESTION,
+		nullptr,
+		nullptr,
+		true
 	);
 	if (confirmed != wxID_YES) { return; }
 

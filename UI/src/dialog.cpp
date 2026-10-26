@@ -1,4 +1,5 @@
 #include "dialog.h"
+#include "centered_message.h"
 #include "theme.h"
 
 CardDialog::CardDialog(wxWindow* parent, const wxString& title)
@@ -39,11 +40,8 @@ CardDialog::CardDialog(wxWindow* parent, const wxString& title)
 	this->rootSizer->Add(buttons, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 16);
 
 	this->SetSizer(this->rootSizer);
-	this->SetMinSize(wxSize(480, 360));
-	this->SetSize(wxSize(520, 400));
 	Theme::Get().StyleDialog(this);
-	this->Layout();
-	this->CentreOnParent();
+	SizeAsThirdOfMainWindow(this);
 }
 
 DeckDialog::DeckDialog(wxWindow* parent, const wxString& title)
@@ -78,11 +76,8 @@ DeckDialog::DeckDialog(wxWindow* parent, const wxString& title)
 	this->rootSizer->Add(buttons, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 16);
 
 	this->SetSizer(this->rootSizer);
-	this->SetMinSize(wxSize(480, 320));
-	this->SetSize(wxSize(520, 360));
 	Theme::Get().StyleDialog(this);
-	this->Layout();
-	this->CentreOnParent();
+	SizeAsThirdOfMainWindow(this);
 }
 
 EventDialog::EventDialog(wxWindow* parent) : wxDialog(parent, wxID_ANY, "Create Event", wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER) {
