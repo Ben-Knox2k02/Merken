@@ -10,7 +10,9 @@
 #include "../../Application/UseCases/Profile/FinishGuide/finish_guide_usecase.h"
 #include <wx/dcbuffer.h>
 #include <wx/dcgraph.h>
+#ifdef __WXMSW__
 #include <wx/msw/wrapwin.h>
+#endif
 #include <wx/tokenzr.h>
 #include <algorithm>
 #include <cmath>
@@ -666,6 +668,7 @@ void RepaintStudyCard(wxWindow* window) {
 	if (window == nullptr || !window->IsShown()) {
 		return;
 	}
+#ifdef __WXMSW__
 	HWND hwnd = static_cast<HWND>(window->GetHandle());
 	if (hwnd != nullptr) {
 		::InvalidateRect(hwnd, nullptr, FALSE);
@@ -674,11 +677,16 @@ void RepaintStudyCard(wxWindow* window) {
 		window->Refresh(false);
 		window->Update();
 	}
+#else
+	window->Refresh(false);
+	window->Update();
+#endif
 	for (wxWindow* child : window->GetChildren()) {
 		RepaintStudyCard(child);
 	}
 }
 
+#ifdef __WXMSW__
 struct HoldRedraw {
 	HWND hwnd;
 	explicit HoldRedraw(HWND window)
@@ -695,6 +703,7 @@ struct HoldRedraw {
 	HoldRedraw(const HoldRedraw&) = delete;
 	HoldRedraw& operator=(const HoldRedraw&) = delete;
 };
+#endif
 
 void PlaceStudyCard(wxWindow* card, int x, int y, int width, int height, bool show) {
 	if (card == nullptr) {
@@ -715,7 +724,9 @@ void PlaceStudyCard(wxWindow* card, int x, int y, int width, int height, bool sh
 		return;
 	}
 	{
+#ifdef __WXMSW__
 		HoldRedraw hold(shown ? static_cast<HWND>(card->GetHandle()) : nullptr);
+#endif
 		if (!shown || !sameSize) {
 			card->SetSize(nextPos.x, nextPos.y, nextSize.x, nextSize.y);
 			if (!shown) {

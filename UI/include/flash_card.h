@@ -448,7 +448,12 @@ class FlashCard : public wxPanel {
 
 			const int width = this->tagHost->GetClientSize().GetWidth();
 			if (width > 1) {
+#if wxCHECK_VERSION(3, 3, 0)
 				const wxSize min = this->tagSizer->CalcMinSizeFromKnownDirection(wxHORIZONTAL, width, -1);
+#else
+				this->tagSizer->SetDimension(0, 0, width, 1);
+				const wxSize min = this->tagSizer->CalcMin();
+#endif
 				this->tagHost->SetMinSize(wxSize(0, min.GetHeight()));
 				this->tagSizer->SetDimension(wxPoint(0, 0), wxSize(width, min.GetHeight()));
 			} else {

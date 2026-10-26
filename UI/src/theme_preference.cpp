@@ -7,8 +7,8 @@
 
 namespace {
 void RefreshOpenFrames() {
-	for (wxWindowList::compatibility_iterator it = wxTopLevelWindows.GetFirst(); it; it = it.GetNext()) {
-		wxWindow* window = it.GetData();
+	for (wxWindowList::compatibility_iterator it = wxTopLevelWindows.GetFirst(); it; it = it->GetNext()) {
+		wxWindow* window = it->GetData();
 		if (auto* frame = dynamic_cast<MainFrame*>(window)) {
 			frame->ApplyTheme();
 		} else if (window != nullptr) {
@@ -22,7 +22,9 @@ void ApplyAppearance(bool dark) {
 	// SetAppearance only succeeds before the first top-level window, and only
 	// while the mode is still the default. Calling it here still updates the
 	// custom palette, then the open frames repaint.
+#if wxCHECK_VERSION(3, 3, 0)
 	wxGetApp().SetAppearance(dark ? wxApp::Appearance::Dark : wxApp::Appearance::Light);
+#endif
 	RefreshOpenFrames();
 }
 }
@@ -49,5 +51,7 @@ void ApplyStoredTheme() {
 		ApplyAppearance(false);
 		return;
 	}
+#if wxCHECK_VERSION(3, 3, 0)
 	wxGetApp().SetAppearance(wxApp::Appearance::System);
+#endif
 }
