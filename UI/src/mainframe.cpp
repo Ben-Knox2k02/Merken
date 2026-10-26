@@ -15,6 +15,7 @@
 #include "centered_message.h"
 #include "theme.h"
 #include "../../Application/UseCases/Profile/GetUserProfile/get_user_profile_usecase.h"
+#include <wx/statline.h>
 
 MainFrame::MainFrame(const wxString& title)
     : wxFrame(nullptr, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE),
@@ -108,9 +109,9 @@ MainFrame::MainFrame(const wxString& title)
 	this->sidebarPanel = new DeckPanelList(this);
 
 	const int edge = this->FromDIP(Theme::Get().size.panelPad);
-	const int gap = this->FromDIP(Theme::Get().space.md);
+	wxStaticLine* paneSplit = new wxStaticLine(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLI_VERTICAL);
 	this->rootSizer->Add(this->sidebarPanel, 30, wxEXPAND | wxTOP | wxBOTTOM | wxLEFT, edge);
-	this->rootSizer->AddSpacer(gap);
+	this->rootSizer->Add(paneSplit, 0, wxEXPAND | wxTOP | wxBOTTOM, edge);
 	this->rootSizer->Add(this->contentPanel, 70, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, edge);
 	
 	this->SetSizer(this->rootSizer);

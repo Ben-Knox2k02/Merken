@@ -12,6 +12,7 @@
 #include "../../Application/UseCases/Deck/DeleteCard/delete_card_usecase.h"
 #include "../../Application/UseCases/Profile/GetUserProfile/get_user_profile_usecase.h"
 #include <wx/dcgraph.h>
+#include <wx/statline.h>
 #include <wx/tokenzr.h>
 
 wxDECLARE_APP(App);
@@ -115,8 +116,15 @@ FlashCardList::FlashCardList(wxWindow* parent, int deckId)
 
 	wxBoxSizer* headerBlock = new wxBoxSizer(wxVERTICAL);
 	headerBlock->Add(headerRow, 0, wxEXPAND);
-	headerBlock->Add(this->description, 0, wxEXPAND | wxTOP | wxBOTTOM, this->FromDIP(Theme::Get().space.xxl));
-	this->rootSizer->Add(headerBlock, 0, wxEXPAND | wxALL, pad);
+	this->rootSizer->Add(headerBlock, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, pad);
+	this->rootSizer->AddSpacer(this->FromDIP(Theme::Get().space.sm));
+	this->rootSizer->Add(new wxStaticLine(this, wxID_ANY), 0, wxEXPAND);
+	this->rootSizer->Add(
+		this->description,
+		0,
+		wxEXPAND | wxLEFT | wxRIGHT | wxTOP | wxBOTTOM,
+		this->FromDIP(Theme::Get().space.xxl)
+	);
 	const int nameToDesc = this->FromDIP(Theme::Get().space.xxl);
 	this->headerGap = this->rootSizer->AddSpacer(nameToDesc > pad ? nameToDesc - pad : 0);
 	this->headerGap->Show(false);
