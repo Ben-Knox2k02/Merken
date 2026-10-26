@@ -10,11 +10,11 @@ wxDECLARE_APP(App);
 ProfileHeader::ProfileHeader(wxWindow* parent)
 	: wxPanel(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE) {
 	const Theme& theme = Theme::Get();
-	this->SetBackgroundColour(theme.color.primary);
+	this->SetBackgroundColour(theme.color.window);
 	this->SetCursor(wxCursor(wxCURSOR_HAND));
 
 	this->badge = new ProfileBadge(this);
-	this->badge->SetColours(theme.color.primary, theme.color.fill, theme.color.label);
+	this->badge->SetColours(theme.color.window, theme.color.fill, theme.color.label);
 	this->badge->SetCursor(wxCursor(wxCURSOR_HAND));
 
 	this->nameLabel = new wxStaticText(this, wxID_ANY, "Profile", wxDefaultPosition, wxDefaultSize, wxST_ELLIPSIZE_END);
@@ -22,8 +22,8 @@ ProfileHeader::ProfileHeader(wxWindow* parent)
 	font.SetPointSize(font.GetPointSize() + 1);
 	font.SetWeight(wxFONTWEIGHT_NORMAL);
 	this->nameLabel->SetFont(font);
-	this->nameLabel->SetForegroundColour(theme.color.onPrimary);
-	this->nameLabel->SetBackgroundColour(theme.color.primary);
+	this->nameLabel->SetForegroundColour(theme.color.label);
+	this->nameLabel->SetBackgroundColour(theme.color.window);
 	this->nameLabel->SetCursor(wxCursor(wxCURSOR_HAND));
 
 	wxBoxSizer* row = new wxBoxSizer(wxHORIZONTAL);
@@ -48,10 +48,10 @@ void ProfileHeader::Load() {
 
 void ProfileHeader::ApplyTheme() {
 	const Theme& theme = Theme::Get();
-	this->SetBackgroundColour(theme.color.primary);
-	this->nameLabel->SetForegroundColour(theme.color.onPrimary);
-	this->nameLabel->SetBackgroundColour(theme.color.primary);
-	this->badge->SetColours(theme.color.primary, theme.color.fill, theme.color.label);
+	this->SetBackgroundColour(theme.color.window);
+	this->nameLabel->SetForegroundColour(theme.color.label);
+	this->nameLabel->SetBackgroundColour(theme.color.window);
+	this->badge->SetColours(theme.color.window, theme.color.fill, theme.color.label);
 	this->Refresh();
 }
 

@@ -10,7 +10,7 @@ class ProfileBadge : public wxPanel {
 	public:
 		explicit ProfileBadge(wxWindow* parent)
 			: wxPanel(),
-			  backdrop(Theme::Get().color.primary),
+			  backdrop(Theme::Get().color.window),
 			  circle(Theme::Get().color.fill),
 			  ink(Theme::Get().color.label) {
 			this->SetBackgroundStyle(wxBG_STYLE_PAINT);

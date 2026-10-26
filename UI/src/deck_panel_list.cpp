@@ -20,7 +20,7 @@ DeckPanelList::DeckPanelList(wxWindow* parent)
 	this->SetBackgroundStyle(wxBG_STYLE_PAINT);
 	this->Create(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE);
 	this->SetWindowStyleFlag(this->GetWindowStyleFlag() & ~wxCLIP_CHILDREN);
-	this->SetBackgroundColour(Theme::Get().color.primary);
+	this->SetBackgroundColour(Theme::Get().color.window);
 	this->SetMinSize(wxSize(this->FromDIP(kMinWidth), -1));
 
 	this->rootSizer = new wxBoxSizer(wxVERTICAL);
@@ -35,7 +35,7 @@ DeckPanelList::DeckPanelList(wxWindow* parent)
 	this->scroller = new wxScrolledWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxVSCROLL);
 	this->SetWindowStyleFlag(this->GetWindowStyleFlag() & ~wxCLIP_CHILDREN);
 	this->scroller->SetWindowStyleFlag(this->scroller->GetWindowStyleFlag() & ~wxCLIP_CHILDREN);
-	this->scroller->SetBackgroundColour(Theme::Get().color.primary);
+	this->scroller->SetBackgroundColour(Theme::Get().color.window);
 	this->scroller->SetScrollRate(0, 16);
 	this->scroller->ShowScrollbars(wxSHOW_SB_NEVER, wxSHOW_SB_DEFAULT);
 
@@ -79,9 +79,9 @@ DeckPanelList::DeckPanelList(wxWindow* parent)
 
 void DeckPanelList::ApplyTheme() {
 	const Theme& theme = Theme::Get();
-	this->SetBackgroundColour(theme.color.primary);
+	this->SetBackgroundColour(theme.color.window);
 	this->profileHeader->ApplyTheme();
-	this->scroller->SetBackgroundColour(theme.color.primary);
+	this->scroller->SetBackgroundColour(theme.color.window);
 	for (DeckCard* card : this->cards) {
 		card->ApplyTheme();
 	}
@@ -97,7 +97,7 @@ void DeckPanelList::OnSize(wxSizeEvent& event) {
 void DeckPanelList::OnPaint(wxPaintEvent&) {
 	wxPaintDC dc(this);
 	wxGCDC gc(dc);
-	Theme::Get().DrawPanel(gc, this, this->GetClientSize());
+	Theme::Get().FillCanvas(gc, this, this->GetClientSize());
 }
 
 void DeckPanelList::LoadDecks() {

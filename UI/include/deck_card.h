@@ -19,7 +19,7 @@ class DeckCard : public wxPanel {
 			this->SetBackgroundStyle(wxBG_STYLE_PAINT);
 			this->Create(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE);
 			this->SetWindowStyleFlag(this->GetWindowStyleFlag() & ~wxCLIP_CHILDREN);
-			this->SetBackgroundColour(Theme::Get().color.primary);
+			this->SetBackgroundColour(Theme::Get().color.window);
 
 			const int side = this->FromDIP(18);
 			this->icon = new wxStaticBitmap();
@@ -59,7 +59,7 @@ class DeckCard : public wxPanel {
 
 		void ApplyTheme() {
 			this->SetBackgroundColour(
-				this->selected ? Theme::Get().color.selectedFill : Theme::Get().color.primary
+				this->selected ? Theme::Get().color.selectedFill : Theme::Get().color.window
 			);
 			this->icon->SetBitmap(this->IconBundle());
 			this->ApplyTextColours();
@@ -83,7 +83,7 @@ class DeckCard : public wxPanel {
 		wxColour TitleColour() const {
 			return this->selected
 				? Theme::Get().color.onSelected
-				: Theme::Get().color.onPrimary;
+				: Theme::Get().color.label;
 		}
 
 		wxBitmapBundle IconBundle() const {
