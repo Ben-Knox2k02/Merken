@@ -11,7 +11,6 @@
 #include "../../Application/UseCases/Deck/DeleteDeck/delete_deck_usecase.h"
 #include "../../Application/UseCases/Profile/GetUserProfile/get_user_profile_usecase.h"
 #include <wx/dcgraph.h>
-#include <wx/statline.h>
 
 wxDECLARE_APP(App);
 
@@ -31,10 +30,7 @@ DeckPanelList::DeckPanelList(wxWindow* parent)
 	this->rootSizer->AddSpacer(profileSpace);
 	this->profileHeader = new ProfileHeader(this);
 	this->rootSizer->Add(this->profileHeader, 0, wxEXPAND | wxLEFT | wxRIGHT, pad);
-	this->rootSizer->AddSpacer(profileSpace);
-	wxStaticLine* profileRule = new wxStaticLine(this);
-	this->rootSizer->Add(profileRule, 0, wxEXPAND | wxLEFT | wxRIGHT, pad);
-	this->rootSizer->AddSpacer(profileSpace);
+	this->rootSizer->AddSpacer(profileSpace * 2);
 
 	this->scroller = new wxScrolledWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxVSCROLL);
 	this->SetWindowStyleFlag(this->GetWindowStyleFlag() & ~wxCLIP_CHILDREN);
@@ -47,8 +43,6 @@ DeckPanelList::DeckPanelList(wxWindow* parent)
 	this->scroller->SetSizer(this->listSizer);
 	this->rootSizer->Add(this->scroller, 1, wxEXPAND | wxLEFT | wxRIGHT, pad);
 
-	wxStaticLine* rule = new wxStaticLine(this);
-	this->rootSizer->Add(rule, 0, wxEXPAND | wxLEFT | wxRIGHT, pad);
 	this->rootSizer->AddSpacer(this->FromDIP(Theme::Get().space.md));
 
 	this->addDeckButton = new wxButton(this, wxID_ANY, "Add");
