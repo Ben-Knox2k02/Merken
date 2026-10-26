@@ -52,11 +52,11 @@ class Theme {
 		struct Radius {
 			int xs = 6;
 			int sm = 8;
-			int md = 16;
+			int md = 8;
 			int lg = 14;
 			int well = 8;
 			int chip = 11;
-			int row = 8;
+			int row = 4;
 		};
 
 		struct Space {
