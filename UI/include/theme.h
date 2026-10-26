@@ -4,6 +4,21 @@
 #include <wx/wx.h>
 #include <wx/dcgraph.h>
 
+inline void ApplyButtonPadding(wxButton* button) {
+	if (button == nullptr) {
+		return;
+	}
+	const int padX = button->FromDIP(30);
+	const int padY = button->FromDIP(5);
+	const wxSize text = button->GetTextExtent(button->GetLabelText());
+	int height = text.GetHeight() + padY * 2;
+	const int defaultHeight = wxButton::GetDefaultSize(button).GetHeight();
+	if (height < defaultHeight) {
+		height = defaultHeight;
+	}
+	button->SetMinSize(wxSize(text.GetWidth() + padX * 2, height));
+}
+
 // Visual tokens for Merken. Brand primary is #0B2937; surfaces, type, and
 // elevation follow iOS grouped surfaces and macOS hairline cards.
 class Theme {

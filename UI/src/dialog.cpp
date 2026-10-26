@@ -30,9 +30,13 @@ CardDialog::CardDialog(wxWindow* parent, const wxString& title)
 	this->tagCtrl = new wxTextCtrl(this, wxID_ANY);
 	fields->Add(this->tagCtrl, 1, wxEXPAND);
 
+	wxButton* okButton = new wxButton(this, wxID_OK);
+	wxButton* cancelButton = new wxButton(this, wxID_CANCEL);
+	ApplyButtonPadding(okButton);
+	ApplyButtonPadding(cancelButton);
 	wxStdDialogButtonSizer* buttons = new wxStdDialogButtonSizer();
-	buttons->AddButton(new wxButton(this, wxID_OK));
-	buttons->AddButton(new wxButton(this, wxID_CANCEL));
+	buttons->AddButton(okButton);
+	buttons->AddButton(cancelButton);
 	buttons->Realize();
 
 	this->rootSizer = new wxBoxSizer(wxVERTICAL);
@@ -66,9 +70,13 @@ DeckDialog::DeckDialog(wxWindow* parent, const wxString& title)
 	this->descriptionCtrl->SetMinSize(wxSize(-1, 80));
 	fields->Add(this->descriptionCtrl, 1, wxEXPAND);
 
+	wxButton* okButton = new wxButton(this, wxID_OK);
+	wxButton* cancelButton = new wxButton(this, wxID_CANCEL);
+	ApplyButtonPadding(okButton);
+	ApplyButtonPadding(cancelButton);
 	wxStdDialogButtonSizer* buttons = new wxStdDialogButtonSizer();
-	buttons->AddButton(new wxButton(this, wxID_OK));
-	buttons->AddButton(new wxButton(this, wxID_CANCEL));
+	buttons->AddButton(okButton);
+	buttons->AddButton(cancelButton);
 	buttons->Realize();
 
 	this->rootSizer = new wxBoxSizer(wxVERTICAL);

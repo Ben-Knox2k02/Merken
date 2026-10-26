@@ -45,6 +45,7 @@ OnboardingDialog::OnboardingDialog(wxWindow* parent)
 	wxStaticText* welcomeTitle = MakeTitle(this->welcomePanel, "Welcome to Merken", 14);
 	wxStaticText* welcomeBody = MakeBody(this->welcomePanel, "Your companion flash-card study app.");
 	wxButton* continueButton = new wxButton(this->welcomePanel, wxID_ANY, "Continue");
+	ApplyButtonPadding(continueButton);
 	continueButton->SetDefault();
 	wxBoxSizer* welcome = new wxBoxSizer(wxVERTICAL);
 	welcome->AddStretchSpacer(1);
@@ -59,6 +60,8 @@ OnboardingDialog::OnboardingDialog(wxWindow* parent)
 	this->nameCtrl = new wxTextCtrl(this->namePanel, wxID_ANY, wxEmptyString, wxDefaultPosition, this->FromDIP(wxSize(280, -1)));
 	wxButton* nameContinue = new wxButton(this->namePanel, wxID_ANY, "Continue");
 	wxButton* nameSkip = new wxButton(this->namePanel, wxID_ANY, "Skip");
+	ApplyButtonPadding(nameContinue);
+	ApplyButtonPadding(nameSkip);
 	nameContinue->SetDefault();
 	wxBoxSizer* nameButtons = new wxBoxSizer(wxHORIZONTAL);
 	nameButtons->Add(nameSkip, 0, wxRIGHT, gapSm);
@@ -77,6 +80,10 @@ OnboardingDialog::OnboardingDialog(wxWindow* parent)
 	wxButton* goal20 = new wxButton(this->goalPanel, 20, "20 cards");
 	wxButton* goal30 = new wxButton(this->goalPanel, 30, "30 cards");
 	wxButton* goalSkip = new wxButton(this->goalPanel, wxID_ANY, "Skip");
+	ApplyButtonPadding(goal10);
+	ApplyButtonPadding(goal20);
+	ApplyButtonPadding(goal30);
+	ApplyButtonPadding(goalSkip);
 	wxBoxSizer* goalChoices = new wxBoxSizer(wxHORIZONTAL);
 	goalChoices->Add(goal10, 0, wxRIGHT, gapSm);
 	goalChoices->Add(goal20, 0, wxRIGHT, gapSm);

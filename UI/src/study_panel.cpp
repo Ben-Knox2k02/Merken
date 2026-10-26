@@ -616,6 +616,9 @@ StudyPanel::StudyPanel(wxWindow* parent, int deckId)
 	this->showAnswerButton = new wxButton(this, wxID_ANY, "Show Answer");
 	this->rememberedButton = new wxButton(this, wxID_ANY, "Remembered");
 	this->forgotButton = new wxButton(this, wxID_ANY, "Forgot");
+	ApplyButtonPadding(this->showAnswerButton);
+	ApplyButtonPadding(this->rememberedButton);
+	ApplyButtonPadding(this->forgotButton);
 	gradeSizer->Add(this->showAnswerButton, 0, wxRIGHT, 8);
 	gradeSizer->Add(this->rememberedButton, 0, wxRIGHT, 8);
 	gradeSizer->Add(this->forgotButton, 0);
@@ -632,6 +635,7 @@ StudyPanel::StudyPanel(wxWindow* parent, int deckId)
 	this->rootSizer->Add(this->todayLabel, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 4);
 
 	this->backButton = new wxButton(this, wxID_ANY, "Back");
+	ApplyButtonPadding(this->backButton);
 	this->rootSizer->Add(this->backButton, 0, wxALIGN_CENTER | wxALL, 16);
 
 	this->SetSizer(this->rootSizer);

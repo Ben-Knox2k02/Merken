@@ -106,6 +106,9 @@ FlashCardList::FlashCardList(wxWindow* parent, int deckId)
 	this->addButton = new wxButton(this, wxID_ANY, "Add Flash Card");
 	this->studyButton = new wxButton(this, wxID_ANY, "Study Deck");
 	this->aiStudyButton = new wxButton(this, wxID_ANY, "AI Study Deck");
+	ApplyButtonPadding(this->addButton);
+	ApplyButtonPadding(this->studyButton);
+	ApplyButtonPadding(this->aiStudyButton);
 	this->headerButtonSizer->Add(this->addButton, 0, wxRIGHT | wxALIGN_BOTTOM, this->FromDIP(Theme::Get().space.xs));
 	this->headerButtonSizer->Add(this->studyButton, 0, wxRIGHT | wxALIGN_BOTTOM, this->FromDIP(Theme::Get().space.xs));
 	this->headerButtonSizer->Add(this->aiStudyButton, 0);

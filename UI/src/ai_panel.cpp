@@ -1,4 +1,5 @@
 #include "ai_panel.h"
+#include "theme.h"
 
 AIPanel::AIPanel(wxWindow* parent) : wxPanel(parent) {
 	//============ ROOT PANEL ======================================== ROOT PANEL =====================
@@ -29,6 +30,7 @@ AIPanel::AIPanel(wxWindow* parent) : wxPanel(parent) {
 	this->promptCtrl = new wxTextCtrl(this->bottomPanel, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER | wxTE_RICH2);
 	this->promptCtrl->SetHint("Ask Gemini to generate cards, explain concepts, or create quizzes...");
 	this->submitButton = new wxButton(this->bottomPanel, wxID_ANY, "Submit");
+	ApplyButtonPadding(this->submitButton);
 	
 	wxBoxSizer* inputSizer = new wxBoxSizer(wxHORIZONTAL);
 	inputSizer->Add(this->promptCtrl, 1, wxEXPAND | wxRIGHT, 10);

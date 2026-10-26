@@ -1,5 +1,6 @@
 #include "ai_study_panel.h"
 #include "centered_message.h"
+#include "theme.h"
 #include "mainframe.h"
 #include "app.h"
 #include "../../Application/UseCases/AI/AiStudy/ai_study_usecase.h"
@@ -51,15 +52,20 @@ AiStudyPanel::AiStudyPanel(wxWindow* parent, int deckId)
 	this->showAnswerButton = new wxButton(this, wxID_ANY, "Show answer");
 	this->gotItButton = new wxButton(this, wxID_ANY, "Got it");
 	this->missedItButton = new wxButton(this, wxID_ANY, "Missed it");
+	ApplyButtonPadding(this->showAnswerButton);
+	ApplyButtonPadding(this->gotItButton);
+	ApplyButtonPadding(this->missedItButton);
 	gradeSizer->Add(this->showAnswerButton, 0, wxRIGHT, 8);
 	gradeSizer->Add(this->gotItButton, 0, wxRIGHT, 8);
 	gradeSizer->Add(this->missedItButton, 0);
 	this->rootSizer->Add(gradeSizer, 0, wxALIGN_CENTER | wxALL, 10);
 
 	this->startAgainButton = new wxButton(this, wxID_ANY, "Start test again");
+	ApplyButtonPadding(this->startAgainButton);
 	this->rootSizer->Add(this->startAgainButton, 0, wxALIGN_CENTER | wxALL, 4);
 
 	this->backButton = new wxButton(this, wxID_ANY, "Back");
+	ApplyButtonPadding(this->backButton);
 	this->rootSizer->Add(this->backButton, 0, wxALIGN_CENTER | wxALL, 16);
 
 	this->SetSizer(this->rootSizer);

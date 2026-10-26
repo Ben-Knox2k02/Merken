@@ -77,6 +77,8 @@ ProfileDialog::ProfileDialog(wxWindow* parent, const GetUserProfileResponse& pro
 
 	wxButton* okButton = new wxButton(this, wxID_ANY, "OK");
 	wxButton* cancelButton = new wxButton(this, wxID_CANCEL, "Cancel");
+	ApplyButtonPadding(okButton);
+	ApplyButtonPadding(cancelButton);
 	okButton->SetDefault();
 	wxBoxSizer* buttons = new wxBoxSizer(wxHORIZONTAL);
 	buttons->AddStretchSpacer(1);

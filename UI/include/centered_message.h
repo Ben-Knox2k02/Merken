@@ -117,12 +117,18 @@ inline int ShowCenteredMessage(
 
 	wxStdDialogButtonSizer* buttons = new wxStdDialogButtonSizer();
 	if (style & wxYES_NO) {
-		buttons->AddButton(new wxButton(&dialog, wxID_YES));
-		buttons->AddButton(new wxButton(&dialog, wxID_NO));
+		wxButton* yesButton = new wxButton(&dialog, wxID_YES);
+		wxButton* noButton = new wxButton(&dialog, wxID_NO);
+		ApplyButtonPadding(yesButton);
+		ApplyButtonPadding(noButton);
+		buttons->AddButton(yesButton);
+		buttons->AddButton(noButton);
 		dialog.SetAffirmativeId(wxID_YES);
 		dialog.SetEscapeId(wxID_NO);
 	} else {
-		buttons->AddButton(new wxButton(&dialog, wxID_OK));
+		wxButton* okButton = new wxButton(&dialog, wxID_OK);
+		ApplyButtonPadding(okButton);
+		buttons->AddButton(okButton);
 	}
 	buttons->Realize();
 

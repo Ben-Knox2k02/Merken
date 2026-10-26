@@ -128,6 +128,8 @@ class FlashCard : public wxPanel {
 
 			this->editButton = new wxButton(this, wxID_ANY, "Edit");
 			this->deleteButton = new wxButton(this, wxID_ANY, "Delete");
+			ApplyButtonPadding(this->editButton);
+			ApplyButtonPadding(this->deleteButton);
 			this->editButton->Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
 				if (this->onEdit) {
 					this->onEdit();
