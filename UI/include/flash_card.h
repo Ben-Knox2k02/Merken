@@ -10,7 +10,6 @@
 #include <wx/wrapsizer.h>
 #include "flash_card_tag.h"
 #include "flash_card_number.h"
-#include "icon_button.h"
 #include "theme.h"
 
 class FlashCardWell : public wxPanel {
@@ -127,8 +126,8 @@ class FlashCard : public wxPanel {
 
 			this->RebuildTags();
 
-			this->editButton = new IconButton(this, "UI/assets/edit_icon.png", "Edit");
-			this->deleteButton = new IconButton(this, "UI/assets/delete_icon.png", "Delete");
+			this->editButton = new wxButton(this, wxID_ANY, "Edit");
+			this->deleteButton = new wxButton(this, wxID_ANY, "Delete");
 			this->editButton->Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
 				if (this->onEdit) {
 					this->onEdit();
@@ -218,8 +217,6 @@ class FlashCard : public wxPanel {
 
 		void ApplyTheme() {
 			this->ApplyTextColours();
-			this->editButton->ApplyTheme();
-			this->deleteButton->ApplyTheme();
 			this->Refresh();
 			this->frontWell->Refresh();
 			this->backWell->Refresh();
@@ -241,8 +238,8 @@ class FlashCard : public wxPanel {
 		wxStaticText* frontCtrl;
 		wxStaticText* backCtrl;
 		wxWrapSizer* tagSizer;
-		IconButton* editButton;
-		IconButton* deleteButton;
+		wxButton* editButton;
+		wxButton* deleteButton;
 		std::function<void()> onEdit;
 		std::function<void()> onDelete;
 		bool selected;

@@ -103,23 +103,8 @@ FlashCardList::FlashCardList(wxWindow* parent, int deckId)
 
 	this->headerButtonSizer = new wxBoxSizer(wxHORIZONTAL);
 	this->addButton = new wxButton(this, wxID_ANY, "Add Flash Card");
-	this->addButton->SetBitmap(
-		IconButton::LoadIconBundle("UI/assets/add_icon.png", 16, Theme::IsDarkAppearance()),
-		wxLEFT
-	);
-	this->addButton->SetBitmapMargins(this->FromDIP(6), 0);
 	this->studyButton = new wxButton(this, wxID_ANY, "Study Deck");
-	this->studyButton->SetBitmap(
-		IconButton::LoadIconBundle("UI/assets/study_icon.png", 16, Theme::IsDarkAppearance()),
-		wxLEFT
-	);
-	this->studyButton->SetBitmapMargins(this->FromDIP(6), 0);
 	this->aiStudyButton = new wxButton(this, wxID_ANY, "AI Study Deck");
-	this->aiStudyButton->SetBitmap(
-		IconButton::LoadIconBundle("UI/assets/ai_study_icon.png", 16, Theme::IsDarkAppearance()),
-		wxLEFT
-	);
-	this->aiStudyButton->SetBitmapMargins(this->FromDIP(6), 0);
 	this->headerButtonSizer->Add(this->addButton, 0, wxRIGHT | wxALIGN_BOTTOM, this->FromDIP(Theme::Get().space.xs));
 	this->headerButtonSizer->Add(this->studyButton, 0, wxRIGHT | wxALIGN_BOTTOM, this->FromDIP(Theme::Get().space.xs));
 	this->headerButtonSizer->Add(this->aiStudyButton, 0);
@@ -334,7 +319,6 @@ void FlashCardList::UpdateDeckHeader() {
 
 void FlashCardList::ApplyTheme() {
 	const Theme& theme = Theme::Get();
-	const bool invert = Theme::IsDarkAppearance();
 	this->SetBackgroundColour(theme.color.window);
 	this->header->SetForegroundColour(theme.color.label);
 	this->description->SetForegroundColour(theme.color.secondaryLabel);
@@ -345,9 +329,6 @@ void FlashCardList::ApplyTheme() {
 	if (this->emptyMessage != nullptr) {
 		this->emptyMessage->SetForegroundColour(theme.color.secondaryLabel);
 	}
-	this->addButton->SetBitmap(IconButton::LoadIconBundle("UI/assets/add_icon.png", 16, invert), wxLEFT);
-	this->studyButton->SetBitmap(IconButton::LoadIconBundle("UI/assets/study_icon.png", 16, invert), wxLEFT);
-	this->aiStudyButton->SetBitmap(IconButton::LoadIconBundle("UI/assets/ai_study_icon.png", 16, invert), wxLEFT);
 	for (FlashCard* card : this->cards) {
 		card->ApplyTheme();
 	}

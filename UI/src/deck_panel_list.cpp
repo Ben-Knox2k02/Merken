@@ -51,10 +51,10 @@ DeckPanelList::DeckPanelList(wxWindow* parent)
 	this->rootSizer->Add(rule, 0, wxEXPAND | wxLEFT | wxRIGHT, pad);
 	this->rootSizer->AddSpacer(this->FromDIP(Theme::Get().space.md));
 
-	this->addDeckButton = new IconButton(this, "UI/assets/add_icon.png", "Add", true);
-	this->editDeckButton = new IconButton(this, "UI/assets/edit_icon.png", "Edit", true);
-	this->deleteDeckButton = new IconButton(this, "UI/assets/delete_icon.png", "Delete", true);
-	const int buttonHeight = this->addDeckButton->GetMinHeight();
+	this->addDeckButton = new wxButton(this, wxID_ANY, "Add");
+	this->editDeckButton = new wxButton(this, wxID_ANY, "Edit");
+	this->deleteDeckButton = new wxButton(this, wxID_ANY, "Delete");
+	const int buttonHeight = wxButton::GetDefaultSize(this).GetHeight();
 	const wxSize sharedButtonSize(0, buttonHeight);
 	this->addDeckButton->SetMinSize(sharedButtonSize);
 	this->editDeckButton->SetMinSize(sharedButtonSize);
@@ -88,9 +88,6 @@ void DeckPanelList::ApplyTheme() {
 	this->SetBackgroundColour(theme.color.primary);
 	this->profileHeader->ApplyTheme();
 	this->scroller->SetBackgroundColour(theme.color.primary);
-	this->addDeckButton->ApplyTheme();
-	this->editDeckButton->ApplyTheme();
-	this->deleteDeckButton->ApplyTheme();
 	for (DeckCard* card : this->cards) {
 		card->ApplyTheme();
 	}

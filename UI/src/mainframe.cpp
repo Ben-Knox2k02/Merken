@@ -14,7 +14,6 @@
 #include "settings_dialog.h"
 #include "centered_message.h"
 #include "theme.h"
-#include "icon_button.h"
 #include "../../Application/UseCases/Profile/GetUserProfile/get_user_profile_usecase.h"
 
 MainFrame::MainFrame(const wxString& title)
@@ -98,7 +97,6 @@ MainFrame::MainFrame(const wxString& title)
 	
 	//============ ATTACH WIDGETS ==================================== ATTACH WIDGETS ========================= 
 	this->SetMenuBar(this->menuBar);
-	this->ApplyMenuIcons();
 	this->CreateStatusBar();
 	this->SetBackgroundColour(Theme::Get().color.window);
 	
@@ -215,27 +213,6 @@ void MainFrame::SetSelectedCardCount(int count) {
 	this->UpdateDeckMenus();
 }
 
-void MainFrame::ApplyMenuIcons() {
-	if (this->menuBar == nullptr) {
-		return;
-	}
-	const bool invert = Theme::IsDarkAppearance();
-	auto setIcon = [this, invert](int id, const wxString& path) {
-		wxMenuItem* item = this->menuBar->FindItem(id);
-		if (item != nullptr) {
-			item->SetBitmap(IconButton::LoadIconBundle(path, 16, invert));
-		}
-	};
-	setIcon(wxID_NEW, "UI/assets/add_icon.png");
-	setIcon(ID_EDIT_DECK, "UI/assets/edit_icon.png");
-	setIcon(ID_DELETE_DECK, "UI/assets/delete_icon.png");
-	setIcon(ID_CARDS, "UI/assets/flash_card_icon.png");
-	setIcon(ID_STUDY, "UI/assets/study_icon.png");
-	setIcon(ID_AI, "UI/assets/ai_study_icon.png");
-	setIcon(ID_TODAYS_PROGRESS, "UI/assets/progress.png");
-	setIcon(ID_CALENDAR, "UI/assets/calendar_icon.png");
-}
-
 void MainFrame::ReloadDecks() {
 	if (auto* decks = dynamic_cast<DeckPanelList*>(this->sidebarPanel)) {
 		decks->LoadDecks();
@@ -259,7 +236,6 @@ void MainFrame::ApplyTheme() {
 		this->currentPanel->SetBackgroundColour(theme.color.window);
 		this->currentPanel->Refresh();
 	}
-	this->ApplyMenuIcons();
 	Theme::ApplyTitleBar(this);
 	this->Refresh();
 	this->Update();

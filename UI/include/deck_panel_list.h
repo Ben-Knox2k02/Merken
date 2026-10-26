@@ -4,7 +4,6 @@
 #include <wx/wx.h>
 #include <vector>
 #include "deck_card.h"
-#include "icon_button.h"
 #include "profile_header.h"
 
 class DeckPanelList : public wxPanel {
@@ -16,9 +15,9 @@ class DeckPanelList : public wxPanel {
 		ProfileHeader* profileHeader;
 		wxScrolledWindow* scroller;
 		wxBoxSizer* listSizer;
-		IconButton* addDeckButton;
-		IconButton* editDeckButton;
-		IconButton* deleteDeckButton;
+		wxButton* addDeckButton;
+		wxButton* editDeckButton;
+		wxButton* deleteDeckButton;
 
 		void LoadDecks();
 		void ApplyTheme();
