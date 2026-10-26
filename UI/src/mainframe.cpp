@@ -110,9 +110,9 @@ MainFrame::MainFrame(const wxString& title)
 
 	const int edge = this->FromDIP(Theme::Get().size.panelPad);
 	wxStaticLine* paneSplit = new wxStaticLine(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLI_VERTICAL);
-	this->rootSizer->Add(this->sidebarPanel, 30, wxEXPAND | wxTOP | wxBOTTOM | wxLEFT, edge);
+	this->rootSizer->Add(this->sidebarPanel, 57, wxEXPAND | wxTOP | wxBOTTOM | wxLEFT, edge);
 	this->rootSizer->Add(paneSplit, 0, wxEXPAND | wxTOP | wxBOTTOM, edge);
-	this->rootSizer->Add(this->contentPanel, 70, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, edge);
+	this->rootSizer->Add(this->contentPanel, 143, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, edge);
 	
 	this->SetSizer(this->rootSizer);
 	this->Layout();
@@ -606,7 +606,7 @@ void MainFrame::ApplyPanelWidths() {
 	if(inner <= 0) {
 		return;
 	}
-	const int deckWidth = inner * 30 / 100;
+	const int deckWidth = inner * 30 / 100 * 95 / 100;
 	const int cardWidth = inner - deckWidth;
 	if(deckWidth <= 0 || cardWidth <= 0) {
 		return;
