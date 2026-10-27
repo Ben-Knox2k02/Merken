@@ -251,7 +251,7 @@ class FlashCard : public wxPanel {
 
 		wxStaticText* MakeCaption(const wxString& label) {
 			wxStaticText* caption = new wxStaticText();
-			caption->SetBackgroundStyle(wxBG_STYLE_TRANSPARENT);
+			caption->SetBackgroundStyle(wxBG_STYLE_COLOUR);
 			caption->Create(this, wxID_ANY, label);
 			return caption;
 		}
@@ -496,6 +496,9 @@ class FlashCard : public wxPanel {
 			this->frontCaption->SetForegroundColour(caption);
 			this->backCaption->SetForegroundColour(caption);
 			this->tagsCaption->SetForegroundColour(caption);
+			this->frontCaption->SetBackgroundColour(fill);
+			this->backCaption->SetBackgroundColour(fill);
+			this->tagsCaption->SetBackgroundColour(fill);
 			this->frontCtrl->SetForegroundColour(caption);
 			this->backCtrl->SetForegroundColour(caption);
 			this->frontCtrl->SetBackgroundColour(fill);

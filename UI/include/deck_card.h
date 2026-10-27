@@ -166,7 +166,7 @@ class DeckCard : public wxPanel {
 			theme.DrawRounded(
 				gc,
 				wxRect(inset, inset, size.GetWidth() - inset * 2, size.GetHeight() - inset * 2),
-				this->FromDIP(theme.radius.md),
+				this->FromDIP(theme.radius.xs),
 				SelectedFill(),
 				wxColour(0, 0, 0, 0)
 			);

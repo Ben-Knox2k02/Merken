@@ -8,14 +8,9 @@ inline void ApplyButtonPadding(wxButton* button) {
 	if (button == nullptr) {
 		return;
 	}
-	const int padX = button->FromDIP(30);
-	const int padY = button->FromDIP(5);
+	const int padX = button->FromDIP(15);
 	const wxSize text = button->GetTextExtent(button->GetLabelText());
-	int height = text.GetHeight() + padY * 2;
-	const int defaultHeight = wxButton::GetDefaultSize(button).GetHeight();
-	if (height < defaultHeight) {
-		height = defaultHeight;
-	}
+	const int height = wxButton::GetDefaultSize(button).GetHeight();
 	button->SetMinSize(wxSize(text.GetWidth() + padX * 2, height));
 }
 
@@ -319,7 +314,7 @@ inline void Theme::DrawRounded(wxGCDC& gc, const wxRect& rect, int radiusDip, co
 }
 
 inline void Theme::DrawCard(wxGCDC& gc, wxWindow* window, const wxRect& rect, bool selected) const {
-	const int radius = Dip(window, this->radius.md);
+	const int radius = Dip(window, this->radius.xs);
 	if (selected) {
 		this->DrawRounded(gc, rect, radius, this->color.selectedFill, this->color.selectedFill);
 		return;
