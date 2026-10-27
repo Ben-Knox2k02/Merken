@@ -52,18 +52,23 @@ DeckPanelList::DeckPanelList(wxWindow* parent)
 	this->addDeckButton = new wxButton(this, wxID_ANY, "Add");
 	this->editDeckButton = new wxButton(this, wxID_ANY, "Edit");
 	this->deleteDeckButton = new wxButton(this, wxID_ANY, "Delete");
-	ApplyButtonPadding(this->addDeckButton);
-	ApplyButtonPadding(this->editDeckButton);
-	ApplyButtonPadding(this->deleteDeckButton);
+	const int buttonHeight = wxButton::GetDefaultSize(this).GetHeight();
+	const wxSize buttonMin(0, buttonHeight);
+	this->addDeckButton->SetMinSize(buttonMin);
+	this->editDeckButton->SetMinSize(buttonMin);
+	this->deleteDeckButton->SetMinSize(buttonMin);
 
-	const int gap = this->FromDIP(Theme::Get().space.xs);
+	// Equal buttons, centered, with Space.sm between them.
+	const int gap = this->FromDIP(Theme::Get().space.sm);
 	this->buttonSizer = new wxBoxSizer(wxHORIZONTAL);
 	this->buttonSizer->AddStretchSpacer(1);
-	this->buttonSizer->Add(this->addDeckButton, 0, wxRIGHT, gap);
-	this->buttonSizer->Add(this->editDeckButton, 0, wxRIGHT, gap);
-	this->buttonSizer->Add(this->deleteDeckButton, 0);
+	this->buttonSizer->Add(this->addDeckButton, 2, wxEXPAND);
+	this->buttonSizer->AddSpacer(gap);
+	this->buttonSizer->Add(this->editDeckButton, 2, wxEXPAND);
+	this->buttonSizer->AddSpacer(gap);
+	this->buttonSizer->Add(this->deleteDeckButton, 2, wxEXPAND);
 	this->buttonSizer->AddStretchSpacer(1);
-	this->rootSizer->Add(this->buttonSizer, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, pad);
+	this->rootSizer->Add(this->buttonSizer, 0, wxEXPAND | wxBOTTOM, pad);
 
 	this->SetSizer(this->rootSizer);
 

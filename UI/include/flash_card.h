@@ -130,6 +130,12 @@ class FlashCard : public wxPanel {
 			this->deleteButton = new wxButton(this, wxID_ANY, "Delete");
 			ApplyButtonPadding(this->editButton);
 			ApplyButtonPadding(this->deleteButton);
+			const int sharedWidth = this->editButton->GetMinSize().GetWidth() > this->deleteButton->GetMinSize().GetWidth()
+				? this->editButton->GetMinSize().GetWidth()
+				: this->deleteButton->GetMinSize().GetWidth();
+			const wxSize sharedSize(sharedWidth, wxButton::GetDefaultSize(this).GetHeight());
+			this->editButton->SetMinSize(sharedSize);
+			this->deleteButton->SetMinSize(sharedSize);
 			this->editButton->Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
 				if (this->onEdit) {
 					this->onEdit();

@@ -109,6 +109,17 @@ FlashCardList::FlashCardList(wxWindow* parent, int deckId)
 	ApplyButtonPadding(this->addButton);
 	ApplyButtonPadding(this->studyButton);
 	ApplyButtonPadding(this->aiStudyButton);
+	int sharedWidth = this->addButton->GetMinSize().GetWidth();
+	if (this->studyButton->GetMinSize().GetWidth() > sharedWidth) {
+		sharedWidth = this->studyButton->GetMinSize().GetWidth();
+	}
+	if (this->aiStudyButton->GetMinSize().GetWidth() > sharedWidth) {
+		sharedWidth = this->aiStudyButton->GetMinSize().GetWidth();
+	}
+	const wxSize sharedSize(sharedWidth, wxButton::GetDefaultSize(this).GetHeight());
+	this->addButton->SetMinSize(sharedSize);
+	this->studyButton->SetMinSize(sharedSize);
+	this->aiStudyButton->SetMinSize(sharedSize);
 	this->headerButtonSizer->Add(this->addButton, 0, wxRIGHT | wxALIGN_BOTTOM, this->FromDIP(Theme::Get().space.xs));
 	this->headerButtonSizer->Add(this->studyButton, 0, wxRIGHT | wxALIGN_BOTTOM, this->FromDIP(Theme::Get().space.xs));
 	this->headerButtonSizer->Add(this->aiStudyButton, 0);
