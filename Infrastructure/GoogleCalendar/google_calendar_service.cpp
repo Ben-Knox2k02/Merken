@@ -67,6 +67,18 @@ static std::string DescribeFailure(const HttpResponse& response){
 	return ExtractGoogleErrorMessage(response.body);
 }
 
+static nlohmann::json BuildEventPayload(const CalendarEvent& event){
+	nlohmann::json payload;
+	payload["summary"] = event.GetTitle();
+	payload["description"] = event.GetDescription();
+	payload["start"]["dateTime"] = event.GetStartTime();
+	payload["end"]["dateTime"] = event.GetEndTime();
+	payload["reminders"]["useDefault"] = false;
+	payload["reminders"]["overrides"] = nlohmann::json::array(
+		{{{"method", "popup"},{"minutes", event.GetReminderMinutes()}}});
+	return payload;
+}
+
 // Helper function to parse a Google Calendar event JSON object into a CalendarEvent instance (created with help from Gemini)
 CalendarEvent ParseGoogleEventJson(const nlohmann::json& json){
 	if(!json.is_object()){
@@ -110,17 +122,10 @@ CalendarEvent GoogleCalendarService::CreateEvent(const CalendarEvent& event, con
 	}
 	
 	try {
-		nlohmann::json payload;
-		payload["summary"] = event.GetTitle();
-		payload["description"] = event.GetDescription();
-		payload["start"]["dateTime"] = event.GetStartTime();
-		payload["end"]["dateTime"] = event.GetEndTime();
-		payload["reminders"]["useDefault"] = false;
-		payload["reminders"]["overrides"] = nlohmann::json::array(
-			{{{"method", "popup"},{"minutes", event.GetReminderMinutes()}}});
+		
 
 
-		HttpResponse response = this->httpClient.PostJson(kEventsUrl, payload.dump(), AuthHeaders(accessToken));
+		HttpResponse response = this->httpClient.PostJson(kEventsUrl, BuildEventPayload(event).dump(), AuthHeaders(accessToken));
 
 		if (!IsSuccessStatus(response.statusCode)){
 			LogCalendarError("CreateEvent", response.statusCode, DescribeFailure(response));
@@ -222,9 +227,26 @@ std::vector<CalendarEvent> GoogleCalendarService::GetEvents(const std::string& a
 }
 
 bool GoogleCalendarService::UpdateEvent(const CalendarEvent& event, const std::string& accessToken) {
-	(void)event;
-	(void)accessToken;
-	(void)this->httpClient;
+	if (accessToken.empty()){
+		LogCalendarError("UpdateEvent", 0, "No access token provided");
+		return false;
+	}
+	if (event.GetGoogleEventId().empty()){
+		LogCalendarError("UpdateEvent", 0, "No Google event ID provided");
+		return false;
+	}
+	try {
+		std::string url = kEventsUrl + "/" + UrlEncode(event.GetGoogleEventId());
+		HttpResponse response = this->httpClient.PatchJson(url, BuildEventPayload(event).dump(), AuthHeaders(accessToken));
+		if(!IsSuccessStatus(response.statusCode)){
+			LogCalendarError("UpdateEvent", response.statusCode, DescribeFailure(response));
+			return false;
+		}
+		return true;
+	} catch (const std::exception& e){
+		LogCalendarError("UpdateEvent", 0, e.what());
+	}
 	return false;
+
 }
 

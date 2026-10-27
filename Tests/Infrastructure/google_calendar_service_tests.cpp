@@ -132,3 +132,57 @@ TEST_CASE("GoogleCalendarService GetEvents stops at the page limit"){
     service.GetEvents("token");
     REQUIRE(http.getCallCount == 50);
 }
+
+static CalendarEvent MakeSyncedEvent(){
+    CalendarEvent event = MakeEvent();
+    event.SetGoogleEventId("abc123");
+    return event;
+}
+
+TEST_CASE("GoogleCalendarService UpdateEvent sends a PATCH and returns true on success"){
+    FakeHttpClient http;
+    GoogleCalendarService service(http);
+    http.QueueResponse(200, R"({"id":"abc123","status":"confirmed"})");
+    CHECK(service.UpdateEvent(MakeSyncedEvent(), "token"));
+    CHECK(http.patchCallCount == 1);
+    REQUIRE(http.requestedMethods.size() == 1);
+    CHECK(http.requestedMethods[0] == "PATCH");
+    CHECK(http.lastUrl == kBaseUrl + "/abc123");
+    CHECK(http.LastHeaderValue("Authorization") == "Bearer token");
+    CHECK(http.lastBody.find("\"summary\":\"Study Session\"") != std::string::npos);
+}
+
+TEST_CASE("GoogleCalendarService UpdateEvent returns false on a 404"){
+    FakeHttpClient http;
+    GoogleCalendarService service(http);
+    http.QueueResponse(404, R"({"error":{"code":404,"message":"Not Found"}})");
+    CHECK_FALSE(service.UpdateEvent(MakeSyncedEvent(), "token"));
+}
+
+TEST_CASE("GoogleCalendarService UpdateEvent returns false on a 401"){
+    FakeHttpClient http;
+    GoogleCalendarService service(http);
+    http.QueueResponse(401, R"({"error":{"code":401,"message":"Invalid Credentials"}})");
+    CHECK_FALSE(service.UpdateEvent(MakeSyncedEvent(), "bad-token"));
+}
+
+TEST_CASE("GoogleCalendarService UpdateEvent returns false when there is no response"){
+    FakeHttpClient http;
+    GoogleCalendarService service(http);
+    http.QueueResponse(0, "", "timeout");
+    CHECK_FALSE(service.UpdateEvent(MakeSyncedEvent(), "token"));
+}
+
+TEST_CASE("GoogleCalendarService UpdateEvent does not call the API without a Google event id"){
+    FakeHttpClient http;
+    GoogleCalendarService service(http);
+    CHECK_FALSE(service.UpdateEvent(MakeEvent(), "token"));
+    CHECK(http.patchCallCount == 0);
+}
+
+TEST_CASE("GoogleCalendarService UpdateEvent does not call the API without a token"){
+    FakeHttpClient http;
+    GoogleCalendarService service(http);
+    CHECK_FALSE(service.UpdateEvent(MakeSyncedEvent(), ""));
+    CHECK(http.patchCallCount == 0);
+}
