@@ -595,7 +595,6 @@ StudyPanel::StudyPanel(wxWindow* parent, int deckId)
 	this->cardHost = new wxPanel();
 	this->cardHost->SetBackgroundStyle(wxBG_STYLE_PAINT);
 	this->cardHost->Create(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE | wxCLIP_CHILDREN);
-	this->cardHost->SetDoubleBuffered(true);
 	this->cardHost->SetBackgroundColour(theme.color.window);
 	this->cardHost->Bind(wxEVT_ERASE_BACKGROUND, [](wxEraseEvent&) {});
 	this->cardHost->Bind(wxEVT_PAINT, [this](wxPaintEvent&) {
@@ -645,7 +644,6 @@ StudyPanel::StudyPanel(wxWindow* parent, int deckId)
 	this->rememberedButton->Bind(wxEVT_BUTTON, &StudyPanel::OnRemembered, this);
 	this->forgotButton->Bind(wxEVT_BUTTON, &StudyPanel::OnForgot, this);
 	this->backButton->Bind(wxEVT_BUTTON, &StudyPanel::OnBack, this);
-	this->Bind(wxEVT_TIMER, &StudyPanel::OnPageTick, this, this->pageTimer.GetId());
 	this->cardHost->Bind(wxEVT_SIZE, [this](wxSizeEvent& event) {
 		event.Skip();
 		const wxSize size = event.GetSize();
@@ -661,43 +659,56 @@ StudyPanel::StudyPanel(wxWindow* parent, int deckId)
 }
 
 namespace {
-double EaseOut(double t) {
-	t = std::clamp(t, 0.0, 1.0);
-	return 1.0 - (1.0 - t) * (1.0 - t);
-}
-
-void RepaintStudyCard(wxWindow* window) {
-	if (window == nullptr || !window->IsShown()) {
-		return;
-	}
-	HWND hwnd = static_cast<HWND>(window->GetHandle());
-	if (hwnd != nullptr) {
-		::InvalidateRect(hwnd, nullptr, FALSE);
-		::UpdateWindow(hwnd);
-	} else {
-		window->Refresh(false);
-		window->Update();
-	}
-	for (wxWindow* child : window->GetChildren()) {
-		RepaintStudyCard(child);
-	}
-}
-
-struct HoldRedraw {
-	HWND hwnd;
-	explicit HoldRedraw(HWND window)
-		: hwnd(window) {
-		if (this->hwnd != nullptr) {
-			::SendMessage(this->hwnd, WM_SETREDRAW, FALSE, 0);
+// Moving a card leaves its old face in the gap. Hold the host, place both
+// cards, then paint the host and the study page that composites it.
+struct HostRedraw {
+	wxWindow* host;
+	explicit HostRedraw(wxWindow* window)
+		: host(window) {
+		const HWND hwnd = this->Handle();
+		if (hwnd != nullptr) {
+			::SendMessage(hwnd, WM_SETREDRAW, FALSE, 0);
 		}
 	}
-	~HoldRedraw() {
-		if (this->hwnd != nullptr) {
-			::SendMessage(this->hwnd, WM_SETREDRAW, TRUE, 0);
+	~HostRedraw() {
+		const HWND hwnd = this->Handle();
+		if (hwnd == nullptr) {
+			return;
 		}
+		::SendMessage(hwnd, WM_SETREDRAW, TRUE, 0);
+		::RedrawWindow(
+			hwnd,
+			nullptr,
+			nullptr,
+			RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_UPDATENOW | RDW_NOERASE
+		);
+		wxWindow* parent = this->host->GetParent();
+		if (parent == nullptr) {
+			return;
+		}
+		const HWND parentHwnd = static_cast<HWND>(parent->GetHandle());
+		if (parentHwnd == nullptr) {
+			return;
+		}
+		RECT rect;
+		::GetWindowRect(hwnd, &rect);
+		::MapWindowPoints(HWND_DESKTOP, parentHwnd, reinterpret_cast<POINT*>(&rect), 2);
+		::RedrawWindow(
+			parentHwnd,
+			&rect,
+			nullptr,
+			RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_UPDATENOW | RDW_NOERASE
+		);
 	}
-	HoldRedraw(const HoldRedraw&) = delete;
-	HoldRedraw& operator=(const HoldRedraw&) = delete;
+	HostRedraw(const HostRedraw&) = delete;
+	HostRedraw& operator=(const HostRedraw&) = delete;
+
+	HWND Handle() const {
+		if (this->host == nullptr) {
+			return nullptr;
+		}
+		return static_cast<HWND>(this->host->GetHandle());
+	}
 };
 
 void PlaceStudyCard(wxWindow* card, int x, int y, int width, int height, bool show) {
@@ -718,24 +729,21 @@ void PlaceStudyCard(wxWindow* card, int x, int y, int width, int height, bool sh
 	if (samePlace) {
 		return;
 	}
-	{
-		HoldRedraw hold(shown ? static_cast<HWND>(card->GetHandle()) : nullptr);
-		if (!shown || !sameSize) {
-			card->SetSize(nextPos.x, nextPos.y, nextSize.x, nextSize.y);
-			if (!shown) {
-				card->Show();
-			}
-		} else {
-			card->Move(nextPos);
+	if (!shown || !sameSize) {
+		card->SetSize(nextPos.x, nextPos.y, nextSize.x, nextSize.y);
+		if (!shown) {
+			card->Show();
 		}
+	} else {
+		card->Move(nextPos);
 	}
-	RepaintStudyCard(card);
 }
 }
 
 void StudyPanel::ClosePage() {
 	this->pageTimer.Stop();
 	this->pageElapsed = -1;
+	this->answerVisible = false;
 	this->ApplySpread();
 }
 
@@ -749,65 +757,31 @@ void StudyPanel::ApplySpread() {
 		return;
 	}
 	this->spreading = true;
-	const bool sliding = this->pageElapsed >= 0;
-	this->card->SetSliding(sliding);
-	this->backCard->SetSliding(sliding);
-
-	constexpr int kSlideMs = 280;
-	constexpr int kBackMs = 280;
-	double frontSlide = 0;
-	double backSlide = 0;
-	if (this->pageElapsed >= 0) {
-		int t = this->pageElapsed;
-		if (t < kSlideMs) {
-			frontSlide = EaseOut(t / static_cast<double>(kSlideMs));
-		} else {
-			t -= kSlideMs;
-			frontSlide = 1;
-			backSlide = EaseOut(t / static_cast<double>(kBackMs));
-		}
-	}
+	this->card->SetSliding(false);
+	this->backCard->SetSliding(false);
 
 	const int gutter = this->FromDIP(Theme::Get().space.xxl);
 	const int cardW = std::max(1, (row / 2) * 2 / 3);
 	const int cardH = std::max(1, hostH - 2 * gutter);
-	const int slideDistance = cardW / 2 + gutter / 2;
-	const int slidLeft = (row - cardW) / 2 - slideDistance;
-	const int frontLeft = (row - cardW) / 2 - static_cast<int>(slideDistance * frontSlide);
 	const int frontTop = (hostH - cardH) / 2;
-
 	this->card->SetBaseWidth(cardW);
 	this->backCard->SetBaseWidth(cardW);
 
-	PlaceStudyCard(this->card, frontLeft, frontTop, cardW, cardH, true);
-	if (backSlide <= 0.001) {
-		PlaceStudyCard(this->backCard, slidLeft, frontTop, cardW, cardH, false);
-	} else {
-		const int backDest = slidLeft + cardW + gutter;
-		const int backTravel = std::max(0, cardW - gutter);
-		const int backLeft = backDest - static_cast<int>((1.0 - backSlide) * backTravel);
-		const bool backArriving = !this->backCard->IsShown();
-		PlaceStudyCard(this->backCard, backLeft, frontTop, cardW, cardH, true);
-		if (backArriving) {
-			this->card->Raise();
+	{
+		HostRedraw host(this->cardHost);
+		if (!this->answerVisible) {
+			const int frontLeft = (row - cardW) / 2;
+			PlaceStudyCard(this->card, frontLeft, frontTop, cardW, cardH, true);
+			PlaceStudyCard(this->backCard, frontLeft, frontTop, cardW, cardH, false);
+		} else {
+			const int pair = cardW * 2 + gutter;
+			const int frontLeft = (row - pair) / 2;
+			const int backLeft = frontLeft + cardW + gutter;
+			PlaceStudyCard(this->card, frontLeft, frontTop, cardW, cardH, true);
+			PlaceStudyCard(this->backCard, backLeft, frontTop, cardW, cardH, true);
 		}
 	}
 	this->spreading = false;
-}
-
-void StudyPanel::OnPageTick(wxTimerEvent&) {
-	constexpr int kPageMs = 280 + 280;
-	this->pageElapsed += 16;
-	if (this->pageElapsed >= kPageMs) {
-		this->pageElapsed = kPageMs;
-		this->pageTimer.Stop();
-		this->ApplySpread();
-		this->rememberedButton->Enable();
-		this->forgotButton->Enable();
-		this->RefreshGuide();
-		return;
-	}
-	this->ApplySpread();
 }
 
 void StudyPanel::StartStudy() {
@@ -938,9 +912,10 @@ void StudyPanel::OnShowAnswer(wxCommandEvent&) {
 	this->showAnswerButton->Disable();
 	GuideHighlight::SetBorder(this->showAnswerButton, false);
 	this->backCard->SetText(wxString(this->dueCards.front().back), StudyCardSide::Back);
-	this->pageElapsed = 0;
-	this->pageTimer.Start(16);
 	this->ApplySpread();
+	this->rememberedButton->Enable();
+	this->forgotButton->Enable();
+	this->RefreshGuide();
 }
 
 void StudyPanel::OnRemembered(wxCommandEvent&) {
