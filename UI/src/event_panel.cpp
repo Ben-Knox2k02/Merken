@@ -1,27 +1,19 @@
 #include "event_panel.h"
-#include "mainframe.h"
-#include "app.h"
-#include "../../Application/UseCases/Calendar/GetEvents/get_events_usecase.h"
-#include <wx/dcbuffer.h>
-#include <thread>
 
 EventPanel::EventPanel(wxWindow* parent)
 	: wxPanel(parent),
 	  alive(std::make_shared<bool>(true)) {
 	this->SetBackgroundStyle(wxBG_STYLE_PAINT);
-	this->SetDoubleBuffered(true);
 	this->rootSizer = new wxBoxSizer(wxVERTICAL);
 
-	this->header = new wxStaticText(this, wxID_ANY, "Calendar");
-	this->header->SetFont(this->header->GetFont().Bold());
+	this->header = new wxStaticText(this, wxID_ANY, "Events");
+	this->header->SetFont(wxFont(25, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD));
+	this->header->SetForegroundColour(*wxBLACK);
+	this->header->SetBackgroundColour(wxColour(240, 240, 240));
 	this->rootSizer->Add(this->header, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 10);
-
-	this->statusLabel = new wxStaticText(this, wxID_ANY, "Loading events...");
-	this->rootSizer->Add(this->statusLabel, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 4);
 
 	this->eventList = new wxListCtrl(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_SINGLE_SEL);
 
-	// Insert columns (wxListCtrl uses InsertColumn instead of AppendTextColumn)
 	this->eventList->InsertColumn(0, "Title", wxLIST_FORMAT_LEFT, 180);
 	this->eventList->InsertColumn(1, "Start", wxLIST_FORMAT_LEFT, 160);
 	this->eventList->InsertColumn(2, "End", wxLIST_FORMAT_LEFT, 160);
@@ -29,13 +21,28 @@ EventPanel::EventPanel(wxWindow* parent)
 
 	this->rootSizer->Add(this->eventList, 1, wxEXPAND | wxALL, 10);
 
-	this->backButton = new wxButton(this, wxID_ANY, "Back");
-	this->rootSizer->Add(this->backButton, 0, wxALIGN_CENTER | wxALL, 10);
+	this->addEventButton = new wxButton(this, wxID_ANY, "Add Event");
+	this->editEventButton = new wxButton(this, wxID_ANY, "Edit Event");
+	this->deleteEventButton = new wxButton(this, wxID_ANY, "Delete Event");
+	
+	wxBoxSizer* bottomNav = new wxBoxSizer(wxHORIZONTAL);
+
+	bottomNav->AddStretchSpacer(1);
+	bottomNav->Add(this->addEventButton, 0, wxRIGHT, 10);
+	bottomNav->Add(this->editEventButton, 0, wxRIGHT, 10);
+	bottomNav->Add(this->deleteEventButton, 0, wxALIGN_CENTER_VERTICAL);
+	bottomNav->AddStretchSpacer(1);
+	
+	this->rootSizer->Add(bottomNav, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 10);
 
 	this->SetSizer(this->rootSizer);
-	this->Bind(wxEVT_PAINT, &EventPanel::OnPaint, this);
-	this->backButton->Bind(wxEVT_BUTTON, &EventPanel::OnBack, this);
 	this->LoadEvents();
+	
+	//=========== BIND EVENT HANDLERS ===================== BIND EVENT HANDLERS ==========
+	this->Bind(wxEVT_PAINT, &EventPanel::OnPaint, this);
+	this->addEventButton->Bind(wxEVT_BUTTON, &EventPanel::OnAddEvent, this);
+	this->editEventButton->Bind(wxEVT_BUTTON, &EventPanel::OnEditEvent, this);
+	this->deleteEventButton->Bind(wxEVT_BUTTON, &EventPanel::OnDeleteEvent, this);
 }
 
 EventPanel::~EventPanel() {
@@ -56,8 +63,18 @@ void EventPanel::OnPaint(wxPaintEvent&) {
 	dc.Clear();
 }
 
-void EventPanel::OnBack(wxCommandEvent&) {
-	if (auto* frame = dynamic_cast<MainFrame*>(wxGetTopLevelParent(this))) {
-		frame->ShowCardList();
-	}
+void EventPanel::OnAddEvent(wxCommandEvent& event) {
+	
+	event.Skip();
+}
+
+
+void EventPanel::OnEditEvent(wxCommandEvent& event) {
+	
+	event.Skip();
+}
+
+void EventPanel::OnDeleteEvent(wxCommandEvent& event) {
+	
+	event.Skip();
 }
