@@ -98,15 +98,13 @@ set WINLIBS= ^
     -lmsimg32
 
 rem === ENSURE OBJ FOLDER ===============================================
-if exist obj rmdir /s /q obj
-mkdir obj
+if not exist obj mkdir obj
+if not exist obj\manifest mkdir obj\manifest
 
 rem ==== ICON ============================================================
 echo Compiling icon resource...
 if exist UI\resources\app.rc (
      %MINGW%\bin\windres.exe UI\resources\app.rc -O coff -o obj\app_icon.o
-) else (
-     echo Using Default Icon
 )
 
 rem ==== MANIFEST ===========================================
@@ -128,23 +126,39 @@ if exist UI\resources\manifest.rc (
     echo Using Default Manifest
 )
 
-rem === PARALLEL COMPILE (UI + Application + ThirdParty) ==================
+rem === INCREMENTAL PARALLEL COMPILE ======================================
 echo Compiling sources...
 
 for /r %%f in (*.cpp) do (
     set "filepath=%%f"
     echo !filepath! | findstr /i "ThirdParty Tests" >nul
     if errorlevel 1 (
-        start /B cmd /c %MINGW%\bin\g++ -std=c++17 -pipe -O2 -c "%%f" %INC% -o obj\%%~nf.o
+        set "src=%%f"
+        set "obj=obj\%%~nf.o"
+        
+        rem Check if object file doesn't exist or is older than source file
+        if not exist "!obj!" (
+            start /B cmd /c %MINGW%\bin\g++ -std=c++17 -pipe -O2 -c "!src!" %INC% -o "!obj!"
+        ) else (
+            for %%i in ("!src!") do set "srctime=%%~ti"
+            for %%i in ("!obj!") do set "objtime=%%~ti"
+            if "!srctime!" gtr "!objtime!" (
+                start /B cmd /c %MINGW%\bin\g++ -std=c++17 -pipe -O2 -c "!src!" %INC% -o "!obj!"
+            )
+        )
     )
 )
 
-rem === Compile wxSQLite3 wrapper files =================================
+rem === Compile wxSQLite3 wrapper files incrementally =====================
 if exist ThirdParty\wxSQLite3\src\wxsqlite3.cpp (
-    start /B cmd /c %MINGW%\bin\g++ -std=c++17 -pipe -O2 -c ThirdParty\wxSQLite3\src\wxsqlite3.cpp %INC% -o obj\wxsqlite3.o
+    if not exist obj\wxsqlite3.o (
+        start /B cmd /c %MINGW%\bin\g++ -std=c++17 -pipe -O2 -c ThirdParty\wxSQLite3\src\wxsqlite3.cpp %INC% -o obj\wxsqlite3.o
+    )
 )
 if exist ThirdParty\wxSQLite3\src\sqlite3mc_amalgamation.c (
-    start /B cmd /c %MINGW%\bin\gcc -pipe -O2 -w -c ThirdParty\wxSQLite3\src\sqlite3mc_amalgamation.c -I ThirdParty\wxSQLite3\src -o obj\sqlite3mc_amalgamation.o
+    if not exist obj\sqlite3mc_amalgamation.o (
+        start /B cmd /c %MINGW%\bin\gcc -pipe -O2 -w -c ThirdParty\wxSQLite3\src\sqlite3mc_amalgamation.c -I ThirdParty\wxSQLite3\src -o obj\sqlite3mc_amalgamation.o
+    )
 )
 
 rem === WAIT FOR PARALLEL JOBS ==========================================
