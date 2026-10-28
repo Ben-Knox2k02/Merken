@@ -4,6 +4,7 @@
 #include "app.h"
 #include <wx/wx.h>
 #include <wx/fdrepdlg.h>
+#include <wx/splitter.h>
 
 #define NUM_SHORTCUTS 17
 
@@ -32,6 +33,9 @@ class MainFrame : public wxFrame {
 		wxPanel* currentSidebarPanel;
 		wxPanel* contentPanel;		// HUSK TO HOLD currentPanel
 		wxPanel* currentPanel;
+		
+		int sidebarWeight;
+		int contentWeight;
 		
 		int selectedDeckId;
 		int selectedCardCount;
@@ -101,7 +105,7 @@ class MainFrame : public wxFrame {
 		void OnMouseEvent(wxMouseEvent& event);			// I/O
 		void OnKeyEvent(wxKeyEvent& event);
 		
-		void ApplyPanelWidths();
+		void ApplyPanelWidths(int sidebarWeight, int contentWeight);
 		void OnWindowResized(wxSizeEvent& event);		// WINDOW
 		void OnWindowClosed(wxCloseEvent& event);
 		void OnSysColourChanged(wxSysColourChangedEvent& event);
