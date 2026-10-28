@@ -111,25 +111,24 @@ MainFrame::MainFrame(const wxString& title)
 	this->contentPanel = new wxPanel(this, wxID_ANY);
 	this->contentPanel->SetBackgroundColour(Theme::Get().color.window);
 	this->SetCurrentPanel(new FlashCardList(this->contentPanel, 0));
-	std::cout<<"[TRACE] content panel initialized..."<<std::endl;
 	
 	this->sidebarPanel = new wxPanel(this, wxID_ANY);
 	this->SetCurrentSidebarPanel(new DeckPanelList(this->sidebarPanel));
-	//this->sidebarPanel = new DeckPanelList(this);
-	std::cout<<"[TRACE] sidebar initialized..."<<std::endl;
-	//this->sidebarPanel = new EventPanel(this);
 
-	const int edge = this->FromDIP(Theme::Get().size.panelPad);
-	const int gap = this->FromDIP(Theme::Get().space.md);
-	this->rootSizer->Add(this->sidebarPanel, 30, wxEXPAND | wxTOP | wxBOTTOM | wxLEFT, edge);
+	int edge = this->FromDIP(Theme::Get().size.panelPad);
+	int gap = this->FromDIP(Theme::Get().space.md);
+	this->sidebarWeight = 30;
+	this->contentWeight = 70;
+	
+	this->rootSizer->Add(this->sidebarPanel, this->sidebarWeight, wxEXPAND | wxTOP | wxBOTTOM | wxLEFT, edge);
 	this->rootSizer->AddSpacer(gap);
-	this->rootSizer->Add(this->contentPanel, 70, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, edge);
+	this->rootSizer->Add(this->contentPanel, this->contentWeight, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, edge);
 	
 	this->SetSizer(this->rootSizer);
 	this->Layout();
 	
 	//========= BIND EVENT HANDLERS ==================================== BIND EVENT HANDLERS ===================
-	std::cout<<"Binding event handlers..."<<std::endl;
+	std::cout<<"[TRACE] Binding event handlers..."<<std::endl;
 	this->Bind(wxEVT_MENU, &MainFrame::OnAddDeck, this, wxID_NEW);					// FILE
 	this->Bind(wxEVT_MENU, &MainFrame::OnEditDeck, this, ID_EDIT_DECK);
 	this->Bind(wxEVT_MENU, &MainFrame::OnDeleteDeck, this, ID_DELETE_DECK);
@@ -288,6 +287,9 @@ void MainFrame::ShowCardList() {
 	if(auto* decks = dynamic_cast<DeckPanelList*>(this->sidebarPanel)) {
 		decks->RefreshGuide();
 	}
+	this->sidebarWeight = 30;
+	this->contentWeight = 70;
+	this->ApplyPanelWidths(this->sidebarWeight, this->contentWeight);
 	this->SetCurrentSidebarPanel(new DeckPanelList(this->sidebarPanel));
 	this->SetCurrentPanel(new FlashCardList(this->contentPanel, this->selectedDeckId));
 	this->UpdateDeckMenus();
@@ -298,17 +300,26 @@ void MainFrame::ShowStudyDeck() {
 		ShowCenteredMessage(this, "Select a deck first.", "Study Deck", wxOK | wxICON_WARNING);
 		return;
 	}
+	this->sidebarWeight = 30;
+	this->contentWeight = 70;
+	this->ApplyPanelWidths(this->sidebarWeight, this->contentWeight);
 	this->SetCurrentSidebarPanel(new DeckPanelList(this->sidebarPanel));
 	this->SetCurrentPanel(new StudyPanel(this->contentPanel, this->selectedDeckId));
 	this->SetStudying(true);
 }
 
 void MainFrame::ShowTodaysProgress() {
+	this->sidebarWeight = 30;
+	this->contentWeight = 70;
+	this->ApplyPanelWidths(this->sidebarWeight, this->contentWeight);
 	this->SetCurrentSidebarPanel(new DeckPanelList(this->sidebarPanel));
 	this->SetCurrentPanel(new ProgressPanel(this->contentPanel));
 }
 
 void MainFrame::ShowCalendar() {
+	this->sidebarWeight = 50;
+	this->contentWeight = 50;
+	this->ApplyPanelWidths(this->sidebarWeight, this->contentWeight);
 	this->SetCurrentSidebarPanel(new EventPanel(this->sidebarPanel));
 	this->SetCurrentPanel(new CalendarPanel(this->contentPanel));
 }
@@ -318,17 +329,59 @@ void MainFrame::ShowAiStudy() {
 		ShowCenteredMessage(this, "Select a deck first.", "AI Study", wxOK | wxICON_WARNING);
 		return;
 	}
+	this->sidebarWeight = 30;
+	this->contentWeight = 70;
+	this->ApplyPanelWidths(this->sidebarWeight, this->contentWeight);
 	this->SetCurrentSidebarPanel(new DeckPanelList(this->sidebarPanel));
 	this->SetCurrentPanel(new AiStudyPanel(this->contentPanel, this->selectedDeckId));
 	this->SetStudying(true);
 }
 
 void MainFrame::SetCurrentPanel(wxPanel* newPanel) {
+    wxSizer* sizer = this->contentPanel->GetSizer();
+    if(!sizer) {
+        sizer = new wxBoxSizer(wxVERTICAL);
+        this->contentPanel->SetSizer(sizer);
+    } 
+	else {
+        // This safely clears and destroys the old panel automatically
+        sizer->Clear(true);
+    }
+    
+    this->currentPanel = newPanel;
+    this->currentPanel->SetBackgroundStyle(wxBG_STYLE_PAINT);
+    this->currentPanel->SetBackgroundColour(Theme::Get().color.window);
+    
+    sizer->Add(this->currentPanel, 1, wxEXPAND);
+    
+    this->contentPanel->Layout();
+    this->currentPanel->SetFocus();
+}
+
+void MainFrame::SetCurrentSidebarPanel(wxPanel* newPanel) {
+    wxSizer* sizer = this->sidebarPanel->GetSizer();
+    if(!sizer) {
+        sizer = new wxBoxSizer(wxVERTICAL);
+        this->sidebarPanel->SetSizer(sizer);
+    } 
+	else {
+        sizer->Clear(true);
+    }
+    
+	this->currentSidebarPanel = newPanel;
+	this->currentSidebarPanel->SetBackgroundStyle(wxBG_STYLE_PAINT);
+	this->currentSidebarPanel->SetBackgroundColour(Theme::Get().color.window);
+    
+    sizer->Add(this->currentSidebarPanel, 1, wxEXPAND);
+    
+    this->sidebarPanel->Layout();
+}
+
+/*void MainFrame::SetCurrentPanel(wxPanel* newPanel) {
 	if(this->currentPanel != NULL) { 
 		this->currentPanel->Destroy();
 		this->currentPanel = NULL;
 	}
-	
 	this->contentPanel->SetSizer(NULL);
 	
 	this->currentPanel = newPanel;
@@ -340,12 +393,11 @@ void MainFrame::SetCurrentPanel(wxPanel* newPanel) {
 	
 	this->contentPanel->SetSizer(sizer);
 	this->contentPanel->Layout();
-	this->ApplyPanelWidths();
 	
 	this->currentPanel->SetFocus();
-}
+}*/
 
-void MainFrame::SetCurrentSidebarPanel(wxPanel* newPanel) {
+/*void MainFrame::SetCurrentSidebarPanel(wxPanel* newPanel) {
 	wxLogStatus("CHANGE SIDEBAR");
 	
 	if(this->currentSidebarPanel != NULL) { 
@@ -364,32 +416,41 @@ void MainFrame::SetCurrentSidebarPanel(wxPanel* newPanel) {
 	
 	this->sidebarPanel->SetSizer(sizer);
 	this->sidebarPanel->Layout();
-	this->ApplyPanelWidths();
 	
 	this->currentSidebarPanel->SetFocus();
-}
+} */
 
-void MainFrame::ApplyPanelWidths() {
-	const int clientWidth = this->GetClientSize().GetWidth();
-	if(clientWidth <= 0 || this->sidebarPanel == nullptr || this->contentPanel == nullptr) {
-		return;
-	}
+void MainFrame::ApplyPanelWidths(int sidebarWeight, int contentWeight) {
+    const int clientWidth = this->GetClientSize().GetWidth();
+    if(clientWidth <= 0 || this->sidebarPanel == nullptr || this->contentPanel == nullptr) {
+        return;
+    }
 
-	const int edge = this->FromDIP(Theme::Get().size.panelPad);
-	const int gap = this->FromDIP(Theme::Get().space.md);
-	const int inner = clientWidth - edge - gap - edge;
-	if(inner <= 0) {
-		return;
-	}
-	const int deckWidth = inner * 30 / 100;
-	const int cardWidth = inner - deckWidth;
-	if(deckWidth <= 0 || cardWidth <= 0) {
-		return;
-	}
-	this->sidebarPanel->SetMinSize(wxSize(deckWidth, -1));
-	this->sidebarPanel->SetMaxSize(wxSize(deckWidth, -1));
-	this->contentPanel->SetMinSize(wxSize(cardWidth, -1));
-	this->contentPanel->SetMaxSize(wxSize(cardWidth, -1));
+    const int edge = this->FromDIP(Theme::Get().size.panelPad);
+    const int gap = this->FromDIP(Theme::Get().space.md);
+    const int inner = clientWidth - edge - gap - edge;
+    if(inner <= 0) {
+        return;
+    }
+   
+    int totalWeight = sidebarWeight + contentWeight;	 			// Guard against invalid weights
+    if(totalWeight <= 0 || totalWeight > 100) {
+        sidebarWeight = 30;
+        contentWeight = 70;
+        totalWeight = 100;
+    }
+
+    const int deckWidth = (inner * sidebarWeight) / totalWeight;	// Calculate dynamic proportional widths based on the weights
+    const int cardWidth = inner - deckWidth;
+
+    if(deckWidth <= 0 || cardWidth <= 0) { return; }
+
+    this->sidebarPanel->SetMinSize(wxSize(deckWidth, -1));
+    this->sidebarPanel->SetMaxSize(wxSize(deckWidth, -1));
+    this->contentPanel->SetMinSize(wxSize(cardWidth, -1));
+    this->contentPanel->SetMaxSize(wxSize(cardWidth, -1));
+	
+	this->Layout();
 }
 
 //=============== EVENT HANDLERS ================================== EVENT HANDLERS =============
@@ -680,7 +741,7 @@ void MainFrame::OnWindowResized(wxSizeEvent& event) {				// WINDOW
 	
 	this->app.SetWindowWidth(size.GetWidth());
 	this->app.SetWindowHeight(size.GetHeight());
-	this->ApplyPanelWidths();
+	this->ApplyPanelWidths(this->sidebarWeight, this->contentWeight);
 	
 	event.Skip();
 }
