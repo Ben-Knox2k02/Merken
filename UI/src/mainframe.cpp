@@ -8,6 +8,7 @@
 #include "deck_panel_list.h"
 #include "study_panel.h"
 #include "calendar_panel.h"
+#include "event_panel.h"
 #include "ai_panel.h"
 #include "ai_study_panel.h"
 #include "progress_panel.h"
@@ -16,6 +17,8 @@
 #include "theme.h"
 #include "icon_button.h"
 #include "../../Application/UseCases/Profile/GetUserProfile/get_user_profile_usecase.h"
+
+wxDECLARE_APP(App); 
 
 MainFrame::MainFrame(const wxString& title)
     : wxFrame(nullptr, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE),
@@ -96,7 +99,8 @@ MainFrame::MainFrame(const wxString& title)
 	wxAcceleratorTable accel(16, this->shortcuts);
 	this->SetAcceleratorTable(accel);
 	
-	//============ ATTACH WIDGETS ==================================== ATTACH WIDGETS ========================= 
+	//============ ATTACH WIDGETS ==================================== ATTACH WIDGETS =========================
+	std::cout<<"[TRACE] attaching widgets..."<<std::endl;
 	this->SetMenuBar(this->menuBar);
 	this->ApplyMenuIcons();
 	this->CreateStatusBar();
@@ -107,9 +111,13 @@ MainFrame::MainFrame(const wxString& title)
 	this->contentPanel = new wxPanel(this, wxID_ANY);
 	this->contentPanel->SetBackgroundColour(Theme::Get().color.window);
 	this->SetCurrentPanel(new FlashCardList(this->contentPanel, 0));
+	std::cout<<"[TRACE] content panel initialized..."<<std::endl;
 	
 	this->sidebarPanel = new wxPanel(this, wxID_ANY);
 	this->SetCurrentSidebarPanel(new DeckPanelList(this->sidebarPanel));
+	//this->sidebarPanel = new DeckPanelList(this);
+	std::cout<<"[TRACE] sidebar initialized..."<<std::endl;
+	//this->sidebarPanel = new EventPanel(this);
 
 	const int edge = this->FromDIP(Theme::Get().size.panelPad);
 	const int gap = this->FromDIP(Theme::Get().space.md);
@@ -121,6 +129,7 @@ MainFrame::MainFrame(const wxString& title)
 	this->Layout();
 	
 	//========= BIND EVENT HANDLERS ==================================== BIND EVENT HANDLERS ===================
+	std::cout<<"Binding event handlers..."<<std::endl;
 	this->Bind(wxEVT_MENU, &MainFrame::OnAddDeck, this, wxID_NEW);					// FILE
 	this->Bind(wxEVT_MENU, &MainFrame::OnEditDeck, this, ID_EDIT_DECK);
 	this->Bind(wxEVT_MENU, &MainFrame::OnDeleteDeck, this, ID_DELETE_DECK);
@@ -279,6 +288,7 @@ void MainFrame::ShowCardList() {
 	if(auto* decks = dynamic_cast<DeckPanelList*>(this->sidebarPanel)) {
 		decks->RefreshGuide();
 	}
+	this->SetCurrentSidebarPanel(new DeckPanelList(this->sidebarPanel));
 	this->SetCurrentPanel(new FlashCardList(this->contentPanel, this->selectedDeckId));
 	this->UpdateDeckMenus();
 }
@@ -288,15 +298,18 @@ void MainFrame::ShowStudyDeck() {
 		ShowCenteredMessage(this, "Select a deck first.", "Study Deck", wxOK | wxICON_WARNING);
 		return;
 	}
+	this->SetCurrentSidebarPanel(new DeckPanelList(this->sidebarPanel));
 	this->SetCurrentPanel(new StudyPanel(this->contentPanel, this->selectedDeckId));
 	this->SetStudying(true);
 }
 
 void MainFrame::ShowTodaysProgress() {
+	this->SetCurrentSidebarPanel(new DeckPanelList(this->sidebarPanel));
 	this->SetCurrentPanel(new ProgressPanel(this->contentPanel));
 }
 
 void MainFrame::ShowCalendar() {
+	this->SetCurrentSidebarPanel(new EventPanel(this->sidebarPanel));
 	this->SetCurrentPanel(new CalendarPanel(this->contentPanel));
 }
 
@@ -305,13 +318,12 @@ void MainFrame::ShowAiStudy() {
 		ShowCenteredMessage(this, "Select a deck first.", "AI Study", wxOK | wxICON_WARNING);
 		return;
 	}
+	this->SetCurrentSidebarPanel(new DeckPanelList(this->sidebarPanel));
 	this->SetCurrentPanel(new AiStudyPanel(this->contentPanel, this->selectedDeckId));
 	this->SetStudying(true);
 }
 
 void MainFrame::SetCurrentPanel(wxPanel* newPanel) {
-	//this->Freeze();
-	
 	if(this->currentPanel != NULL) { 
 		this->currentPanel->Destroy();
 		this->currentPanel = NULL;
@@ -330,15 +342,7 @@ void MainFrame::SetCurrentPanel(wxPanel* newPanel) {
 	this->contentPanel->Layout();
 	this->ApplyPanelWidths();
 	
-	/*if(this->sidebarPanel != nullptr) {
-		this->sidebarPanel->Layout();
-		this->sidebarPanel->Refresh(false);
-		this->sidebarPanel->Update();
-	} */
 	this->currentPanel->SetFocus();
-	
-	//this->Thaw();
-	//this->Refresh(false);
 }
 
 void MainFrame::SetCurrentSidebarPanel(wxPanel* newPanel) {
@@ -361,6 +365,8 @@ void MainFrame::SetCurrentSidebarPanel(wxPanel* newPanel) {
 	this->sidebarPanel->SetSizer(sizer);
 	this->sidebarPanel->Layout();
 	this->ApplyPanelWidths();
+	
+	this->currentSidebarPanel->SetFocus();
 }
 
 void MainFrame::ApplyPanelWidths() {
