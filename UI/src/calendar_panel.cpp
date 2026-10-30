@@ -3,8 +3,8 @@
 CalendarPanel::CalendarPanel(wxWindow* parent)
 	: wxPanel(parent),
 	  alive(std::make_shared<bool>(true)) {
-	App& app = wxGetApp();
 	//============ ROOT PANEL ======================================== ROOT PANEL =====================
+	App& app = wxGetApp();
 	this->SetBackgroundStyle(wxBG_STYLE_PAINT);
     this->rootSizer = new wxBoxSizer(wxVERTICAL);
 
@@ -62,6 +62,7 @@ CalendarPanel::CalendarPanel(wxWindow* parent)
 	
 	//========== BIND EVENT HANDLERS ============================== BIND EVENT HANDLERS ================
 	this->Bind(wxEVT_PAINT, &CalendarPanel::OnPaint, this);
+	this->calendar->Bind(wxEVT_CALENDAR_SEL_CHANGED, &CalendarPanel::OnSelectionChanged, this);
 	this->backButton->Bind(wxEVT_BUTTON, &CalendarPanel::OnBack, this);
 }
 
@@ -75,8 +76,19 @@ void CalendarPanel::OnPaint(wxPaintEvent& event) {				// PAINT METHOD FOR DOUBLE
 	dc.Clear();
 }
 
-void CalendarPanel::OnBack(wxCommandEvent&) {
-	if(auto* frame = dynamic_cast<MainFrame*>(wxGetTopLevelParent(this))) {
+void CalendarPanel::OnSelectionChanged(wxCalendarEvent& event) {
+	wxDateTime selectedDate = this->calendar->GetDate();
+	wxString dateString = selectedDate.Format("%m/%d/%Y");
+	
+	wxFrame* frame = wxDynamicCast(wxGetTopLevelParent(this), wxFrame);
+	if(frame) { frame->SetStatusText("Selected Date: " + dateString); }
+	
+	event.Skip();
+}
+
+void CalendarPanel::OnBack(wxCommandEvent& event) {
+	/*if(auto* frame = dynamic_cast<MainFrame*>(wxGetTopLevelParent(this))) {
 		frame->ShowCardList();
-	}
+	} */
+	event.Skip();
 }
