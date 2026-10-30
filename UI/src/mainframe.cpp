@@ -271,6 +271,9 @@ void MainFrame::OnSysColourChanged(wxSysColourChangedEvent& event) {
 	event.Skip();
 }
 
+wxDateTime MainFrame::GetSelectedDate() const { return this->selectedDate; }
+void MainFrame::SetSelectedDate(const wxDateTime& date) { this->selectedDate = date; }
+
 void MainFrame::ShowCardList() {
 	this->SetStudying(false);
 
