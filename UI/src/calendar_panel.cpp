@@ -62,7 +62,7 @@ CalendarPanel::CalendarPanel(wxWindow* parent)
 	
 	//========== BIND EVENT HANDLERS ============================== BIND EVENT HANDLERS ================
 	this->Bind(wxEVT_PAINT, &CalendarPanel::OnPaint, this);
-	this->calendar->Bind(wxEVT_CALENDAR_SEL_CHANGED, &CalendarPanel::OnSelectionChanged, this);
+	this->calendar->Bind(wxEVT_CALENDAR_SEL_CHANGED, &CalendarPanel::OnDateSelected, this);
 	this->backButton->Bind(wxEVT_BUTTON, &CalendarPanel::OnBack, this);
 }
 
@@ -76,12 +76,14 @@ void CalendarPanel::OnPaint(wxPaintEvent& event) {				// PAINT METHOD FOR DOUBLE
 	dc.Clear();
 }
 
-void CalendarPanel::OnSelectionChanged(wxCalendarEvent& event) {
+void CalendarPanel::OnDateSelected(wxCalendarEvent& event) {
 	wxDateTime selectedDate = this->calendar->GetDate();
 	wxString dateString = selectedDate.Format("%m/%d/%Y");
 	
-	wxFrame* frame = wxDynamicCast(wxGetTopLevelParent(this), wxFrame);
-	if(frame) { frame->SetStatusText("Selected Date: " + dateString); }
+	if(auto* frame = dynamic_cast<MainFrame*>(wxGetTopLevelParent(this))) {
+		frame->SetSelectedDate(selectedDate);
+		frame->SetStatusText("Selected Date: " + dateString);
+	}
 	
 	event.Skip();
 }
