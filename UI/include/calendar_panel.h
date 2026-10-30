@@ -32,7 +32,7 @@ class CalendarPanel : public wxPanel {
 		wxButton* backButton;
 		
 		void OnPaint(wxPaintEvent& event);
-		void OnSelectionChanged(wxCalendarEvent& event);
+		void OnDateSelected(wxCalendarEvent& event);
 		void OnBack(wxCommandEvent& event);
 
 	private:
