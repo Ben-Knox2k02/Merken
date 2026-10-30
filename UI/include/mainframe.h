@@ -2,9 +2,25 @@
 #define MAINFRAME_H
 
 #include "app.h"
-#include <wx/wx.h>
+#include "flash_card_list.h"
+#include "deck_panel_list.h"
+#include "study_panel.h"
+#include "calendar_panel.h"
+#include "event_panel.h"
+#include "ai_panel.h"
+#include "ai_study_panel.h"
+#include "progress_panel.h"
+#include "settings_dialog.h"
+#include "centered_message.h"
+#include "theme.h"
+#include "icon_button.h"
 #include <wx/fdrepdlg.h>
-#include <wx/splitter.h>
+#include <vector>
+#include <string>
+#include <filesystem>
+#include <fstream>
+#include <algorithm>
+#include "../../Application/UseCases/Profile/GetUserProfile/get_user_profile_usecase.h"
 
 #define NUM_SHORTCUTS 17
 
