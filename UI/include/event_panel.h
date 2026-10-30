@@ -1,14 +1,14 @@
 #ifndef EVENT_PANEL_H
 #define EVENT_PANEL_H
 
-#include <wx/wx.h>
+#include "app.h"
+#include "mainframe.h"
+#include "dialog.h"
+#include "theme.h"
 #include <wx/listctrl.h>
 #include <wx/dcbuffer.h>
 #include <thread>
 #include <memory>
-#include "app.h"
-#include "mainframe.h"
-#include "theme.h"
 #include "../../Application/UseCases/Calendar/GetEvents/get_events_response.h"
 #include "../../Application/UseCases/Calendar/GetEvents/get_events_usecase.h"
 
@@ -17,14 +17,14 @@ class EventPanel : public wxPanel {
 		explicit EventPanel(wxWindow* parent);
 		~EventPanel() override;
 
-		//wxPanel* topPanel;
-		//wxPanel* midPanel;
-		//wxPanel* bottomPanel;
+		wxPanel* topPanel;
+		wxPanel* midPanel;
+		wxPanel* bottomPanel;
 		
 		wxBoxSizer* rootSizer;
-		//wxBoxSizer* topSizer;
-		//wxBoxSizer* midSizer;
-		//wxBoxSizer* bottomSizer;
+		wxBoxSizer* topSizer;
+		wxBoxSizer* midSizer;
+		wxBoxSizer* bottomSizer;
 		
 		wxStaticText* header;
 		
