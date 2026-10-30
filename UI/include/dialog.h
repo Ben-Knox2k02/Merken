@@ -54,6 +54,14 @@ class EventDialog : public wxDialog {
 		wxString GetLocation() const;
 		wxString GetDescription() const;
 		wxString GetReminder() const;
+		
+		void SetTitle(const wxString& title);
+		void SetDate(const wxString& date);
+		void SetStart(const wxString& start);
+		void SetEnd(const wxString& end);
+		void SetLocation(const wxString& location);
+		void SetDescription(const wxString& description);
+		void SetReminder(const wxString& reminder);
 };
 
 #endif
