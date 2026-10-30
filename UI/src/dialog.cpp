@@ -86,35 +86,55 @@ DeckDialog::DeckDialog(wxWindow* parent, const wxString& title)
 }
 
 EventDialog::EventDialog(wxWindow* parent) : wxDialog(parent, wxID_ANY, "Create Event", wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER) {
+	// (Change or remove green background when you're ready for production styling!)
 	this->SetBackgroundColour(wxColour(*wxGREEN));
 	
 	this->rootSizer = new wxBoxSizer(wxVERTICAL);
 	
-	this->titleText = new wxStaticText(this, wxID_ANY, "Title:");
+	// Helper macro or just standard clean additions:
+	this->titleText = new wxStaticText(this, wxID_ANY, "Title:");					
 	this->titleCtrl = new wxTextCtrl(this, wxID_ANY);
-	this->rootSizer->Add(this->titleText, 0, wxLEFT | wxALL, 5);
-	this->rootSizer->Add(this->titleCtrl, 0, wxRIGHT | wxALL, 5);
+	this->rootSizer->Add(this->titleText, 0, wxLEFT | wxTOP | wxRIGHT, 5);
+	this->rootSizer->Add(this->titleCtrl, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 5);
 	
-	this->dateText = new wxStaticText(this, wxID_ANY, "Date:");
+	this->dateText = new wxStaticText(this, wxID_ANY, "Date:");					
 	this->dateCtrl = new wxTextCtrl(this, wxID_ANY);
-	this->rootSizer->Add(this->dateText, 0, wxLEFT | wxALL, 5);
-	this->rootSizer->Add(this->dateCtrl, 0, wxRIGHT | wxALL, 5);
+	this->rootSizer->Add(this->dateText, 0, wxLEFT | wxTOP | wxRIGHT, 5);
+	this->rootSizer->Add(this->dateCtrl, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 5);
 	
-	this->locationText = new wxStaticText(this, wxID_ANY, "Location:");
+	this->startText = new wxStaticText(this, wxID_ANY, "Start Time:");			
+	this->startCtrl = new wxTextCtrl(this, wxID_ANY);
+	this->rootSizer->Add(this->startText, 0, wxLEFT | wxTOP | wxRIGHT, 5);
+	this->rootSizer->Add(this->startCtrl, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 5);
+	
+	this->endText = new wxStaticText(this, wxID_ANY, "End Time:");				
+	this->endCtrl = new wxTextCtrl(this, wxID_ANY);
+	this->rootSizer->Add(this->endText, 0, wxLEFT | wxTOP | wxRIGHT, 5);
+	this->rootSizer->Add(this->endCtrl, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 5);
+	
+	this->locationText = new wxStaticText(this, wxID_ANY, "Location:");			
 	this->locationCtrl = new wxTextCtrl(this, wxID_ANY);
-	this->rootSizer->Add(this->locationText, 0, wxLEFT | wxALL, 5);
-	this->rootSizer->Add(this->locationCtrl, 0, wxRIGHT | wxALL, 5);
+	this->rootSizer->Add(this->locationText, 0, wxLEFT | wxTOP | wxRIGHT, 5);
+	this->rootSizer->Add(this->locationCtrl, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 5);
 	
-	this->descriptionText = new wxStaticText(this, wxID_ANY, "Description:");
+	this->descriptionText = new wxStaticText(this, wxID_ANY, "Description:");		
 	this->descriptionCtrl = new wxTextCtrl(this, wxID_ANY);
-	this->rootSizer->Add(this->descriptionText, 0, wxLEFT | wxALL, 5);
-	this->rootSizer->Add(this->descriptionCtrl, 0, wxRIGHT | wxALL, 5);
+	this->rootSizer->Add(this->descriptionText, 0, wxLEFT | wxTOP | wxRIGHT, 5);
+	this->rootSizer->Add(this->descriptionCtrl, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 5);
 	
-	this->reminderText = new wxStaticText(this, wxID_ANY, "Reminder:");
+	this->reminderText = new wxStaticText(this, wxID_ANY, "Reminder:");			
 	this->reminderCtrl = new wxTextCtrl(this, wxID_ANY);
-	this->rootSizer->Add(this->reminderText, 0, wxLEFT | wxALL, 5);
-	this->rootSizer->Add(this->reminderCtrl, 0, wxRIGHT | wxALL, 5);
+	this->rootSizer->Add(this->reminderText, 0, wxLEFT | wxTOP | wxRIGHT, 5);
+	this->rootSizer->Add(this->reminderCtrl, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 5);
 	
 	this->rootSizer->Add(CreateSeparatedButtonSizer(wxOK | wxCANCEL), 0, wxEXPAND | wxALL, 10);
 	this->SetSizerAndFit(this->rootSizer);
 }
+
+wxString EventDialog::GetTitle() const { return this->titleCtrl->GetValue(); }
+wxString EventDialog::GetDate() const { return this->dateCtrl->GetValue(); }
+wxString EventDialog::GetStart() const { return this->startCtrl->GetValue(); }
+wxString EventDialog::GetEnd() const { return this->endCtrl->GetValue(); }
+wxString EventDialog::GetLocation() const { return this->locationCtrl->GetValue(); }
+wxString EventDialog::GetDescription() const { return this->descriptionCtrl->GetValue(); }
+wxString EventDialog::GetReminder() const { return this->reminderCtrl->GetValue(); }
