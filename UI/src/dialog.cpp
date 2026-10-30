@@ -138,3 +138,39 @@ wxString EventDialog::GetEnd() const { return this->endCtrl->GetValue(); }
 wxString EventDialog::GetLocation() const { return this->locationCtrl->GetValue(); }
 wxString EventDialog::GetDescription() const { return this->descriptionCtrl->GetValue(); }
 wxString EventDialog::GetReminder() const { return this->reminderCtrl->GetValue(); }
+
+void EventDialog::SetTitle(const wxString& title) {
+    if(this->titleCtrl) { this->titleCtrl->SetValue(title); }
+}
+
+void EventDialog::SetDate(const wxString& date) {
+    if(this->dateCtrl) { this->dateCtrl->SetValue(date); }
+}
+
+void EventDialog::SetStart(const wxString& start) {
+    if(this->startCtrl) { this->startCtrl->SetValue(start); }
+}
+
+void EventDialog::SetEnd(const wxString& end) {
+    if(this->endCtrl) { this->endCtrl->SetValue(end); }
+}
+
+void EventDialog::SetLocation(const wxString& location) {
+    if(this->locationCtrl) { this->locationCtrl->SetValue(location); }
+}
+
+void EventDialog::SetDescription(const wxString& description) {
+    if(this->descriptionCtrl) { this->descriptionCtrl->SetValue(description); }
+}
+
+void EventDialog::SetReminder(const wxString& reminder) {
+    if(this->reminderCtrl) {
+        // Note: If the reminder control is a choice dropdown instead of a text control,
+        // use something like: this->reminderCtrl->SetStringSelection(reminder);
+        this->reminderCtrl->SetValue(reminder);
+    }
+}
+
+
+
+
