@@ -132,13 +132,63 @@ void EventPanel::OnAddEvent(wxCommandEvent& event) {
 
 
 void EventPanel::OnEditEvent(wxCommandEvent& event) {
+	long selected = this->eventList->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
+	if (selected == -1) {
+		wxMessageBox("Please select an event to edit.", "Edit Event", wxOK | wxICON_WARNING, this);
+		event.Skip();
+		return;
+	}
+
 	wxFrame* frame = wxDynamicCast(wxGetTopLevelParent(this), wxFrame);
 	if(frame) { frame->SetStatusText("Edit Event"); }
+
+	EventDialog dialog(this);
+	dialog.SetTitle(this->eventList->GetItemText(selected, 0));
+	dialog.SetDate(this->eventList->GetItemText(selected, 1));
+	dialog.SetStart(this->eventList->GetItemText(selected, 2));
+	dialog.SetEnd(this->eventList->GetItemText(selected, 3));
+	dialog.SetLocation(this->eventList->GetItemText(selected, 4));
+	dialog.SetDescription(this->eventList->GetItemText(selected, 5));
+	dialog.SetReminder(this->eventList->GetItemText(selected, 6));
+
+	dialog.CentreOnParent();
+	
+	if(dialog.ShowModal() == wxID_OK) {
+		if(frame) { frame->SetStatusText("Event Updated"); }
+		this->eventList->SetItem(selected, 0, dialog.GetTitle());
+		this->eventList->SetItem(selected, 1, dialog.GetDate());
+		this->eventList->SetItem(selected, 2, dialog.GetStart());
+		this->eventList->SetItem(selected, 3, dialog.GetEnd());
+		this->eventList->SetItem(selected, 4, dialog.GetLocation());
+		this->eventList->SetItem(selected, 5, dialog.GetDescription());
+		this->eventList->SetItem(selected, 6, dialog.GetReminder());
+	}
+	
 	event.Skip();
 }
 
 void EventPanel::OnDeleteEvent(wxCommandEvent& event) {
+	long selected = this->eventList->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
+	if(selected == -1) {
+		wxMessageBox("Please select an event to delete.", "Delete Event", wxOK | wxICON_WARNING, this);
+		event.Skip();
+		return;
+	}
+
 	wxFrame* frame = wxDynamicCast(wxGetTopLevelParent(this), wxFrame);
 	if(frame) { frame->SetStatusText("Delete Event"); }
+
+	int confirmed = wxMessageBox(
+		"Are you sure you want to delete this event?",
+		"Delete Event",
+		wxYES_NO | wxICON_QUESTION,
+		this
+	);
+
+	if(confirmed == wxYES) {
+		this->eventList->DeleteItem(selected);
+		if(frame) { frame->SetStatusText("Event Deleted"); }
+	}
+	
 	event.Skip();
 }
