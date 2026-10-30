@@ -32,16 +32,28 @@ class EventDialog : public wxDialog {
 		wxBoxSizer* rootSizer;
 		
 		wxStaticText* titleText;
-		wxStaticText* descriptionText;
 		wxStaticText* dateText;
+		wxStaticText* startText;
+		wxStaticText* endText;
 		wxStaticText* locationText;
+		wxStaticText* descriptionText;
 		wxStaticText* reminderText;
 		
 		wxTextCtrl* titleCtrl;
-		wxTextCtrl* descriptionCtrl;
 		wxTextCtrl* dateCtrl;
+		wxTextCtrl* startCtrl;
+		wxTextCtrl* endCtrl;
 		wxTextCtrl* locationCtrl;
+		wxTextCtrl* descriptionCtrl;
 		wxTextCtrl* reminderCtrl;
+		
+		wxString GetTitle() const;
+		wxString GetDate() const;
+		wxString GetStart() const;
+		wxString GetEnd() const;
+		wxString GetLocation() const;
+		wxString GetDescription() const;
+		wxString GetReminder() const;
 };
 
 #endif
