@@ -7,8 +7,10 @@
 wxIMPLEMENT_APP(App);
 
 bool App::OnInit() {
+	std::cout<<"[TRACE] Entering OnInit..."<<std::endl;
+	this->basePath = wxFileName(wxStandardPaths::Get().GetExecutablePath()).GetPath() + wxFILE_SEP_PATH;
+	std::cout<<"[TRACE] Merken.exe Path: "<<this->basePath<<std::endl;
 	try {
-		std::cout << "[TRACE] Entering OnInit..." << std::endl;
 		this->SetAppearance(Appearance::System);
 		wxInitAllImageHandlers();
 		this->EnsureInjector();
@@ -53,10 +55,12 @@ int App::OnExit() {
 }
 
 void App::EnsureInjector() {
-	if (!this->injector.has_value()) {
+	if(!this->injector.has_value()) {
 		this->injector.emplace(MakeInjector());
 	}
 }
+
+wxString App::GetBasePath() const { return this->basePath; }
 
 int App::GetScreenWidth() const { return this->SCREEN_WIDTH; }
 int App::GetScreenHeight() const { return this->SCREEN_HEIGHT; }
