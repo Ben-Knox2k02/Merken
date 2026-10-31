@@ -1,20 +1,10 @@
 #include "flash_card_list.h"
-#include "dialog.h"
-#include "centered_message.h"
-#include "mainframe.h"
-#include "theme.h"
-#include "guide_highlight.h"
-#include "app.h"
 #include "../../Application/UseCases/Deck/GetCards/get_cards_usecase.h"
 #include "../../Application/UseCases/Deck/GetDecks/get_decks_usecase.h"
 #include "../../Application/UseCases/Deck/CreateCard/create_card_usecase.h"
 #include "../../Application/UseCases/Deck/UpdateCard/update_card_usecase.h"
 #include "../../Application/UseCases/Deck/DeleteCard/delete_card_usecase.h"
 #include "../../Application/UseCases/Profile/GetUserProfile/get_user_profile_usecase.h"
-#include <wx/dcgraph.h>
-#include <wx/tokenzr.h>
-
-wxDECLARE_APP(App);
 
 namespace {
 
@@ -76,10 +66,13 @@ FlashCardList::FlashCardList(wxWindow* parent, int deckId)
 	  headerGap(nullptr),
 	  lastHeaderWrap(0),
 	  lastDescWrap(0) {
+	std::cout<<"[TRACE] Entering FlashCardList Constructor"<<std::endl;
 	this->SetBackgroundStyle(wxBG_STYLE_PAINT);
 	this->Create(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE);
 	this->SetWindowStyleFlag(this->GetWindowStyleFlag() & ~wxCLIP_CHILDREN);
 	this->SetBackgroundColour(Theme::Get().color.window);
+	
+	App& app = wxGetApp();
 
 	this->rootSizer = new wxBoxSizer(wxVERTICAL);
 
@@ -104,19 +97,19 @@ FlashCardList::FlashCardList(wxWindow* parent, int deckId)
 	this->headerButtonSizer = new wxBoxSizer(wxHORIZONTAL);
 	this->addButton = new wxButton(this, wxID_ANY, "Add Flash Card");
 	this->addButton->SetBitmap(
-		IconButton::LoadIconBundle("UI/assets/add_icon.png", 16, Theme::IsDarkAppearance()),
+		IconButton::LoadIconBundle(app.GetBasePath() + "UI/assets/add_icon.png", 16, Theme::IsDarkAppearance()),
 		wxLEFT
 	);
 	this->addButton->SetBitmapMargins(this->FromDIP(6), 0);
 	this->studyButton = new wxButton(this, wxID_ANY, "Study Deck");
 	this->studyButton->SetBitmap(
-		IconButton::LoadIconBundle("UI/assets/study_icon.png", 16, Theme::IsDarkAppearance()),
+		IconButton::LoadIconBundle(app.GetBasePath() + "UI/assets/study_icon.png", 16, Theme::IsDarkAppearance()),
 		wxLEFT
 	);
 	this->studyButton->SetBitmapMargins(this->FromDIP(6), 0);
 	this->aiStudyButton = new wxButton(this, wxID_ANY, "AI Study Deck");
 	this->aiStudyButton->SetBitmap(
-		IconButton::LoadIconBundle("UI/assets/ai_study_icon.png", 16, Theme::IsDarkAppearance()),
+		IconButton::LoadIconBundle(app.GetBasePath() + "UI/assets/ai_study_icon.png", 16, Theme::IsDarkAppearance()),
 		wxLEFT
 	);
 	this->aiStudyButton->SetBitmapMargins(this->FromDIP(6), 0);
@@ -172,6 +165,7 @@ FlashCardList::FlashCardList(wxWindow* parent, int deckId)
 	this->Bind(wxEVT_ERASE_BACKGROUND, [](wxEraseEvent&) {});
 
 	this->LoadCards();
+	std::cout<<"FlashCardList constructor executed"<<std::endl;
 }
 
 void FlashCardList::OnPaint(wxPaintEvent&) {
@@ -204,16 +198,22 @@ void FlashCardList::SetDeck(int deckId) {
 }
 
 void FlashCardList::LoadCards() {
+	std::cout<<"[TRACE] LoadCards() entered"<<std::endl;
 	this->leftCol->Clear(true);
 	this->rightCol->Clear(true);
 	this->cards.clear();
 	this->cardIds.clear();
 
+	std::cout<<"[TRACE] Updating deck header..."<<std::endl;
 	this->UpdateDeckHeader();
 
+	std::cout<<"[TRACE] Checking deckId"<<this->deckId<<std::endl;
 	if (this->deckId != 0) {
+		std::cout<<"[TRACE] Creating GetCardsUseCase..."<<std::endl;
 		auto useCase = wxGetApp().GetInjector().create<GetCardsUseCase>();
+		std::cout<<"[TRACE] Executing GetCardsUseCase..."<<std::endl;
 		GetCardsResponse response = useCase.Execute(GetCardsRequest{this->deckId});
+		std::cout<<"[TRACE] Adding Cards Loop..."<<std::endl;
 		for (const CardResponse& card : response.cards) {
 			this->AddCard(card.cardId, wxString(card.front), wxString(card.back), wxString(card.tags));
 		}
@@ -247,6 +247,8 @@ void FlashCardList::LoadCards() {
 		this->scroller->Layout();
 		this->scroller->FitInside();
 	});
+	
+	std::cout<<"[TRACE] LoadCards() executed successfully..."<<std::endl;
 }
 
 void FlashCardList::RefreshGuide() {
@@ -333,6 +335,7 @@ void FlashCardList::UpdateDeckHeader() {
 }
 
 void FlashCardList::ApplyTheme() {
+	App& app = wxGetApp();
 	const Theme& theme = Theme::Get();
 	const bool invert = Theme::IsDarkAppearance();
 	this->SetBackgroundColour(theme.color.window);
@@ -345,9 +348,9 @@ void FlashCardList::ApplyTheme() {
 	if (this->emptyMessage != nullptr) {
 		this->emptyMessage->SetForegroundColour(theme.color.secondaryLabel);
 	}
-	this->addButton->SetBitmap(IconButton::LoadIconBundle("UI/assets/add_icon.png", 16, invert), wxLEFT);
-	this->studyButton->SetBitmap(IconButton::LoadIconBundle("UI/assets/study_icon.png", 16, invert), wxLEFT);
-	this->aiStudyButton->SetBitmap(IconButton::LoadIconBundle("UI/assets/ai_study_icon.png", 16, invert), wxLEFT);
+	this->addButton->SetBitmap(IconButton::LoadIconBundle(app.GetBasePath() + "UI/assets/add_icon.png", 16, invert), wxLEFT);
+	this->studyButton->SetBitmap(IconButton::LoadIconBundle(app.GetBasePath() + "UI/assets/study_icon.png", 16, invert), wxLEFT);
+	this->aiStudyButton->SetBitmap(IconButton::LoadIconBundle(app.GetBasePath() + "UI/assets/ai_study_icon.png", 16, invert), wxLEFT);
 	for (FlashCard* card : this->cards) {
 		card->ApplyTheme();
 	}
