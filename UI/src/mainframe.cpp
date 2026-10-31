@@ -1,6 +1,6 @@
 #include "mainframe.h"
 
-wxDECLARE_APP(App); 
+wxDECLARE_APP(App);   // MACRO ONLY NEEDS TO BE USED ONCE
 
 MainFrame::MainFrame(const wxString& title)
     : wxFrame(nullptr, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE),
@@ -272,7 +272,14 @@ void MainFrame::OnSysColourChanged(wxSysColourChangedEvent& event) {
 }
 
 wxDateTime MainFrame::GetSelectedDate() const { return this->selectedDate; }
-void MainFrame::SetSelectedDate(const wxDateTime& date) { this->selectedDate = date; }
+
+void MainFrame::SetSelectedDate(const wxDateTime& date) { 
+	this->selectedDate = date;
+	EventPanel* existingEvents = dynamic_cast<EventPanel*>(this->currentSidebarPanel);
+	if(existingEvents != nullptr) {
+		existingEvents->LoadEventsForDate(this->selectedDate);
+	}
+}
 
 void MainFrame::ShowCardList() {
 	this->SetStudying(false);
