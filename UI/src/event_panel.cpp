@@ -28,17 +28,19 @@ EventPanel::EventPanel(wxWindow* parent)
     this->midPanel->SetBackgroundColour(wxColour(240, 240, 240));
     this->midSizer = new wxBoxSizer(wxVERTICAL);
 	
-	int sm = app.GetWindowWidth() / 16;
+	int xs = app.GetWindowWidth() / 36;	
+	int sm = app.GetWindowWidth() / 20;
 	int md = app.GetWindowWidth() / 14;
-	int lg = app.GetWindowWidth() / 12;
+	int lg = app.GetWindowWidth() / 10;
+	int xl = app.GetWindowWidth() / 8;
 	this->eventList = new wxListCtrl(this->midPanel, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_SINGLE_SEL);
-	this->eventList->InsertColumn(0, "Title", wxLIST_FORMAT_LEFT, md);
+	this->eventList->InsertColumn(0, "Title", wxLIST_FORMAT_LEFT, lg);
 	this->eventList->InsertColumn(1, "Date", wxLIST_FORMAT_LEFT, sm);
-	this->eventList->InsertColumn(2, "Start", wxLIST_FORMAT_LEFT, sm);
-	this->eventList->InsertColumn(3, "End", wxLIST_FORMAT_LEFT, sm);
+	this->eventList->InsertColumn(2, "Start", wxLIST_FORMAT_LEFT, xs);
+	this->eventList->InsertColumn(3, "End", wxLIST_FORMAT_LEFT, xs);
 	this->eventList->InsertColumn(4, "Location", wxLIST_FORMAT_LEFT, md);
-	this->eventList->InsertColumn(5, "Description", wxLIST_FORMAT_LEFT, lg);
-	this->eventList->InsertColumn(6, "Reminder", wxLIST_FORMAT_LEFT, sm);
+	this->eventList->InsertColumn(5, "Description", wxLIST_FORMAT_LEFT, xl);
+	this->eventList->InsertColumn(6, "Reminder", wxLIST_FORMAT_LEFT, md);
 	this->midSizer->Add(this->eventList, 1, wxEXPAND | wxALL, 10);
 	
     this->midPanel->SetSizer(this->midSizer);
@@ -96,6 +98,11 @@ void EventPanel::LoadEvents() {
 	}).detach();
 }
 
+void EventPanel::LoadEventsForDate(const wxDateTime& date) {
+	this->currentDate = date;
+	wxString dateStr = date.Format("%m/%d/%Y");
+}
+
 void EventPanel::ShowEvents(const GetEventsResponse& response) {
 	
 }
@@ -113,15 +120,20 @@ void EventPanel::OnAddEvent(wxCommandEvent& event) {
 	if(frame) { frame->SetStatusText("Add Event"); }
 	
 	EventDialog dialog(this);
+	
+	if(this->currentDate.IsValid()) {
+		dialog.SetDate(this->currentDate);
+	}
+	
 	dialog.CentreOnParent();
 	
 	if(dialog.ShowModal() == wxID_OK) {
 		frame->SetStatusText("Event Created");
 		long row = this->eventList->GetItemCount();
 		long index = this->eventList->InsertItem(row, dialog.GetTitle());
-		this->eventList->SetItem(index, 1, dialog.GetDate());
-		this->eventList->SetItem(index, 2, dialog.GetStart());
-		this->eventList->SetItem(index, 3, dialog.GetEnd());
+		this->eventList->SetItem(index, 1, dialog.GetDate().Format("%m/%d/%Y"));
+		this->eventList->SetItem(index, 2, dialog.GetStart().Format("%H:%M"));
+		this->eventList->SetItem(index, 3, dialog.GetEnd().Format("%H:%M"));
 		this->eventList->SetItem(index, 4, dialog.GetLocation());
 		this->eventList->SetItem(index, 5, dialog.GetDescription());
 		this->eventList->SetItem(index, 6, dialog.GetReminder());
@@ -143,22 +155,33 @@ void EventPanel::OnEditEvent(wxCommandEvent& event) {
 	if(frame) { frame->SetStatusText("Edit Event"); }
 
 	EventDialog dialog(this);
+	
 	dialog.SetTitle(this->eventList->GetItemText(selected, 0));
-	dialog.SetDate(this->eventList->GetItemText(selected, 1));
-	dialog.SetStart(this->eventList->GetItemText(selected, 2));
-	dialog.SetEnd(this->eventList->GetItemText(selected, 3));
 	dialog.SetLocation(this->eventList->GetItemText(selected, 4));
 	dialog.SetDescription(this->eventList->GetItemText(selected, 5));
 	dialog.SetReminder(this->eventList->GetItemText(selected, 6));
+	
+	wxDateTime eventDate;
+	if(eventDate.ParseFormat(this->eventList->GetItemText(selected, 1), "%m/%d/%Y")) {
+		dialog.SetDate(eventDate);
+	}
+
+	wxDateTime startTime, endTime;
+	if(startTime.ParseTime(this->eventList->GetItemText(selected, 2))) {
+		dialog.SetStart(startTime);
+	}
+	if(endTime.ParseTime(this->eventList->GetItemText(selected, 3))) {
+		dialog.SetEnd(endTime);
+	}
 
 	dialog.CentreOnParent();
 	
 	if(dialog.ShowModal() == wxID_OK) {
 		if(frame) { frame->SetStatusText("Event Updated"); }
 		this->eventList->SetItem(selected, 0, dialog.GetTitle());
-		this->eventList->SetItem(selected, 1, dialog.GetDate());
-		this->eventList->SetItem(selected, 2, dialog.GetStart());
-		this->eventList->SetItem(selected, 3, dialog.GetEnd());
+		this->eventList->SetItem(selected, 1, dialog.GetDate().Format("%m/%d/%Y")); // Format date
+		this->eventList->SetItem(selected, 2, dialog.GetStart().Format("%H:%M"));  // Format start time
+		this->eventList->SetItem(selected, 3, dialog.GetEnd().Format("%H:%M"));    // Format end time
 		this->eventList->SetItem(selected, 4, dialog.GetLocation());
 		this->eventList->SetItem(selected, 5, dialog.GetDescription());
 		this->eventList->SetItem(selected, 6, dialog.GetReminder());
