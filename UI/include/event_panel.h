@@ -1,11 +1,11 @@
 #ifndef EVENT_PANEL_H
 #define EVENT_PANEL_H
 
-#include "app.h"
 #include "mainframe.h"
 #include "dialog.h"
 #include "theme.h"
 #include <wx/listctrl.h>
+#include <wx/datetime.h>
 #include <wx/dcbuffer.h>
 #include <thread>
 #include <memory>
@@ -27,14 +27,15 @@ class EventPanel : public wxPanel {
 		wxBoxSizer* bottomSizer;
 		
 		wxStaticText* header;
-		
 		wxListCtrl* eventList;
+		wxDateTime currentDate;
 		
 		wxButton* addEventButton;
 		wxButton* editEventButton;
 		wxButton* deleteEventButton;
 
 		void LoadEvents();
+		void LoadEventsForDate(const wxDateTime& date);
 		void ShowEvents(const GetEventsResponse& response);
 		
 		void OnPaint(wxPaintEvent& event);
