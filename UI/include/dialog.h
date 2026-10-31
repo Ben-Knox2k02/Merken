@@ -2,7 +2,11 @@
 #define DIALOG_H
 
 #include <wx/wx.h>
-#include <wx/dataview.h>
+#include <wx/datetime.h>
+#include <wx/choice.h>
+#include <wx/timectrl.h>
+#include <wx/datectrl.h>
+#include <wx/listctrl.h>
 
 class CardDialog : public wxDialog {
 	public:
@@ -40,25 +44,31 @@ class EventDialog : public wxDialog {
 		wxStaticText* reminderText;
 		
 		wxTextCtrl* titleCtrl;
-		wxTextCtrl* dateCtrl;
-		wxTextCtrl* startCtrl;
-		wxTextCtrl* endCtrl;
+		wxDatePickerCtrl* dateCtrl;
+		wxChoice* startHourChoice;
+		wxChoice* startMinuteChoice;
+		wxChoice* endHourChoice;
+		wxChoice* endMinuteChoice;
 		wxTextCtrl* locationCtrl;
 		wxTextCtrl* descriptionCtrl;
 		wxTextCtrl* reminderCtrl;
 		
 		wxString GetTitle() const;
-		wxString GetDate() const;
-		wxString GetStart() const;
-		wxString GetEnd() const;
+		
+		wxDateTime GetDate() const;
+		wxDateTime GetStart() const;
+		wxDateTime GetEnd() const;
+		
 		wxString GetLocation() const;
 		wxString GetDescription() const;
 		wxString GetReminder() const;
 		
 		void SetTitle(const wxString& title);
-		void SetDate(const wxString& date);
-		void SetStart(const wxString& start);
-		void SetEnd(const wxString& end);
+		
+		void SetDate(const wxDateTime& dt);
+		void SetStart(const wxDateTime& dt);
+		void SetEnd(const wxDateTime& dt);
+		
 		void SetLocation(const wxString& location);
 		void SetDescription(const wxString& description);
 		void SetReminder(const wxString& reminder);
