@@ -1,9 +1,15 @@
 #ifndef FLASH_CARD_LIST_H
 #define FLASH_CARD_LIST_H
 
-#include <wx/wx.h>
-#include <vector>
+#include "mainframe.h"
 #include "flash_card.h"
+#include "dialog.h"
+#include "centered_message.h"
+#include "theme.h"
+#include "guide_highlight.h"
+#include <wx/dcgraph.h>
+#include <wx/tokenzr.h>
+#include <vector>
 
 class FlashCardList : public wxPanel {
 	public:
