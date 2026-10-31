@@ -6,9 +6,11 @@
 struct CreateEventResponse {
 	int calendarEventId;
 	std::string title;
-	std::string description;
+	std::string date;
 	std::string startTime;
 	std::string endTime;
+	std::string location;
+	std::string description;
 	int reminderMinutes;
 	std::string googleEventId;
 };
