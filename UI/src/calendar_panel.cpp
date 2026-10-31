@@ -70,7 +70,7 @@ CalendarPanel::~CalendarPanel() {
 	*this->alive = false;
 }
 
-void CalendarPanel::OnPaint(wxPaintEvent& event) {				// PAINT METHOD FOR DOUBLE BUFFERING
+void CalendarPanel::OnPaint(wxPaintEvent& event) {	
 	wxAutoBufferedPaintDC dc(this);
 	dc.SetBrush(wxBrush(this->GetBackgroundColour()));
 	dc.Clear();
