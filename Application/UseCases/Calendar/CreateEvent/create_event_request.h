@@ -4,11 +4,13 @@
 #include <string>
 
 struct CreateEventRequest {
-	std::string title;
-	std::string description;
-	std::string startTime;
-	std::string endTime;
-	int reminderMinutes = 60;
+    std::string title;       	// Required
+	std::string date;        	// Required ("MM/DD/YYYY")
+    std::string startTime;   	// Required ("HH:MM")
+    std::string endTime;     	// Required ("HH:MM")
+    std::string location;    	// Optional
+    std::string description; 	// Optional
+    int reminderMinutes = 60;	// Optional (with default)
 };
 
-#endif
+#endif  // CREATE_EVENT_REQUEST_H
