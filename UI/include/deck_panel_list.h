@@ -1,15 +1,23 @@
 #ifndef DECK_PANEL_LIST_H
 #define DECK_PANEL_LIST_H
 
-#include <wx/wx.h>
-#include <vector>
+#include "mainframe.h"
 #include "deck_card.h"
 #include "icon_button.h"
 #include "profile_header.h"
+#include "dialog.h"
+#include "centered_message.h"
+#include "theme.h"
+#include "guide_highlight.h"
+#include <wx/dcgraph.h>
+#include <wx/statline.h>
+#include <vector>
 
 class DeckPanelList : public wxPanel {
 	public:
 		explicit DeckPanelList(wxWindow* parent);
+		
+		App& app;
 
 		wxBoxSizer* rootSizer;
 		wxFlexGridSizer* buttonSizer;
