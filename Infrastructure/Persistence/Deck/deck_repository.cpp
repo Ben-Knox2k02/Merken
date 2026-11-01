@@ -11,9 +11,9 @@ std::vector<Deck> DeckRepository::GetDecks() {
 	while (result.NextRow()) {
 		decks.emplace_back(
 			result.GetInt(0),
-			result.GetString(1).ToStdString(),
-			result.GetString(2).ToStdString(),
-			result.GetString(3).ToStdString()
+			result.GetString(1).ToStdString(wxConvUTF8),
+			result.GetString(2).ToStdString(wxConvUTF8),
+			result.GetString(3).ToStdString(wxConvUTF8)
 		);
 		this->LoadCards(decks.back());
 	}
@@ -32,9 +32,9 @@ std::optional<Deck> DeckRepository::GetDeck(int deckId) {
 
 	Deck deck(
 		result.GetInt(0),
-		result.GetString(1).ToStdString(),
-		result.GetString(2).ToStdString(),
-		result.GetString(3).ToStdString()
+		result.GetString(1).ToStdString(wxConvUTF8),
+		result.GetString(2).ToStdString(wxConvUTF8),
+		result.GetString(3).ToStdString(wxConvUTF8)
 	);
 	this->LoadCards(deck);
 	return deck;
@@ -59,9 +59,9 @@ int DeckRepository::AddDeck(const Deck& deck) {
 		wxSQLite3::Statement stmt = this->db.GetConnection()->PrepareStatement(
 			"INSERT INTO decks (name, description, created_at) VALUES (?, ?, ?);"
 		);
-		stmt.Bind(1, wxString(deck.GetName()));
-		stmt.Bind(2, wxString(deck.GetDescription()));
-		stmt.Bind(3, wxString(deck.GetCreatedAt()));
+		stmt.Bind(1, wxString::FromUTF8(deck.GetName().c_str()));
+		stmt.Bind(2, wxString::FromUTF8(deck.GetDescription().c_str()));
+		stmt.Bind(3, wxString::FromUTF8(deck.GetCreatedAt().c_str()));
 		if (stmt.ExecuteUpdate() <= 0) { return 0; }
 		return static_cast<int>(this->db.GetConnection()->GetLastRowId().GetValue());
 	} catch (const wxSQLite3::Exception&) {
@@ -73,8 +73,8 @@ bool DeckRepository::UpdateDeck(const Deck& deck) {
 	wxSQLite3::Statement stmt = this->db.GetConnection()->PrepareStatement(
 		"UPDATE decks SET name = ?, description = ? WHERE deck_id = ?;"
 	);
-	stmt.Bind(1, wxString(deck.GetName()));
-	stmt.Bind(2, wxString(deck.GetDescription()));
+	stmt.Bind(1, wxString::FromUTF8(deck.GetName().c_str()));
+	stmt.Bind(2, wxString::FromUTF8(deck.GetDescription().c_str()));
 	stmt.Bind(3, deck.GetDeckId());
 	return stmt.ExecuteUpdate() > 0;
 }

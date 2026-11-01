@@ -120,7 +120,8 @@ void DeckPanelList::LoadDecks() {
 
 	int firstDeckId = 0;
 	for (const DeckResponse& deck : response.decks) {
-		this->AddDeckCard(deck.deckId, wxString(deck.name), deck.cardCount);
+		this->AddDeckCard(deck.deckId, wxString::FromUTF8(deck.name.c_str()), deck.cardCount);
+
 		if (firstDeckId == 0) {
 			firstDeckId = deck.deckId;
 		}
@@ -221,7 +222,7 @@ void DeckPanelList::OnAddDeck(wxCommandEvent&) {
 	DeckDialog dialog(this, "Add Deck");
 	if (dialog.ShowModal() != wxID_OK) { return; }
 
-	const std::string name = dialog.nameCtrl->GetValue().ToStdString();
+	const std::string name = dialog.nameCtrl->GetValue().ToStdString(wxConvUTF8);
 	if (name.empty()) {
 		ShowCenteredMessage(this, "Deck name is required.", "Add Deck", wxOK | wxICON_WARNING);
 		return;
@@ -229,7 +230,7 @@ void DeckPanelList::OnAddDeck(wxCommandEvent&) {
 
 	CreateDeckRequest request;
 	request.name = name;
-	request.description = dialog.descriptionCtrl->GetValue().ToStdString();
+	request.description = dialog.descriptionCtrl->GetValue().ToStdString(wxConvUTF8);
 
 	auto useCase = wxGetApp().GetInjector().create<CreateDeckUseCase>();
 	CreateDeckResponse response = useCase.Execute(request);
@@ -261,11 +262,11 @@ void DeckPanelList::OnEditDeck(wxCommandEvent&) {
 	if (selected == nullptr) { return; }
 
 	DeckDialog dialog(this, "Edit Deck");
-	dialog.nameCtrl->SetValue(wxString(selected->name));
-	dialog.descriptionCtrl->SetValue(wxString(selected->description));
+	dialog.nameCtrl->SetValue(wxString::FromUTF8(selected->name.c_str()));
+	dialog.descriptionCtrl->SetValue(wxString::FromUTF8(selected->description.c_str()));
 	if (dialog.ShowModal() != wxID_OK) { return; }
 
-	const std::string name = dialog.nameCtrl->GetValue().ToStdString();
+	const std::string name = dialog.nameCtrl->GetValue().ToStdString(wxConvUTF8);
 	if (name.empty()) {
 		ShowCenteredMessage(this, "Deck name is required.", "Edit Deck", wxOK | wxICON_WARNING);
 		return;
@@ -274,7 +275,7 @@ void DeckPanelList::OnEditDeck(wxCommandEvent&) {
 	UpdateDeckRequest request;
 	request.deckId = deckId;
 	request.name = name;
-	request.description = dialog.descriptionCtrl->GetValue().ToStdString();
+	request.description = dialog.descriptionCtrl->GetValue().ToStdString(wxConvUTF8);
 
 	auto useCase = wxGetApp().GetInjector().create<UpdateDeckUseCase>();
 	if (!useCase.Execute(request)) {

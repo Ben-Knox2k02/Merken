@@ -215,7 +215,12 @@ void FlashCardList::LoadCards() {
 		auto useCase = wxGetApp().GetInjector().create<GetCardsUseCase>();
 		GetCardsResponse response = useCase.Execute(GetCardsRequest{this->deckId});
 		for (const CardResponse& card : response.cards) {
-			this->AddCard(card.cardId, wxString(card.front), wxString(card.back), wxString(card.tags));
+			this->AddCard(
+			card.cardId,
+			wxString::FromUTF8(card.front.c_str()),
+			wxString::FromUTF8(card.back.c_str()),
+			wxString::FromUTF8(card.tags.c_str())
+);
 		}
 	}
 
@@ -302,8 +307,8 @@ void FlashCardList::UpdateDeckHeader() {
 		GetDecksResponse response = useCase.Execute();
 		for (const DeckResponse& deck : response.decks) {
 			if (deck.deckId == this->deckId) {
-				this->deckName = wxString(deck.name);
-				this->deckDescription = wxString(deck.description);
+				this->deckName = wxString::FromUTF8(deck.name.c_str());
+				this->deckDescription = wxString::FromUTF8(deck.description.c_str());
 				this->deckDescription.Trim(true).Trim(false);
 				break;
 			}
@@ -437,8 +442,8 @@ void FlashCardList::OnAdd(wxCommandEvent&) {
 	CardDialog dialog(this, "Add Card");
 	if (dialog.ShowModal() != wxID_OK) { return; }
 
-	const std::string front = dialog.frontCtrl->GetValue().ToStdString();
-	const std::string back = dialog.backCtrl->GetValue().ToStdString();
+	const std::string front = dialog.frontCtrl->GetValue().ToStdString(wxConvUTF8);
+	const std::string back = dialog.backCtrl->GetValue().ToStdString(wxConvUTF8);
 	if (front.empty() || back.empty()) {
 		ShowCenteredMessage(this, "Front and back are required.", "Add Card", wxOK | wxICON_WARNING);
 		return;
@@ -448,7 +453,7 @@ void FlashCardList::OnAdd(wxCommandEvent&) {
 	request.deckId = this->deckId;
 	request.front = front;
 	request.back = back;
-	request.tags = dialog.tagCtrl->GetValue().ToStdString();
+	request.tags = dialog.tagCtrl->GetValue().ToStdString(wxConvUTF8);
 
 	auto useCase = wxGetApp().GetInjector().create<CreateCardUseCase>();
 	CreateCardResponse response = useCase.Execute(request);
@@ -473,8 +478,8 @@ void FlashCardList::EditCard(int cardId) {
 	dialog.tagCtrl->SetValue(card->GetTags());
 	if (dialog.ShowModal() != wxID_OK) { return; }
 
-	const std::string newFront = dialog.frontCtrl->GetValue().ToStdString();
-	const std::string newBack = dialog.backCtrl->GetValue().ToStdString();
+	const std::string newFront = dialog.frontCtrl->GetValue().ToStdString(wxConvUTF8);
+	const std::string newBack = dialog.backCtrl->GetValue().ToStdString(wxConvUTF8);
 	if (newFront.empty() || newBack.empty()) {
 		ShowCenteredMessage(this, "Front and back are required.", "Edit Card", wxOK | wxICON_WARNING);
 		return;
@@ -485,7 +490,7 @@ void FlashCardList::EditCard(int cardId) {
 	request.cardId = cardId;
 	request.front = newFront;
 	request.back = newBack;
-	request.tags = dialog.tagCtrl->GetValue().ToStdString();
+	request.tags = dialog.tagCtrl->GetValue().ToStdString(wxConvUTF8);
 
 	auto useCase = wxGetApp().GetInjector().create<UpdateCardUseCase>();
 	if (!useCase.Execute(request)) {
