@@ -161,9 +161,11 @@ EventDialog::EventDialog(wxWindow* parent) : wxDialog(parent, wxID_ANY, "Create 
 	this->rootSizer->Add(this->descriptionCtrl, 1, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 5);
 	
 	this->reminderText = new wxStaticText(this, wxID_ANY, "Reminder:");									// REMINDER
-	this->reminderCtrl = new wxTextCtrl(this, wxID_ANY);
-	this->rootSizer->Add(this->reminderText, 0, wxLEFT | wxTOP | wxRIGHT, 5);
-	this->rootSizer->Add(this->reminderCtrl, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 5);
+	this->reminderCtrl = new wxTimePickerCtrl(this, wxID_ANY, wxDateTime(0, 0, 0));
+	wxBoxSizer* reminderSizer = new wxBoxSizer(wxHORIZONTAL);
+	reminderSizer->Add(this->reminderText, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 10);
+	reminderSizer->Add(this->reminderCtrl, 1, wxEXPAND);
+	this->rootSizer->Add(reminderSizer, 0, wxEXPAND | wxALL, 5);
 	
 	this->rootSizer->Add(CreateSeparatedButtonSizer(wxOK | wxCANCEL), 0, wxEXPAND | wxALL, 10);
 	this->SetSizerAndFit(this->rootSizer);
@@ -216,7 +218,10 @@ wxString EventDialog::GetLocation() const { return this->locationCtrl->GetValue(
 
 wxString EventDialog::GetDescription() const { return this->descriptionCtrl->GetValue(); }
 
-wxString EventDialog::GetReminder() const { return this->reminderCtrl->GetValue(); }
+wxDateTime EventDialog::GetReminder() const { 
+	if(reminderCtrl) { return this->reminderCtrl->GetValue(); }
+	else { return wxDateTime::Now(); }
+}
 
 void EventDialog::SetTitle(const wxString& title) { this->titleCtrl->SetValue(title); }
 
@@ -254,12 +259,8 @@ void EventDialog::SetLocation(const wxString& location) { this->locationCtrl->Se
 
 void EventDialog::SetDescription(const wxString& description) { this->descriptionCtrl->SetValue(description); }
 
-void EventDialog::SetReminder(const wxString& reminder) {
-    if(this->reminderCtrl) {
-        // Note: If the reminder control is a choice dropdown instead of a text control,
-        // use something like: this->reminderCtrl->SetStringSelection(reminder);
-        this->reminderCtrl->SetValue(reminder);
-    }
+void EventDialog::SetReminder(const wxDateTime& dt) {
+    if(this->reminderCtrl && dt.IsValid()) { this->reminderCtrl->SetValue(dt); }
 }
 
 
