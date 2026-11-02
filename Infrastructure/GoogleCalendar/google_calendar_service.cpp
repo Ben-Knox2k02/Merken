@@ -13,7 +13,8 @@ std::optional<CalendarEvent> GoogleCalendarService::GetEvent(const std::string& 
 	if (googleEventId.empty()) {
 		return std::nullopt;
 	}
-	CalendarEvent event(0, "", "", "");
+	Date dummyDate = Date::Create(2026, 1, 1).value();
+	CalendarEvent event(0, "", dummyDate, "", "", "", "");
 	event.SetGoogleEventId(googleEventId);
 	return event;
 }
