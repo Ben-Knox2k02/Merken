@@ -1,6 +1,7 @@
 #ifndef CALENDAR_EVENT_H
 #define CALENDAR_EVENT_H
 
+#include "date.h"
 #include <string>
 
 class CalendarEvent {
@@ -8,7 +9,7 @@ class CalendarEvent {
 		CalendarEvent(
 			int calendarEventId,
 			const std::string& title,
-			const std::string& date,
+			Date date,
 			const std::string& startTime,
 			const std::string& endTime,
 			const std::string& location,
@@ -25,7 +26,7 @@ class CalendarEvent {
 		int GetCalendarEventId() const { return this->calendarEventId; }
 		const std::string& GetGoogleEventId() const { return this->googleEventId; }
 		const std::string& GetTitle() const { return this->title; }
-		const std::string& GetDate() const { return this->date; }
+		const Date GetDate() const { return this->date; }
 		const std::string& GetStartTime() const { return this->startTime; }
 		const std::string& GetEndTime() const { return this->endTime; }
 		const std::string& GetLocation() const { return this->location; }
@@ -37,7 +38,7 @@ class CalendarEvent {
 			this->title = newTitle;
 		}
 		
-		void UpdateDate(const std::string& newDate) {
+		void UpdateDate(const Date& newDate) {
 			this->date = newDate;
 		}
 		
@@ -65,7 +66,7 @@ class CalendarEvent {
 	private:
 		int calendarEventId;
 		std::string title;
-		std::string date;
+		Date date;
 		std::string startTime;
 		std::string endTime;
 		std::string location;
