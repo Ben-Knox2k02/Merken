@@ -4,6 +4,7 @@
 #include <wx/stdpaths.h>
 #include <fstream>
 #include <sstream>
+#include <cstdlib>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -46,6 +47,10 @@ std::string EscapeJson(const std::string& value) {
 std::string ToJson(const AppSettings& settings) {
 	return std::string("{\n    \"calendarApiKey\": \"")
 		+ EscapeJson(settings.calendarApiKey)
+		+ "\",\n    \"calendarRefreshToken\": \""
+		+ EscapeJson(settings.calendarRefreshToken)
+		+ "\",\n    \"calendarTokenExpiresAt\": \""
+		+ std::to_string(settings.calendarTokenExpiresAt)
 		+ "\",\n    \"aiApiKey\": \""
 		+ EscapeJson(settings.aiApiKey)
 		+ "\",\n    \"theme\": \""
@@ -56,6 +61,8 @@ std::string ToJson(const AppSettings& settings) {
 AppSettings FromJson(const std::string& json) {
 	AppSettings settings;
 	settings.calendarApiKey = ExtractValue(json, "calendarApiKey");
+	settings.calendarRefreshToken = ExtractValue(json, "calendarRefreshToken");
+	settings.calendarTokenExpiresAt = std::strtoll(ExtractValue(json, "calendarTokenExpiresAt").c_str(), nullptr, 10);
 	settings.aiApiKey = ExtractValue(json, "aiApiKey");
 	settings.theme = ExtractValue(json, "theme");
 	return settings;
