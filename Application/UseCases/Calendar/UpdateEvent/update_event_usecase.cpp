@@ -9,8 +9,10 @@ bool UpdateEventUseCase::Execute(const UpdateEventRequest& request) {
 	if (!existing.has_value()) { return false; }
 
 	existing->UpdateTitle(request.title);
-	existing->UpdateDescription(request.description);
+	existing->UpdateDate(request.date);
 	existing->UpdateTimeRange(request.startTime, request.endTime);
+	existing->UpdateDescription(request.description);
+	existing->UpdateLocation(request.location);
 	existing->UpdateReminderMinutes(request.reminderMinutes);
 	return this->calendarAPIService.UpdateEvent(*existing, apiKey);
 }
