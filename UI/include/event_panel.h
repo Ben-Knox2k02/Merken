@@ -10,7 +10,6 @@
 #include <thread>
 #include <memory>
 #include "../../Application/UseCases/Calendar/GetEvents/get_events_response.h"
-#include "../../Application/UseCases/Calendar/GetEvents/get_events_usecase.h"
 
 class EventPanel : public wxPanel {
 	public:
