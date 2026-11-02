@@ -5,6 +5,7 @@
 #include <wx/wx.h>
 #include <wx/webrequest.h>
 #include <mutex>
+#include <condition_variable>
 #include <atomic>
 
 class WxHttpClient : public IHttpClient, public wxEvtHandler {
@@ -36,10 +37,23 @@ class WxHttpClient : public IHttpClient, public wxEvtHandler {
 			const std::string* jsonBody,
 			const std::vector<HttpHeader>& headers
 		);
+
+		void StartRequest(
+			const wxString& method,
+			const std::string& url,
+			const std::string* jsonBody,
+			const std::vector<HttpHeader>& headers
+		);
+
+		void MarkFinished();
+
 		void OnRequestState(wxWebRequestEvent& event);
 
 		std::mutex mutex;
+		std::mutex stateMutex;
+		std::condition_variable condition;
 		std::atomic<bool> finished{false};
+		wxWebRequest activeRequest;
 		HttpResponse result;
 };
 
