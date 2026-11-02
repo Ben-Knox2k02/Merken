@@ -24,11 +24,20 @@ HttpResponse WxHttpClient::PatchJson(
 	return this->Execute("PATCH", url, &jsonBody, headers);
 }
 
+HttpResponse WxHttpClient::PostForm(
+	const std::string& url,
+	const std::string& formBody,
+	const std::vector<HttpHeader>& headers
+) {
+	return this->Execute("POST", url, &formBody, headers, "application/x-www-form-urlencoded");
+}
+
 HttpResponse WxHttpClient::Execute(
 	const wxString& method,
 	const std::string& url,
 	const std::string* jsonBody,
-	const std::vector<HttpHeader>& headers
+	const std::vector<HttpHeader>& headers,
+	const wxString& contentType
 ) {
 	std::lock_guard<std::mutex> lock(this->mutex);
 
@@ -47,7 +56,7 @@ HttpResponse WxHttpClient::Execute(
 		request.SetHeader(wxString::FromUTF8(header.name), wxString::FromUTF8(header.value));
 	}
 	if (jsonBody != nullptr) {
-		request.SetData(wxString::FromUTF8(*jsonBody), "application/json");
+		request.SetData(wxString::FromUTF8(*jsonBody), contentType);
 	}
 
 	request.Start();

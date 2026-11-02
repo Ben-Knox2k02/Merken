@@ -37,6 +37,13 @@ class IHttpClient {
 			const std::string& jsonBody,
 			const std::vector<HttpHeader>& headers = {}
 		) = 0;
+
+		virtual HttpResponse PostForm(
+			const std::string& url,
+			const std::string& formBody,
+			const std::vector<HttpHeader>& headers = {}
+		) = 0;
+		
 		
 };
 

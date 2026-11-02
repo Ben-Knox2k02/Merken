@@ -27,6 +27,12 @@ class WxHttpClient : public IHttpClient, public wxEvtHandler {
 			const std::string& jsonBody,
 			const std::vector<HttpHeader>& headers = {}
 		) override;
+
+		HttpResponse PostForm(
+			const std::string& url,
+			const std::string& formBody,
+			const std::vector<HttpHeader>& headers = {}
+		) override;
 		
 
 	private:
@@ -34,7 +40,8 @@ class WxHttpClient : public IHttpClient, public wxEvtHandler {
 			const wxString& method,
 			const std::string& url,
 			const std::string* jsonBody,
-			const std::vector<HttpHeader>& headers
+			const std::vector<HttpHeader>& headers,
+			const wxString& contentType = "application/json"
 		);
 		void OnRequestState(wxWebRequestEvent& event);
 
