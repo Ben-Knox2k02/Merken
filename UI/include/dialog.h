@@ -51,27 +51,23 @@ class EventDialog : public wxDialog {
 		wxChoice* endMinuteChoice;
 		wxTextCtrl* locationCtrl;
 		wxTextCtrl* descriptionCtrl;
-		wxTextCtrl* reminderCtrl;
+		wxTimePickerCtrl* reminderCtrl;
 		
 		wxString GetTitle() const;
-		
 		wxDateTime GetDate() const;
 		wxDateTime GetStart() const;
 		wxDateTime GetEnd() const;
-		
 		wxString GetLocation() const;
 		wxString GetDescription() const;
-		wxString GetReminder() const;
+		wxDateTime GetReminder() const;
 		
 		void SetTitle(const wxString& title);
-		
 		void SetDate(const wxDateTime& dt);
 		void SetStart(const wxDateTime& dt);
 		void SetEnd(const wxDateTime& dt);
-		
 		void SetLocation(const wxString& location);
 		void SetDescription(const wxString& description);
-		void SetReminder(const wxString& reminder);
+		void SetReminder(const wxDateTime& dt);
 };
 
 #endif
