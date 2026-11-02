@@ -7,9 +7,11 @@ GetEventsResponse GetEventsUseCase::Execute() {
 		response.events.push_back(EventResponse{
 			.calendarEventId = event.GetCalendarEventId(),
 			.title = event.GetTitle(),
-			.description = event.GetDescription(),
+			.date = event.GetDate(),
 			.startTime = event.GetStartTime(),
 			.endTime = event.GetEndTime(),
+			.location = event.GetLocation(),
+			.description = event.GetDescription(),
 			.reminderMinutes = event.GetReminderMinutes(),
 			.googleEventId = event.GetGoogleEventId()
 		});
