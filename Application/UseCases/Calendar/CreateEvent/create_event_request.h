@@ -1,11 +1,12 @@
 #ifndef CREATE_EVENT_REQUEST_H
 #define CREATE_EVENT_REQUEST_H
 
+#include "../../../../DomainModels/date.h"
 #include <string>
 
 struct CreateEventRequest {
     std::string title;       	// Required
-	std::string date;        	// Required ("MM/DD/YYYY")
+	Date date = Date::Create(2026, 1, 1).value();        			// Required 
     std::string startTime;   	// Required ("HH:MM")
     std::string endTime;     	// Required ("HH:MM")
     std::string location;    	// Optional
