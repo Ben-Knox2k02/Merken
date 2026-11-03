@@ -2,6 +2,7 @@
 #define STUDY_PANEL_H
 
 #include <wx/wx.h>
+#include <wx/dcbuffer.h>
 #include <string>
 #include <vector>
 #include "../../Application/UseCases/Deck/GetCards/card_response.h"

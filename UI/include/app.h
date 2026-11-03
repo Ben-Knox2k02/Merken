@@ -3,6 +3,8 @@
 
 #include <wx/app.h>
 #include <wx/wx.h>
+#include <wx/stdpaths.h>
+#include <wx/filename.h>
 #include <optional>
 #include "../../DiComposition/composition_root.h"
 
@@ -21,6 +23,8 @@ class App : public wxApp {
 		int SCREEN_HEIGHT;
 		int windowWidth;
 		int windowHeight;
+		
+		wxString basePath;
 	
 		bool OnInit();
 		int OnExit();
@@ -29,6 +33,8 @@ class App : public wxApp {
 			this->EnsureInjector();
 			return *this->injector;
 		}
+		
+		wxString GetBasePath() const;
 		
 		int GetScreenWidth() const;
 		int GetScreenHeight() const;

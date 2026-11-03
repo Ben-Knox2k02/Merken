@@ -125,13 +125,8 @@ void ProfileDialog::OnSave(wxCommandEvent&) {
 		ShowCenteredMessage(this, "Could not save the theme.", "Edit Profile", wxOK | wxICON_ERROR);
 		return;
 	}
-	// This dialog is itself a top-level window, so GetTopLevelParent returns
-	// the dialog. Walk the owner chain to reach MainFrame.
-	for (wxWindow* window = this->GetParent(); window != nullptr; window = window->GetParent()) {
-		if (auto* frame = dynamic_cast<MainFrame*>(window)) {
-			frame->ApplyTheme();
-			break;
-		}
+	if (auto* frame = dynamic_cast<MainFrame*>(wxGetTopLevelParent(this))) {
+		frame->ApplyTheme();
 	}
 	this->EndModal(wxID_OK);
 }

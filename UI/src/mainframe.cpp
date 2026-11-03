@@ -1,31 +1,17 @@
 #include "mainframe.h"
-#include <vector>
-#include <string>
-#include <filesystem>
-#include <fstream>
-#include <algorithm>
-#include "flash_card_list.h"
-#include "deck_panel_list.h"
-#include "study_panel.h"
-#include "calendar_panel.h"
-#include "ai_panel.h"
-#include "ai_study_panel.h"
-#include "progress_panel.h"
-#include "settings_dialog.h"
-#include "centered_message.h"
-#include "theme.h"
-#include "icon_button.h"
-#include "../../Application/UseCases/Profile/GetUserProfile/get_user_profile_usecase.h"
+
+wxDECLARE_APP(App);   // MACRO ONLY NEEDS TO BE USED ONCE
 
 MainFrame::MainFrame(const wxString& title)
     : wxFrame(nullptr, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE),
-      app(wxGetApp()), currentPanel(nullptr), sidebarPanel(nullptr), selectedDeckId(0), selectedCardCount(0), studying(false), findDialog(nullptr)
+      app(wxGetApp()), currentPanel(nullptr), currentSidebarPanel(nullptr), selectedDeckId(0), selectedCardCount(0), studying(false), findDialog(nullptr)
 {
-	std::cout << "[TRACE] Entering MainFrame constructor..." << std::endl;
 	//=========== INITIALIZE WIDGETS ===================================== INITIALIZE WIDGETS ================================
-	this->SetIcon(wxIcon("UI/resources/app.ico", wxBITMAP_TYPE_ICO));
+	std::cout << "[TRACE] Entering MainFrame constructor..." << std::endl;
 	
-	this->menuBar = new wxMenuBar;						// MENU BAR
+	this->SetIcon(wxIcon(this->app.GetBasePath() + "UI/resources/app.ico", wxBITMAP_TYPE_ICO));
+	
+	this->menuBar = new wxMenuBar;										// MENU BAR	
 	 
 	this->fileMenu = new wxMenu;										// FILE
 	this->fileMenu->Append(wxID_NEW, "Add Deck");
@@ -34,7 +20,7 @@ MainFrame::MainFrame(const wxString& title)
 	this->fileMenu->AppendSeparator();
 	this->fileMenu->Append(ID_SETTINGS, "Settings");
 	this->fileMenu->AppendSeparator();
-	this->fileMenu->Append(wxID_EXIT, "Exit");
+	this->fileMenu->Append(wxID_EXIT, "&Exit\tAlt+F4");
 	 
 	this->editMenu = new wxMenu;										// EDIT		
 	this->editMenu->Append(wxID_UNDO, "&Undo\tCtrl+Z");
@@ -93,38 +79,52 @@ MainFrame::MainFrame(const wxString& title)
 	this->shortcuts[15].Set(wxACCEL_NORMAL, WXK_F4, ID_TODAYS_PROGRESS);
 	this->shortcuts[16].Set(wxACCEL_NORMAL, WXK_F5, ID_CALENDAR);
 	
-	wxAcceleratorTable accel(NUM_SHORTCUTS, this->shortcuts);
+	wxAcceleratorTable accel(16, this->shortcuts);
 	this->SetAcceleratorTable(accel);
 	
-	//============ ATTACH WIDGETS ==================================== ATTACH WIDGETS ========================= 
+	//============ ATTACH WIDGETS ==================================== ATTACH WIDGETS =========================
+	std::cout<<"[TRACE] attaching widgets..."<<std::endl;
 	this->SetMenuBar(this->menuBar);
 	this->ApplyMenuIcons();
 	this->CreateStatusBar();
 	this->SetBackgroundColour(Theme::Get().color.window);
+	std::cout<<"[TRACE] Theme Applied"<<std::endl;
 	
 	this->rootSizer = new wxBoxSizer(wxHORIZONTAL);
+	std::cout<<"[TRACE] Box Sizer Created"<<std::endl;
 	
+	std::cout<<"[TRACE] Entering contentPanel Construction"<<std::endl;
 	this->contentPanel = new wxPanel(this, wxID_ANY);
-	this->contentPanel->SetBackgroundColour(Theme::Get().color.window);
 	this->SetCurrentPanel(new FlashCardList(this->contentPanel, 0));
-	this->sidebarPanel = new DeckPanelList(this);
-
-	const int edge = this->FromDIP(Theme::Get().size.panelPad);
-	const int gap = this->FromDIP(Theme::Get().space.md);
-	this->rootSizer->Add(this->sidebarPanel, 30, wxEXPAND | wxTOP | wxBOTTOM | wxLEFT, edge);
+	std::cout<<"[TRACE] FlashCardList Created"<<std::endl;
+	
+	this->sidebarPanel = new wxPanel(this, wxID_ANY);
+	this->SetCurrentSidebarPanel(new DeckPanelList(this->sidebarPanel));
+	std::cout<<"[TRACE] DeckPanelCreated"<<std::endl;
+	
+	int edge = this->FromDIP(Theme::Get().size.panelPad);
+	int gap = this->FromDIP(Theme::Get().space.md);
+	this->sidebarWeight = 30;
+	this->contentWeight = 70;
+	
+	this->rootSizer->Add(this->sidebarPanel, this->sidebarWeight, wxEXPAND | wxTOP | wxBOTTOM | wxLEFT, edge);
 	this->rootSizer->AddSpacer(gap);
-	this->rootSizer->Add(this->contentPanel, 70, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, edge);
+	this->rootSizer->Add(this->contentPanel, this->contentWeight, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, edge);
+	std::cout<<"[TRACE] Sidebar/Content Panels Attached"<<std::endl;
 	
 	this->SetSizer(this->rootSizer);
 	this->Layout();
+	std::cout<<"[TRACE] Layout()"<<std::endl;
 	
 	//========= BIND EVENT HANDLERS ==================================== BIND EVENT HANDLERS ===================
-	this->Bind(wxEVT_MENU, &MainFrame::OnAddDeck, this, wxID_NEW);				// FILE
+	std::cout<<"[TRACE] Binding event handlers..."<<std::endl;
+	this->Bind(wxEVT_MENU, &MainFrame::OnAddDeck, this, wxID_NEW);					// FILE
 	this->Bind(wxEVT_MENU, &MainFrame::OnEditDeck, this, ID_EDIT_DECK);
 	this->Bind(wxEVT_MENU, &MainFrame::OnDeleteDeck, this, ID_DELETE_DECK);
+	this->Bind(wxEVT_MENU, &MainFrame::OnSettings, this, ID_SETTINGS);					
 	this->Bind(wxEVT_MENU, &MainFrame::OnExit, this, wxID_EXIT);
 	
-	this->Bind(wxEVT_MENU, &MainFrame::OnUndo, this, wxID_UNDO);					// EDIT
+	this->Bind(wxEVT_MENU, &MainFrame::OnUndo, this, wxID_UNDO);						// EDIT
 	this->Bind(wxEVT_MENU, &MainFrame::OnRedo, this, wxID_REDO);
 	this->Bind(wxEVT_UPDATE_UI, &MainFrame::OnUpdateUndo, this, wxID_UNDO);
 	this->Bind(wxEVT_UPDATE_UI, &MainFrame::OnUpdateRedo, this, wxID_REDO);
@@ -133,33 +133,31 @@ MainFrame::MainFrame(const wxString& title)
 	this->Bind(wxEVT_MENU, &MainFrame::OnPaste, this, wxID_PASTE);
 	this->Bind(wxEVT_MENU, &MainFrame::OnSelectAll, this, wxID_SELECTALL);
 	
-	this->Bind(wxEVT_MENU, &MainFrame::OnFind, this, wxID_FIND);					// SEARCH
+	this->Bind(wxEVT_MENU, &MainFrame::OnFind, this, wxID_FIND);							// SEARCH
 	this->Bind(wxEVT_MENU, &MainFrame::OnReplace, this, wxID_REPLACE);
 	
-	this->Bind(wxEVT_MENU, &MainFrame::OnCards, this, ID_CARDS);					// VIEW
+	this->Bind(wxEVT_MENU, &MainFrame::OnCards, this, ID_CARDS);							// STUDY
 	this->Bind(wxEVT_MENU, &MainFrame::OnStudy, this, ID_STUDY);
 	this->Bind(wxEVT_MENU, &MainFrame::OnTodaysProgress, this, ID_TODAYS_PROGRESS);
-	this->Bind(wxEVT_MENU, &MainFrame::OnCalendar, this, ID_CALENDAR);
 	this->Bind(wxEVT_MENU, &MainFrame::OnAI, this, ID_AI);
 	
-	this->Bind(wxEVT_MENU, &MainFrame::OnSettings, this, ID_SETTINGS);			// TOOLS
+	this->Bind(wxEVT_MENU, &MainFrame::OnCalendar, this, ID_CALENDAR);				// CALENDAR
 	
-	this->Bind(wxEVT_MENU, &MainFrame::OnAbout, this, wxID_ABOUT);				// HELP
+	this->Bind(wxEVT_MENU, &MainFrame::OnAbout, this, wxID_ABOUT);					// HELP
 		
-	this->Bind(wxEVT_KEY_DOWN, &MainFrame::OnKeyEvent, this);						// KEY EVENTS
+	this->Bind(wxEVT_KEY_DOWN, &MainFrame::OnKeyEvent, this);								// KEY EVENTS
 					
 	this->Bind(wxEVT_ENTER_WINDOW, &MainFrame::OnMouseEvent, this);				// MOUSE EVENTS
 	this->Bind(wxEVT_LEAVE_WINDOW, &MainFrame::OnMouseEvent, this);
 	
-	this->Bind(wxEVT_SIZE, &MainFrame::OnWindowResized, this);					// WINDOW EVENTS
+	this->Bind(wxEVT_SIZE, &MainFrame::OnWindowResized, this);								// WINDOW EVENTS
 	this->Bind(wxEVT_CLOSE_WINDOW, &MainFrame::OnWindowClosed, this);
 	
-	this->Bind(wxEVT_SIZE, &MainFrame::OnWindowResized, this);					// WINDOW EVENTS
+	this->Bind(wxEVT_SIZE, &MainFrame::OnWindowResized, this);								// WINDOW EVENTS
 	this->Bind(wxEVT_ENTER_WINDOW, &MainFrame::OnMouseEvent, this);
 	this->Bind(wxEVT_LEAVE_WINDOW, &MainFrame::OnMouseEvent, this);
 	this->Bind(wxEVT_CLOSE_WINDOW, &MainFrame::OnWindowClosed, this);
 	this->Bind(wxEVT_SYS_COLOUR_CHANGED, &MainFrame::OnSysColourChanged, this);
-	Theme::ApplyTitleBar(this);
 }
 
 void MainFrame::OnDeckSelected(int deckId) {
@@ -172,41 +170,45 @@ void MainFrame::OnDeckSelected(int deckId) {
 
 void MainFrame::SetStudying(bool active) {
 	this->studying = active;
-	if (this->sidebarPanel != nullptr) {
+	/*if(this->sidebarPanel != nullptr) {
 		this->sidebarPanel->Enable(!active);
-	}
+	} */
 	this->UpdateDeckMenus();
 }
 
-void MainFrame::UpdateDeckMenus() {
-	if (this->fileMenu == nullptr) {
+void MainFrame::UpdateDeckMenus() {		
+	if(this->fileMenu == nullptr) { 
 		return;
 	}
+	
 	bool guiding = false;
-	if (!this->studying) {
+	if(!this->studying) {
 		auto useCase = wxGetApp().GetInjector().create<GetUserProfileUseCase>();
 		GetUserProfileResponse profile = useCase.Execute();
 		guiding = profile.ok && !profile.guideFinished;
 	}
+	
 	const bool unlocked = !this->studying && !guiding;
+	const bool generalUnlocked = !guiding;
 	bool hasDecks = false;
-	if (auto* decks = dynamic_cast<DeckPanelList*>(this->sidebarPanel)) {
+	if(auto* decks = dynamic_cast<DeckPanelList*>(this->sidebarPanel)) {
 		hasDecks = decks->HasDecks();
 	}
 	const bool canEditDeck = hasDecks && this->selectedDeckId != 0 && unlocked;
 	const bool canStudy = this->selectedCardCount > 0 && unlocked;
+	
 	this->fileMenu->Enable(wxID_NEW, unlocked);
 	this->fileMenu->Enable(ID_EDIT_DECK, canEditDeck);
 	this->fileMenu->Enable(ID_DELETE_DECK, canEditDeck);
 	this->fileMenu->Enable(ID_SETTINGS, unlocked);
-	if (this->studyMenu != nullptr) {
-		this->studyMenu->Enable(ID_CARDS, unlocked);
-		this->studyMenu->Enable(ID_STUDY, canStudy);
-		this->studyMenu->Enable(ID_AI, canStudy);
-		this->studyMenu->Enable(ID_TODAYS_PROGRESS, unlocked);
+	
+	if(this->studyMenu != nullptr) {
+		this->studyMenu->Enable(ID_STUDY, generalUnlocked);
+		this->studyMenu->Enable(ID_AI,  generalUnlocked);
+		this->studyMenu->Enable(ID_TODAYS_PROGRESS, generalUnlocked);
 	}
-	if (this->calendarMenu != nullptr) {
-		this->calendarMenu->Enable(ID_CALENDAR, unlocked);
+	if(this->calendarMenu != nullptr) {
+		this->calendarMenu->Enable(ID_CALENDAR, generalUnlocked);
 	}
 }
 
@@ -215,29 +217,29 @@ void MainFrame::SetSelectedCardCount(int count) {
 	this->UpdateDeckMenus();
 }
 
-void MainFrame::ApplyMenuIcons() {
-	if (this->menuBar == nullptr) {
+void MainFrame::ApplyMenuIcons() {		
+	if(this->menuBar == nullptr) {
 		return;
 	}
 	const bool invert = Theme::IsDarkAppearance();
 	auto setIcon = [this, invert](int id, const wxString& path) {
 		wxMenuItem* item = this->menuBar->FindItem(id);
-		if (item != nullptr) {
+		if(item != nullptr) {
 			item->SetBitmap(IconButton::LoadIconBundle(path, 16, invert));
 		}
 	};
-	setIcon(wxID_NEW, "UI/assets/add_icon.png");
-	setIcon(ID_EDIT_DECK, "UI/assets/edit_icon.png");
-	setIcon(ID_DELETE_DECK, "UI/assets/delete_icon.png");
-	setIcon(ID_CARDS, "UI/assets/flash_card_icon.png");
-	setIcon(ID_STUDY, "UI/assets/study_icon.png");
-	setIcon(ID_AI, "UI/assets/ai_study_icon.png");
-	setIcon(ID_TODAYS_PROGRESS, "UI/assets/progress.png");
-	setIcon(ID_CALENDAR, "UI/assets/calendar_icon.png");
+	setIcon(wxID_NEW,		    this->app.GetBasePath() + "UI/assets/add_icon.png");
+	setIcon(ID_EDIT_DECK,       this->app.GetBasePath() + "UI/assets/edit_icon.png");
+	setIcon(ID_DELETE_DECK,     this->app.GetBasePath() + "UI/assets/delete_icon.png");
+	setIcon(ID_CARDS,           this->app.GetBasePath() + "UI/assets/flash_card_icon.png");
+	setIcon(ID_STUDY,           this->app.GetBasePath() + "UI/assets/study_icon.png");
+	setIcon(ID_AI,              this->app.GetBasePath() + "UI/assets/ai_study_icon.png");
+	setIcon(ID_TODAYS_PROGRESS, this->app.GetBasePath() + "UI/assets/progress.png");
+	setIcon(ID_CALENDAR,        this->app.GetBasePath() + "UI/assets/calendar_icon.png");
 }
 
 void MainFrame::ReloadDecks() {
-	if (auto* decks = dynamic_cast<DeckPanelList*>(this->sidebarPanel)) {
+	if(auto* decks = dynamic_cast<DeckPanelList*>(this->sidebarPanel)) {
 		decks->LoadDecks();
 		this->selectedDeckId = decks->GetSelectedDeckId();
 		this->UpdateDeckMenus();
@@ -247,22 +249,21 @@ void MainFrame::ReloadDecks() {
 void MainFrame::ApplyTheme() {
 	const Theme& theme = Theme::Get();
 	this->SetBackgroundColour(theme.color.window);
-	if (this->contentPanel != nullptr) {
+	if(this->contentPanel != nullptr) {
 		this->contentPanel->SetBackgroundColour(theme.color.window);
 	}
-	if (auto* decks = dynamic_cast<DeckPanelList*>(this->sidebarPanel)) {
+	if(auto* decks = dynamic_cast<DeckPanelList*>(this->sidebarPanel)) {
 		decks->ApplyTheme();
 	}
-	if (auto* cards = dynamic_cast<FlashCardList*>(this->currentPanel)) {
+	if(auto* cards = dynamic_cast<FlashCardList*>(this->currentPanel)) {
 		cards->ApplyTheme();
-	} else if (this->currentPanel != nullptr) {
+	} 
+	if(this->currentPanel != nullptr) {
 		this->currentPanel->SetBackgroundColour(theme.color.window);
 		this->currentPanel->Refresh();
 	}
 	this->ApplyMenuIcons();
-	Theme::ApplyTitleBar(this);
 	this->Refresh();
-	this->Update();
 }
 
 void MainFrame::OnSysColourChanged(wxSysColourChangedEvent& event) {
@@ -270,13 +271,33 @@ void MainFrame::OnSysColourChanged(wxSysColourChangedEvent& event) {
 	event.Skip();
 }
 
+wxDateTime MainFrame::GetSelectedDate() const { return this->selectedDate; }
+
+void MainFrame::SetSelectedDate(const wxDateTime& date) { 
+	this->selectedDate = date;
+	EventPanel* existingEvents = dynamic_cast<EventPanel*>(this->currentSidebarPanel);
+	if(existingEvents != nullptr) {
+		existingEvents->LoadEventsForDate(this->selectedDate);
+	}
+}
+
 void MainFrame::ShowCardList() {
 	this->SetStudying(false);
-	if (auto* decks = dynamic_cast<DeckPanelList*>(this->sidebarPanel)) {
-		decks->RefreshGuide();
+
+	this->sidebarWeight = 30;
+	this->contentWeight = 70;
+	this->ApplyPanelWidths(this->sidebarWeight, this->contentWeight);
+
+	DeckPanelList* existingDecks = dynamic_cast<DeckPanelList*>(this->currentSidebarPanel); 
+	if(existingDecks != nullptr) { existingDecks->RefreshGuide(); } 
+	else { this->SetCurrentSidebarPanel(new DeckPanelList(this->sidebarPanel)); }
+	
+	FlashCardList* existingCards = dynamic_cast<FlashCardList*>(this->currentPanel);
+	if(existingCards != nullptr) { this->UpdateDeckMenus(); }
+	else { 
+		this->SetCurrentPanel(new FlashCardList(this->contentPanel, this->selectedDeckId));
+		this->UpdateDeckMenus();
 	}
-	this->SetCurrentPanel(new FlashCardList(this->contentPanel, this->selectedDeckId));
-	this->UpdateDeckMenus();
 }
 
 void MainFrame::ShowStudyDeck() {
@@ -284,16 +305,33 @@ void MainFrame::ShowStudyDeck() {
 		ShowCenteredMessage(this, "Select a deck first.", "Study Deck", wxOK | wxICON_WARNING);
 		return;
 	}
-	this->SetCurrentPanel(new StudyPanel(this->contentPanel, this->selectedDeckId));
 	this->SetStudying(true);
+	
+	this->sidebarWeight = 30;
+	this->contentWeight = 70;
+	this->ApplyPanelWidths(this->sidebarWeight, this->contentWeight);
+	
+	DeckPanelList* existingDecks = dynamic_cast<DeckPanelList*>(this->currentSidebarPanel); 
+	if(existingDecks != nullptr) { existingDecks->RefreshGuide(); } 
+	else { this->SetCurrentSidebarPanel(new DeckPanelList(this->sidebarPanel)); }
+	
+	StudyPanel* existingStudy = dynamic_cast<StudyPanel*>(this->currentPanel);
+	if(existingStudy != nullptr) {}
+	else { this->SetCurrentPanel(new StudyPanel(this->contentPanel, this->selectedDeckId)); }
 }
 
 void MainFrame::ShowTodaysProgress() {
-	this->SetCurrentPanel(new ProgressPanel(this->contentPanel));
-}
-
-void MainFrame::ShowCalendar() {
-	this->SetCurrentPanel(new CalendarPanel(this->contentPanel));
+	this->sidebarWeight = 30;
+	this->contentWeight = 70;
+	this->ApplyPanelWidths(this->sidebarWeight, this->contentWeight);
+	
+	DeckPanelList* existingDecks = dynamic_cast<DeckPanelList*>(this->currentSidebarPanel); 
+	if(existingDecks != nullptr) { existingDecks->RefreshGuide(); } 
+	else { this->SetCurrentSidebarPanel(new DeckPanelList(this->sidebarPanel)); }
+	
+	ProgressPanel* existingProgress = dynamic_cast<ProgressPanel*>(this->currentPanel);
+	if(existingProgress != nullptr) {}
+	else { this->SetCurrentPanel(new ProgressPanel(this->contentPanel)); }
 }
 
 void MainFrame::ShowAiStudy() {
@@ -301,52 +339,119 @@ void MainFrame::ShowAiStudy() {
 		ShowCenteredMessage(this, "Select a deck first.", "AI Study", wxOK | wxICON_WARNING);
 		return;
 	}
-	this->SetCurrentPanel(new AiStudyPanel(this->contentPanel, this->selectedDeckId));
 	this->SetStudying(true);
+	
+	this->sidebarWeight = 30;
+	this->contentWeight = 70;
+	this->ApplyPanelWidths(this->sidebarWeight, this->contentWeight);
+	
+	DeckPanelList* existingDecks = dynamic_cast<DeckPanelList*>(this->currentSidebarPanel); 
+	if(existingDecks != nullptr) { existingDecks->RefreshGuide(); } 
+	else { this->SetCurrentSidebarPanel(new DeckPanelList(this->sidebarPanel)); }
+	
+	AiStudyPanel* existingAI = dynamic_cast<AiStudyPanel*>(this->currentPanel);
+	if(existingAI != nullptr) {}
+	else { this->SetCurrentPanel(new AiStudyPanel(this->contentPanel, this->selectedDeckId)); }
+}
+
+void MainFrame::ShowCalendar() {
+	this->sidebarWeight = 50;
+	this->contentWeight = 50;
+	this->ApplyPanelWidths(this->sidebarWeight, this->contentWeight);
+	
+	EventPanel* existingEvents = dynamic_cast<EventPanel*>(this->currentSidebarPanel);
+	if(existingEvents != nullptr) {}
+	else { this->SetCurrentSidebarPanel(new EventPanel(this->sidebarPanel)); }
+	
+	CalendarPanel* existingCalendar = dynamic_cast<CalendarPanel*>(this->currentPanel);
+	if(existingCalendar != nullptr) {}
+	else { this->SetCurrentPanel(new CalendarPanel(this->contentPanel)); }
 }
 
 void MainFrame::SetCurrentPanel(wxPanel* newPanel) {
-	if(this->currentPanel != NULL) { 
-		this->currentPanel->Destroy();
-		this->currentPanel = NULL;
-	}
-	
-	this->contentPanel->SetSizer(NULL);
-	
-	this->currentPanel = newPanel;
-	this->currentPanel->SetBackgroundStyle(wxBG_STYLE_PAINT);
-	this->currentPanel->SetBackgroundColour(Theme::Get().color.window);
-	
-	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
-	sizer->Add(this->currentPanel, 1, wxEXPAND);
-	
-	this->contentPanel->SetSizer(sizer);
-	this->contentPanel->Layout();
-	this->ApplyPanelWidths();
-	
-	this->currentPanel->SetFocus();
+    wxSizer* sizer = this->contentPanel->GetSizer();
+    if(!sizer) {
+        sizer = new wxBoxSizer(wxVERTICAL);
+        this->contentPanel->SetSizer(sizer);
+    } 
+	else {	
+        sizer->Clear(true);	 // This safely clears and destroys the old panel automatically
+    }
+    
+    this->currentPanel = newPanel;
+    
+    sizer->Add(this->currentPanel, 1, wxEXPAND);
+    
+    this->contentPanel->Layout();
+    this->currentPanel->SetFocus();
 }
 
-void MainFrame::SetSidebarPanel(wxPanel* newPanel) {
-	wxLogStatus("CHANGE SIDEBAR");
+void MainFrame::SetCurrentSidebarPanel(wxPanel* newPanel) {
+    wxSizer* sizer = this->sidebarPanel->GetSizer();
+    if(!sizer) {
+        sizer = new wxBoxSizer(wxVERTICAL);
+        this->sidebarPanel->SetSizer(sizer);
+    } 
+	else {
+        sizer->Clear(true);
+    }
+    
+	this->currentSidebarPanel = newPanel;
+    
+    sizer->Add(this->currentSidebarPanel, 1, wxEXPAND);
+    
+    this->sidebarPanel->Layout();
+}
+
+void MainFrame::ApplyPanelWidths(int sidebarWeight, int contentWeight) {
+    const int clientWidth = this->GetClientSize().GetWidth();
+    if(clientWidth <= 0 || this->sidebarPanel == nullptr || this->contentPanel == nullptr) {
+        return;
+    }
+
+    const int edge = this->FromDIP(Theme::Get().size.panelPad);
+    const int gap = this->FromDIP(Theme::Get().space.md);
+    const int inner = clientWidth - edge - gap - edge;
+    if(inner <= 0) {
+        return;
+    }
+   
+    int totalWeight = sidebarWeight + contentWeight;	 				// Guard against invalid weights
+    if(totalWeight <= 0 || totalWeight > 100) {
+        sidebarWeight = 30;
+        contentWeight = 70;
+        totalWeight = 100;
+    }
+
+    const int sidebarWidth = (inner * sidebarWeight) / totalWeight;		// Calculate dynamic proportional widths based on the weights
+    const int contentWidth = inner - sidebarWidth;
+
+    if(sidebarWidth <= 0 || contentWidth <= 0) { return; }
+
+    this->sidebarPanel->SetMinSize(wxSize(sidebarWidth, -1));
+    this->sidebarPanel->SetMaxSize(wxSize(sidebarWidth, -1));
+    this->contentPanel->SetMinSize(wxSize(contentWidth, -1));
+    this->contentPanel->SetMaxSize(wxSize(contentWidth, -1));
+	
+	this->Layout();
 }
 
 //=============== EVENT HANDLERS ================================== EVENT HANDLERS =============
 
 void MainFrame::OnAddDeck(wxCommandEvent& event) {
-	if (auto* decks = dynamic_cast<DeckPanelList*>(this->sidebarPanel)) {
+	if(auto* decks = dynamic_cast<DeckPanelList*>(this->sidebarPanel)) {
 		decks->OnAddDeck(event);
 	}
 }
 
 void MainFrame::OnEditDeck(wxCommandEvent& event) {
-	if (auto* decks = dynamic_cast<DeckPanelList*>(this->sidebarPanel)) {
+	if(auto* decks = dynamic_cast<DeckPanelList*>(this->sidebarPanel)) {
 		decks->OnEditDeck(event);
 	}
 }
 
 void MainFrame::OnDeleteDeck(wxCommandEvent& event) {
-	if (auto* decks = dynamic_cast<DeckPanelList*>(this->sidebarPanel)) {
+	if(auto* decks = dynamic_cast<DeckPanelList*>(this->sidebarPanel)) {
 		decks->OnDeleteDeck(event);
 	}
 }
@@ -435,12 +540,7 @@ void MainFrame::OnPaste(wxCommandEvent& event) {
 
 void MainFrame::OnSelectAll(wxCommandEvent& event) {
 	wxLogStatus("SELECT ALL");
-	wxWindow* focused = wxWindow::FindFocus();
-    wxTextCtrl* textCtrl = wxDynamicCast(focused, wxTextCtrl);
-    if(textCtrl) {
-        textCtrl->SelectAll();
-        return;
-    }
+	
 	event.Skip();
 }
 
@@ -617,35 +717,14 @@ void MainFrame::OnKeyEvent(wxKeyEvent& event) {						// KEY
 	event.Skip();
 }
 
-void MainFrame::ApplyPanelWidths() {
-	const int clientWidth = this->GetClientSize().GetWidth();
-	if(clientWidth <= 0 || this->sidebarPanel == nullptr || this->contentPanel == nullptr) {
-		return;
-	}
 
-	const int edge = this->FromDIP(Theme::Get().size.panelPad);
-	const int gap = this->FromDIP(Theme::Get().space.md);
-	const int inner = clientWidth - edge - gap - edge;
-	if(inner <= 0) {
-		return;
-	}
-	const int deckWidth = inner * 30 / 100;
-	const int cardWidth = inner - deckWidth;
-	if(deckWidth <= 0 || cardWidth <= 0) {
-		return;
-	}
-	this->sidebarPanel->SetMinSize(wxSize(deckWidth, -1));
-	this->sidebarPanel->SetMaxSize(wxSize(deckWidth, -1));
-	this->contentPanel->SetMinSize(wxSize(cardWidth, -1));
-	this->contentPanel->SetMaxSize(wxSize(cardWidth, -1));
-}
 
 void MainFrame::OnWindowResized(wxSizeEvent& event) {				// WINDOW
 	wxSize size = event.GetSize();
 	
 	this->app.SetWindowWidth(size.GetWidth());
 	this->app.SetWindowHeight(size.GetHeight());
-	this->ApplyPanelWidths();
+	this->ApplyPanelWidths(this->sidebarWeight, this->contentWeight);
 	
 	event.Skip();
 }

@@ -2,6 +2,8 @@
 #define COMPOSITION_ROOT_H
 
 #include <string>
+#include <wx/stdpaths.h>
+#include <wx/filename.h>
 
 // wxWidgets defines `_` for translations; Boost.DI uses `_` as a type.
 #ifdef _
@@ -38,12 +40,14 @@
 
 namespace di = boost::di;
 
-inline constexpr const char* kDatabaseFileName = "merken.db";
-
 // wires service interfaces to their Infrastructure implementations as app-lifetime singletons
 inline auto MakeInjector() {
+	// Dynamically compute absolute path right next to the running executable
+	wxFileName exePath(wxStandardPaths::Get().GetExecutablePath());
+	wxString absoluteDbPath = exePath.GetPath() + wxFILE_SEP_PATH + "merken.db";
+
 	return di::make_injector(
-		di::bind<DatabaseContext>().in(di::singleton).to<DatabaseContext>(std::string{kDatabaseFileName}),
+		di::bind<DatabaseContext>().in(di::singleton).to<DatabaseContext>(absoluteDbPath.ToStdString()),
 		di::bind<IDeckRepository>().to<DeckRepository>().in(di::singleton),
 		di::bind<IDailyProgressRepository>().to<DailyProgressRepository>().in(di::singleton),
 		di::bind<IUserProfileRepository>().to<UserProfileRepository>().in(di::singleton),

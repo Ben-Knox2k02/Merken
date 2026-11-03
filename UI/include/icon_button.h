@@ -41,9 +41,24 @@ class IconButton : public wxBitmapButton {
 			});
 		}
 
-		void ApplyTheme() {
+		/*void ApplyTheme() {
 			this->SetBitmapLabel(LoadIconBundle(this->imagePath, kIconSize, this->forceInvert || IsDarkTheme()));
 			this->CenterIcon();
+		}*/
+		
+		void ApplyTheme() {
+			wxBitmapBundle bundle = LoadIconBundle(this->imagePath, kIconSize, this->forceInvert || IsDarkTheme());
+    
+			// wxBitmapButton caches separate bitmaps for every state. 
+			// You must update all of them, otherwise hover/focus states will revert the icon color!
+			this->SetBitmapLabel(bundle);
+			this->SetBitmapPressed(bundle);
+			this->SetBitmapFocus(bundle);
+			this->SetBitmapCurrent(bundle);
+			this->SetBitmapDisabled(bundle);
+    
+			this->CenterIcon();
+			this->Refresh();
 		}
 
 		static wxBitmapBundle LoadIconBundle(const wxString& path, int dipSize, bool invert) {

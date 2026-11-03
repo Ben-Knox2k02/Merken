@@ -7,31 +7,31 @@
 wxIMPLEMENT_APP(App);
 
 bool App::OnInit() {
+	std::cout<<"[TRACE] Entering OnInit..."<<std::endl;
+	this->basePath = wxFileName(wxStandardPaths::Get().GetExecutablePath()).GetPath() + wxFILE_SEP_PATH;
+	std::cout<<"[TRACE] Merken.exe Path: "<<this->basePath<<std::endl;
 	try {
-		std::cout << "[TRACE] Entering OnInit..." << std::endl;
+		this->SetAppearance(Appearance::System);
 		wxInitAllImageHandlers();
 		this->EnsureInjector();
-		// Choose Light, Dark, or System once, before any window exists.
-		// wx refuses a later change, so this cannot follow SetAppearance(System).
 		ApplyStoredTheme();
 		std::cout << "[TRACE] Injector ensured successfully." << std::endl;
 
 		auto profileUseCase = this->GetInjector().create<GetUserProfileUseCase>();
 		GetUserProfileResponse profile = profileUseCase.Execute();
-		if (profile.ok && !profile.onboardingFinished) {
+		if(profile.ok && !profile.onboardingFinished) {
 			OnboardingDialog onboarding(nullptr);
 			onboarding.ShowModal();
 		}
 	
-		this->SCREEN_WIDTH = wxSystemSettings::GetMetric(wxSYS_SCREEN_X);
+		this->SCREEN_WIDTH = wxSystemSettings::GetMetric(wxSYS_SCREEN_X);			// MAKE INITIAL WINDOW SIZE RATIO OF SCREEN DIMENSIONS
 		this->SCREEN_HEIGHT = wxSystemSettings::GetMetric(wxSYS_SCREEN_Y);
+		this->windowWidth = this->SCREEN_WIDTH * 4 / 5;
+		this->windowHeight = this->SCREEN_HEIGHT * 4 / 5;
 	
 		MainFrame* mainFrame = new MainFrame("Merken");
 		std::cout << "[TRACE] MainFrame constructed successfully." << std::endl;
-		const wxSize initialSize = mainFrame->FromDIP(wxSize(1366, 768));
-		this->windowWidth = initialSize.GetWidth();
-		this->windowHeight = initialSize.GetHeight();
-		mainFrame->SetClientSize(initialSize);
+		mainFrame->SetSize(this->windowWidth, this->windowHeight);
 		mainFrame->Center();
 		mainFrame->Show();
 		std::cout << "[TRACE] MainFrame shown." << std::endl;
@@ -55,10 +55,12 @@ int App::OnExit() {
 }
 
 void App::EnsureInjector() {
-	if (!this->injector.has_value()) {
+	if(!this->injector.has_value()) {
 		this->injector.emplace(MakeInjector());
 	}
 }
+
+wxString App::GetBasePath() const { return this->basePath; }
 
 int App::GetScreenWidth() const { return this->SCREEN_WIDTH; }
 int App::GetScreenHeight() const { return this->SCREEN_HEIGHT; }

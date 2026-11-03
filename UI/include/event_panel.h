@@ -1,0 +1,49 @@
+#ifndef EVENT_PANEL_H
+#define EVENT_PANEL_H
+
+#include "mainframe.h"
+#include "dialog.h"
+#include "theme.h"
+#include <wx/listctrl.h>
+#include <wx/datetime.h>
+#include <wx/dcbuffer.h>
+#include <thread>
+#include <memory>
+#include "../../Application/UseCases/Calendar/GetEvents/get_events_response.h"
+
+class EventPanel : public wxPanel {
+	public:
+		explicit EventPanel(wxWindow* parent);
+		~EventPanel() override;
+
+		wxPanel* topPanel;
+		wxPanel* midPanel;
+		wxPanel* bottomPanel;
+		
+		wxBoxSizer* rootSizer;
+		wxBoxSizer* topSizer;
+		wxBoxSizer* midSizer;
+		wxBoxSizer* bottomSizer;
+		
+		wxStaticText* header;
+		wxListCtrl* eventList;
+		wxDateTime currentDate;
+		
+		wxButton* addEventButton;
+		wxButton* editEventButton;
+		wxButton* deleteEventButton;
+
+		void LoadEvents();
+		void LoadEventsForDate(const wxDateTime& date);
+		void ShowEvents(const GetEventsResponse& response);
+		
+		void OnPaint(wxPaintEvent& event);
+		void OnAddEvent(wxCommandEvent& event);
+		void OnEditEvent(wxCommandEvent& event);
+		void OnDeleteEvent(wxCommandEvent& event);
+
+	private:
+		std::shared_ptr<bool> alive;
+};
+
+#endif

@@ -1,28 +1,19 @@
 #include "deck_panel_list.h"
-#include "dialog.h"
-#include "centered_message.h"
-#include "mainframe.h"
-#include "theme.h"
-#include "guide_highlight.h"
-#include "app.h"
 #include "../../Application/UseCases/Deck/GetDecks/get_decks_usecase.h"
 #include "../../Application/UseCases/Deck/CreateDeck/create_deck_usecase.h"
 #include "../../Application/UseCases/Deck/UpdateDeck/update_deck_usecase.h"
 #include "../../Application/UseCases/Deck/DeleteDeck/delete_deck_usecase.h"
 #include "../../Application/UseCases/Profile/GetUserProfile/get_user_profile_usecase.h"
-#include <wx/dcgraph.h>
-#include <wx/statline.h>
-
-wxDECLARE_APP(App);
 
 DeckPanelList::DeckPanelList(wxWindow* parent)
 	: wxPanel(),
-	  selectedDeckId(0) {
+	  selectedDeckId(0), app(wxGetApp()) {
+	//std::cout<<"entering deckpanel contructor..."<<std::endl;
 	this->SetBackgroundStyle(wxBG_STYLE_PAINT);
 	this->Create(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE);
 	this->SetWindowStyleFlag(this->GetWindowStyleFlag() & ~wxCLIP_CHILDREN);
 	this->SetBackgroundColour(Theme::Get().color.primary);
-	this->SetMinSize(wxSize(this->FromDIP(kMinWidth), -1));
+	//this->SetMinSize(wxSize(this->FromDIP(kMinWidth), -1));
 
 	this->rootSizer = new wxBoxSizer(wxVERTICAL);
 
@@ -51,9 +42,10 @@ DeckPanelList::DeckPanelList(wxWindow* parent)
 	this->rootSizer->Add(rule, 0, wxEXPAND | wxLEFT | wxRIGHT, pad);
 	this->rootSizer->AddSpacer(this->FromDIP(Theme::Get().space.md));
 
-	this->addDeckButton = new IconButton(this, "UI/assets/add_icon.png", "Add", true);
-	this->editDeckButton = new IconButton(this, "UI/assets/edit_icon.png", "Edit", true);
-	this->deleteDeckButton = new IconButton(this, "UI/assets/delete_icon.png", "Delete", true);
+	const bool isDark = Theme::IsDarkAppearance();
+	this->addDeckButton = new IconButton(this, this->app.GetBasePath() + "UI/assets/add_icon.png", "Add", isDark);
+	this->editDeckButton = new IconButton(this, this->app.GetBasePath() + "UI/assets/edit_icon.png", "Edit", isDark);
+	this->deleteDeckButton = new IconButton(this, this->app.GetBasePath() + "UI/assets/delete_icon.png", "Delete", isDark);
 	const int buttonHeight = this->addDeckButton->GetMinHeight();
 	const wxSize sharedButtonSize(0, buttonHeight);
 	this->addDeckButton->SetMinSize(sharedButtonSize);
@@ -85,15 +77,24 @@ DeckPanelList::DeckPanelList(wxWindow* parent)
 
 void DeckPanelList::ApplyTheme() {
 	const Theme& theme = Theme::Get();
+	const bool invert = Theme::IsDarkAppearance();
+	
 	this->SetBackgroundColour(theme.color.primary);
 	this->profileHeader->ApplyTheme();
 	this->scroller->SetBackgroundColour(theme.color.primary);
+	
+	this->addDeckButton->SetBitmap(IconButton::LoadIconBundle(this->app.GetBasePath() + "UI/assets/add_icon.png", 16, invert), wxLEFT);
+	this->editDeckButton->SetBitmap(IconButton::LoadIconBundle(this->app.GetBasePath() + "UI/assets/edit_icon.png", 16, invert), wxLEFT);
+	this->deleteDeckButton->SetBitmap(IconButton::LoadIconBundle(this->app.GetBasePath() + "UI/assets/delete_icon.png", 16, invert), wxLEFT);
+	
 	this->addDeckButton->ApplyTheme();
 	this->editDeckButton->ApplyTheme();
 	this->deleteDeckButton->ApplyTheme();
+	
 	for (DeckCard* card : this->cards) {
 		card->ApplyTheme();
 	}
+	
 	this->RefreshGuide();
 	this->Refresh();
 }
@@ -212,7 +213,7 @@ void DeckPanelList::RefreshSelection() {
 }
 
 void DeckPanelList::NotifyDeckSelected(int deckId) {
-	if (auto* frame = dynamic_cast<MainFrame*>(this->GetParent())) {
+	if (auto* frame = dynamic_cast<MainFrame*>(wxGetTopLevelParent(this))) {
 		frame->OnDeckSelected(deckId);
 	}
 }

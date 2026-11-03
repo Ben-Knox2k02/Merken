@@ -1,8 +1,11 @@
 #include "google_calendar_service.h"
 #include "../../ThirdParty/nlohmann/json.hpp"
 #include <cctype>
+#include <cstdio>
+#include <ctime>
 #include <iomanip>
 #include <iostream>
+#include <optional>
 #include <sstream>
 
 
@@ -43,13 +46,6 @@ static std::string GetStringField(const nlohmann::json& obj, const char* key){
 	return "";
 }
 
-static std::string GetEventTime(const nlohmann::json& json, const char* key){
-	if(!json.contains(key) || !json[key].is_object()){
-		return "";
-	}
-	std::string dateTime = GetStringField(json[key], "dateTime");
-	return dateTime.empty() ? GetStringField(json[key], "date") : dateTime;
-}
 
 static std::string ExtractGoogleErrorMessage(const std::string& body){
 	nlohmann::json j = nlohmann::json::parse(body, nullptr, false);

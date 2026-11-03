@@ -2,8 +2,25 @@
 #define MAINFRAME_H
 
 #include "app.h"
-#include <wx/wx.h>
+#include "flash_card_list.h"
+#include "deck_panel_list.h"
+#include "study_panel.h"
+#include "ai_panel.h"
+#include "ai_study_panel.h"
+#include "progress_panel.h"
+#include "calendar_panel.h"
+#include "event_panel.h"
+#include "settings_dialog.h"
+#include "centered_message.h"
+#include "theme.h"
+#include "icon_button.h"
 #include <wx/fdrepdlg.h>
+#include <vector>
+#include <string>
+#include <filesystem>
+#include <fstream>
+#include <algorithm>
+#include "../../Application/UseCases/Profile/GetUserProfile/get_user_profile_usecase.h"
 
 #define NUM_SHORTCUTS 17
 
@@ -27,19 +44,26 @@ class MainFrame : public wxFrame {
 		App& app;
 
 		wxBoxSizer* rootSizer;
-
-		wxPanel* sidebarPanel;		
-		wxPanel* contentPanel;		// HUSK TO HOLD currentPanel
+		
+		wxPanel* sidebarPanel;			// HUSK TO HOLD currentSidebarPanel
+		wxPanel* currentSidebarPanel;
+		wxPanel* contentPanel;			// HUSK TO HOLD currentPanel
 		wxPanel* currentPanel;
+		
+		int sidebarWeight;
+		int contentWeight;
+		
 		int selectedDeckId;
 		int selectedCardCount;
 		bool studying;
+		
+		wxDateTime selectedDate;
 
 		wxAcceleratorEntry shortcuts[NUM_SHORTCUTS];
 		wxFindReplaceDialog* findDialog;
 		wxFindReplaceData findData;
 
-		wxMenuBar* menuBar;
+		wxMenuBar* menuBar;								// MENUS
 		wxMenu* fileMenu;
 		wxMenu* editMenu;
 		wxMenu* searchMenu;
@@ -49,23 +73,29 @@ class MainFrame : public wxFrame {
 		wxMenu* toolsMenu;
 		wxMenu* helpMenu;
 		
-		void OnDeckSelected(int deckId);
+		void OnDeckSelected(int deckId);				// STUDY
 		void ReloadDecks();
-		void ApplyTheme();
+		void UpdateDeckMenus();
+		void SetSelectedCardCount(int count);
+		void SetStudying(bool active);
+		
+		wxDateTime GetSelectedDate() const;				// CALENDAR/EVENT
+		void SetSelectedDate(const wxDateTime& date);
+		
+		void ApplyTheme();								// STYLING
+		void ApplyMenuIcons();
 
-		void ShowCardList();
+		void ShowCardList();							// NAVIGATION
 		void ShowStudyDeck();
 		void ShowTodaysProgress();
 		void ShowCalendar();
 		void ShowAiStudy();
 
-		void SetCurrentPanel(wxPanel* newPanel);		// LAYOUT METHODS
-		void SetSidebarPanel(wxPanel* newPanel);
+		void SetCurrentPanel(wxPanel* newPanel);		// LAYOUT
+		void SetCurrentSidebarPanel(wxPanel* newPanel);
+		void ApplyPanelWidths(int sidebarWeight, int contentWeight);
 		
-		void UpdateDeckMenus();
-		void SetSelectedCardCount(int count);
-		void SetStudying(bool active);
-		void ApplyMenuIcons();
+		
 		void OnNew(wxCommandEvent& event);				// FILE
 		void OnOpen(wxCommandEvent& event);
 		void OnSave(wxCommandEvent& event);
@@ -99,7 +129,6 @@ class MainFrame : public wxFrame {
 		void OnMouseEvent(wxMouseEvent& event);			// I/O
 		void OnKeyEvent(wxKeyEvent& event);
 		
-		void ApplyPanelWidths();
 		void OnWindowResized(wxSizeEvent& event);		// WINDOW
 		void OnWindowClosed(wxCloseEvent& event);
 		void OnSysColourChanged(wxSysColourChangedEvent& event);
