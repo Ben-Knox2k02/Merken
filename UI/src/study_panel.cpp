@@ -10,7 +10,9 @@
 #include "../../Application/UseCases/Profile/FinishGuide/finish_guide_usecase.h"
 #include <wx/dcbuffer.h>
 #include <wx/dcgraph.h>
+#ifdef __WXMSW__
 #include <wx/msw/wrapwin.h>
+#endif
 #include <wx/tokenzr.h>
 #include <algorithm>
 #include <cmath>
@@ -659,6 +661,7 @@ StudyPanel::StudyPanel(wxWindow* parent, int deckId)
 }
 
 namespace {
+#ifdef __WXMSW__
 // Moving a card leaves its old face in the gap. Hold the host, place both
 // cards, then paint the host and the study page that composites it.
 struct HostRedraw {
@@ -710,6 +713,11 @@ struct HostRedraw {
 		return static_cast<HWND>(this->host->GetHandle());
 	}
 };
+#else
+struct HostRedraw {
+	explicit HostRedraw(wxWindow*) {}
+};
+#endif
 
 void PlaceStudyCard(wxWindow* card, int x, int y, int width, int height, bool show) {
 	if (card == nullptr) {

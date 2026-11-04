@@ -16,30 +16,82 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Cache wxWidgets (Linux)
+        if: runner.os == 'Linux'
+        uses: actions/cache@v4
+        with:
+          path: /home/runner/wx-3.3.4
+          key: wxwidgets-3.3.4-gtk3-libcurl-v1
+
       - name: Install wxWidgets (Linux)
         if: runner.os == 'Linux'
         run: |
+          set -euo pipefail
           sudo apt-get update
-          sudo apt-get install -y build-essential pkg-config libwxgtk3.2-dev
+          sudo apt-get install -y build-essential pkg-config libgtk-3-dev libcurl4-openssl-dev libjpeg-dev libpng-dev libtiff-dev zlib1g-dev
+          PREFIX="$HOME/wx-3.3.4"
+          if [[ ! -f "$PREFIX/.merken-wx-ok" ]]; then
+            rm -rf "$PREFIX"
+            work="$(mktemp -d)"
+            curl -fsSL -o "$work/wxWidgets-3.3.4.tar.bz2" \
+              https://github.com/wxWidgets/wxWidgets/releases/download/v3.3.4/wxWidgets-3.3.4.tar.bz2
+            echo "815c16cafa4fcbfcf25c5c0a3418309c62257b8a3b6f91d85a1367a134f98c98  $work/wxWidgets-3.3.4.tar.bz2" | sha256sum -c -
+            tar -xf "$work/wxWidgets-3.3.4.tar.bz2" -C "$work"
+            mkdir "$work/wxWidgets-3.3.4/build-gtk"
+            cd "$work/wxWidgets-3.3.4/build-gtk"
+            ../configure --prefix="$PREFIX" --with-gtk=3
+            make -j"$(nproc)"
+            make install
+            cd /
+            rm -rf "$work"
+            shopt -s nullglob
+            setups=("$PREFIX"/lib/wx/include/*/wx/setup.h)
+            if [[ ${#setups[@]} -eq 0 ]]; then
+              echo "wx setup.h was not installed." >&2
+              exit 1
+            fi
+            setup="${setups[0]}"
+            if ! grep -E -q '#define wxUSE_WEBREQUEST[[:space:]]+1' "$setup" \
+              || ! grep -E -q '#define wxUSE_WEBREQUEST_CURL[[:space:]]+1' "$setup"; then
+              echo "wxWidgets was built without the libcurl wxWebRequest backend." >&2
+              exit 1
+            fi
+            touch "$PREFIX/.merken-wx-ok"
+          fi
+          echo "$PREFIX/bin" >> "$GITHUB_PATH"
+          "$PREFIX/bin/wx-config" --version | grep -q '^3\.3\.'
 
       - name: Install wxWidgets (macOS)
         if: runner.os == 'macOS'
-        run: brew install wxwidgets
+        run: |
+          set -euo pipefail
+          brew install wxwidgets
+          wx-config --version | grep -q '^3\.3\.'
 
       - name: Setup MSYS2 (Windows)
         if: runner.os == 'Windows'
         uses: msys2/setup-msys2@v2
         with:
-          msystem: MINGW64
+          msystem: UCRT64
           update: true
           install: >-
-            mingw-w64-x86_64-toolchain
-            mingw-w64-x86_64-wxwidgets3.2-msw
+            mingw-w64-ucrt-x86_64-toolchain
+            mingw-w64-ucrt-x86_64-wxwidgets3.3-msw
 
       - name: Compile and link (Linux/macOS)
         if: runner.os != 'Windows'
         shell: bash
         run: |
+          set -euo pipefail
+          wx_ver="$(wx-config --version)"
+          echo "Using wxwidgets $wx_ver"
+          case "$wx_ver" in
+            3.3.*) ;;
+            *)
+              echo "Merken needs wxWidgets 3.3. This wx-config is $wx_ver." >&2
+              exit 1
+              ;;
+          esac
           mkdir -p obj
           INC="-IUI/include -IThirdParty/boost-di -IThirdParty/wxSQLite3/include -IThirdParty/wxSQLite3/src $(wx-config --cxxflags)"
           find Infrastructure Application -name '*.cpp' | while read -r file; do
@@ -62,10 +114,20 @@ jobs:
           if [ "$RUNNER_OS" = "Linux" ]; then EXTRALIBS="$EXTRALIBS -ldl"; fi
           g++ obj/*.o $(wx-config --libs) $EXTRALIBS -o Merken
 
-      - name: Compile and link (Windows / MSYS2)
+      - name: Compile and link (Windows / UCRT64)
         if: runner.os == 'Windows'
         shell: msys2 {0}
         run: |
+          set -euo pipefail
+          wx_ver="$(wx-config --version)"
+          echo "Using wxwidgets $wx_ver"
+          case "$wx_ver" in
+            3.3.*) ;;
+            *)
+              echo "Merken needs wxWidgets 3.3. This wx-config is $wx_ver." >&2
+              exit 1
+              ;;
+          esac
           mkdir -p obj
           INC="-IUI/include -IThirdParty/boost-di -IThirdParty/wxSQLite3/include -IThirdParty/wxSQLite3/src $(wx-config --cxxflags)"
           find Infrastructure Application -name '*.cpp' | while read -r file; do
