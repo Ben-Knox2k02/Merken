@@ -8,15 +8,17 @@
 
 class ProfileBadge : public wxPanel {
 	public:
+		static constexpr int kSide = 32;
+
 		explicit ProfileBadge(wxWindow* parent)
 			: wxPanel(),
-			  backdrop(Theme::Get().color.primary),
+			  backdrop(Theme::Get().color.window),
 			  circle(Theme::Get().color.fill),
 			  ink(Theme::Get().color.label) {
 			this->SetBackgroundStyle(wxBG_STYLE_PAINT);
 			this->Create(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE);
 			this->SetWindowStyleFlag(this->GetWindowStyleFlag() & ~wxCLIP_CHILDREN);
-			const int side = this->FromDIP(36);
+			const int side = this->FromDIP(kSide);
 			this->SetMinSize(wxSize(side, side));
 			this->SetMaxSize(wxSize(side, side));
 			this->Bind(wxEVT_PAINT, &ProfileBadge::OnPaint, this);

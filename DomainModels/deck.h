@@ -15,7 +15,9 @@ class Deck {
 		) : deckId(deckId),
 			name(name),
 			description(description),
-			createdAt(createdAt) {}
+			createdAt(createdAt),
+			notedCardCount(0),
+			hasNotedCardCount(false) {}
 
 		int GetDeckId() const { return this->deckId; }
 		const std::string& GetName() const { return this->name; }
@@ -50,6 +52,22 @@ class Deck {
 			this->description = newDescription;
 		}
 
+		// Count from the deck list query, which does not load card bodies.
+		void NoteCardCount(int count) {
+			this->notedCardCount = count;
+			this->hasNotedCardCount = true;
+		}
+
+		int GetCardCount() const {
+			if (!this->cards.empty()) {
+				return static_cast<int>(this->cards.size());
+			}
+			if (this->hasNotedCardCount) {
+				return this->notedCardCount;
+			}
+			return 0;
+		}
+
 		void AddCard(const Card& card) {
 			this->cards.push_back(card);
 		}
@@ -69,6 +87,8 @@ class Deck {
 		std::string description;
 		std::string createdAt;
 		std::vector<Card> cards;
+		int notedCardCount;
+		bool hasNotedCardCount;
 };
 
 #endif

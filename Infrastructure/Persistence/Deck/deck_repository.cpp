@@ -5,7 +5,9 @@
 std::vector<Deck> DeckRepository::GetDecks() {
 	std::vector<Deck> decks;
 	wxSQLite3::ResultSet result = this->db.GetConnection()->ExecuteQuery(
-		"SELECT deck_id, name, description, created_at FROM decks ORDER BY deck_id;"
+		"SELECT deck_id, name, description, created_at, "
+		"(SELECT COUNT(*) FROM cards WHERE cards.deck_id = decks.deck_id) "
+		"FROM decks ORDER BY deck_id;"
 	);
 
 	while (result.NextRow()) {
@@ -15,7 +17,7 @@ std::vector<Deck> DeckRepository::GetDecks() {
 			result.GetString(2).ToStdString(),
 			result.GetString(3).ToStdString()
 		);
-		this->LoadCards(decks.back());
+		decks.back().NoteCardCount(result.GetInt(4));
 	}
 
 	return decks;

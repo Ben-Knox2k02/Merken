@@ -65,7 +65,6 @@ class MainFrame : public wxFrame {
 		void UpdateDeckMenus();
 		void SetSelectedCardCount(int count);
 		void SetStudying(bool active);
-		void ApplyMenuIcons();
 		void OnNew(wxCommandEvent& event);				// FILE
 		void OnOpen(wxCommandEvent& event);
 		void OnSave(wxCommandEvent& event);
