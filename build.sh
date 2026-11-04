@@ -36,22 +36,31 @@ OUT=Merken
 echo "Building $OUT"
 
 if [[ "$(uname -s)" == "Darwin" ]]; then
-	if command -v wx-config >/dev/null 2>&1; then
-		echo "Using wxwidgets $(wx-config --version)"
-	else
+	if ! command -v wx-config >/dev/null 2>&1; then
 		if ! command -v brew >/dev/null 2>&1; then
 			echo "Homebrew not found. Install it from https://brew.sh then run this again." >&2
 			exit 1
 		fi
-		echo "Installing wxwidgets..."
+		echo "Installing wxwidgets 3.3..."
 		HOMEBREW_NO_AUTO_UPDATE=1 brew install wxwidgets
 	fi
 fi
 
 if ! command -v wx-config >/dev/null 2>&1; then
-	echo "wx-config not found." >&2
+	echo "wx-config not found. Install wxWidgets 3.3. See docs/SETUP.md." >&2
 	exit 1
 fi
+
+wx_ver="$(wx-config --version)"
+echo "Using wxwidgets $wx_ver"
+case "$wx_ver" in
+	3.3.*) ;;
+	*)
+		echo "Merken needs wxWidgets 3.3. This wx-config is $wx_ver." >&2
+		echo "wxWidgets 3.2 does not compile this tree. See docs/SETUP.md." >&2
+		exit 1
+		;;
+esac
 
 mkdir -p obj
 rm -f obj/*.o

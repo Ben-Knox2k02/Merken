@@ -56,7 +56,7 @@ Standalone MinGW-w64 (for example [WinLibs](https://winlibs.com/)) also works: p
 
 ### 2. Install and build wxWidgets
 
-`build.bat` links **static** MinGW wxWidgets **3.3** (`libwxmsw33u_*.a`). Pre-built Visual Studio binaries and wxWidgets 3.3 will not work. Do this after `g++` is on PATH.
+`build.bat` links **static** MinGW wxWidgets **3.3** (`libwxmsw33u_*.a`). Pre-built Visual Studio binaries and wxWidgets 3.2 will not work. Do this after `g++` is on PATH.
 
 1. Download the **Windows source** archive `wxWidgets-3.3.x.zip` (or `.7z`) from [wxwidgets.org/downloads](https://www.wxwidgets.org/downloads/) or the [3.3 GitHub releases](https://github.com/wxWidgets/wxWidgets/releases).
 
@@ -123,6 +123,8 @@ test.bat
 
 ## macOS
 
+Merken needs wxWidgets **3.3**. Homebrew’s `wxwidgets` formula is that series. `wxwidgets@3.2` does not compile this tree.
+
 1. Install [Homebrew](https://brew.sh) if you do not have it.
 2. Install Xcode command-line tools so `g++` / `clang++` and `cc` exist:
 
@@ -130,71 +132,127 @@ test.bat
    xcode-select --install
    ```
 
-3. Install wxWidgets 3.2 (provides `wx-config`):
+3. Install wxWidgets 3.3:
 
    ```
    brew install wxwidgets
    ```
 
-   `./build.sh` runs that Homebrew install for you if `wx-config` is missing.
+   Do not install `wxwidgets@3.2`.
 
-```
-./build.sh
-./test.sh
-```
+4. Confirm the version. It must start with `3.3`:
 
-Do not use `sudo`. On success you get `Merken.app`.
+   ```
+   wx-config --version
+   ```
+
+   If that prints `3.2`, the old formula is still the active `wx-config`:
+
+   ```
+   brew unlink wxwidgets@3.2
+   brew link --overwrite wxwidgets
+   wx-config --version
+   ```
+
+5. From the repo root:
+
+   ```
+   ./build.sh
+   ./test.sh
+   ```
+
+Do not use `sudo`. `./build.sh` runs `brew install wxwidgets` only when `wx-config` is missing. It does not replace a 3.2 install that is already on PATH, and it stops if `wx-config --version` is not 3.3.
+
+On success you get `Merken.app`. Double-click it, or run it from the repo root.
 
 ---
 
 ## Linux
-### (Debian/Ubuntu):
 
-Install a C++17 compiler and wxWidgets 3.2
+`wx-config --version` must start with `3.3` before `./build.sh`. The script stops on 3.2. The built binary is `./Merken`.
 
-```
-sudo apt-get update
-sudo apt-get install -y build-essential pkg-config libwxgtk3.2-dev
-```
+### Debian / Ubuntu
 
-`libwxgtk3.2-dev` provides `wx-config`. Then from the repo root:
+Debian and Ubuntu apt still ship wxWidgets 3.2 (`libwxgtk3.2-dev`). That package does not compile Merken. Build 3.3 from the release archive.
 
-```
-./build.sh
-./test.sh
-```
+1. Install the compiler and the GTK 3 build dependencies:
 
-`wx-config` must be on PATH. The binary is `./Merken`.
+   ```
+   sudo apt-get update
+   sudo apt-get install -y build-essential pkg-config libgtk-3-dev libcurl4-openssl-dev libjpeg-dev libpng-dev libtiff-dev zlib1g-dev
+   ```
 
+   `libcurl4-openssl-dev` is required. The app’s HTTP client uses `wxWebRequest`.
 
-### (Arch/CachyOS)
+2. Download the Unix source archive `wxWidgets-3.3.x.tar.bz2` from the [3.3 GitHub releases](https://github.com/wxWidgets/wxWidgets/releases). 3.3.4 is a current 3.3 release. Do **not** use the GitHub “Source code” archive (it is missing third-party sources).
 
-Install core c++ compilers and build utilities
+3. Build and install it. Substitute the version you downloaded:
+
+   ```
+   tar xf wxWidgets-3.3.4.tar.bz2
+   cd wxWidgets-3.3.4
+   mkdir build-gtk
+   cd build-gtk
+   ../configure --prefix=/usr/local --with-gtk=3
+   make -j"$(nproc)"
+   sudo make install
+   sudo ldconfig
+   ```
+
+   The first build takes several minutes. Later rebuilds of Merken do not rebuild wxWidgets.
+
+4. Open a new terminal and confirm 3.3 is the `wx-config` on PATH:
+
+   ```
+   wx-config --version
+   ```
+
+   A default PATH checks `/usr/local/bin` before `/usr/bin`, so this should print `3.3.x` even if `libwxgtk3.2-dev` is still installed. If it prints `3.2`, remove that dev package or put `/usr/local/bin` ahead of `/usr/bin`, then check again:
+
+   ```
+   sudo apt-get remove libwxgtk3.2-dev
+   hash -r
+   wx-config --version
+   ```
+
+5. From the Merken repo root:
+
+   ```
+   ./build.sh
+   ./test.sh
+   ```
+
+If `./Merken` fails to start because a `libwx_*.so` is missing, run `sudo ldconfig` and try again.
+
+### Arch / CachyOS
+
+Install the compiler and build utilities:
 
 ```
 sudo pacman -S --needed base-devel pkgconf
 ```
 
-Install wxWidgets 3.3.3 from the AUR
+Install wxWidgets 3.3 from the AUR:
 
 ```
 paru -S wxwidgets-gtk3-unstable
 ```
 
-Since the build script looks for "wx-config", create a symlink to 3.3.
+`./build.sh` looks for `wx-config`. Point that name at the 3.3 binary:
 
 ```
 sudo ln -sf /usr/bin/wx-config-3.3.3 /usr/local/bin/wx-config
+wx-config --version
 ```
 
-Run build scripts from the repo root:
+The version must start with `3.3`. If the package installed a different `wx-config-3.3*` name, symlink that file instead.
+
+From the repo root:
 
 ```
 ./build.sh
 ./test.sh
 ```
-
-`wx-config` must be on PATH. The binary is `./Merken`.
 
 ---
 
@@ -205,8 +263,8 @@ Run build scripts from the repo root:
 | `g++ --version` | C++ compiler is on PATH |
 | `gcc --version` | C compiler (Windows app build compiles a `.c` file with `gcc`) |
 | `mingw32-make --version` | Make used by `build_wxWidgets.bat` (Windows) |
-| `wx-config --version` | wxWidgets (macOS / Linux) |
-| `dir C:\wxWidgets\lib\gcc_lib\libwxmsw32u_core.a` | wxWidgets static libs (Windows; use `%WXWIN%` if you set it) |
+| `wx-config --version` | wxWidgets 3.3 (macOS / Linux). A `3.2` result will not compile Merken. |
+| `dir C:\wxWidgets\lib\gcc_lib\libwxmsw33u_core.a` | wxWidgets 3.3 static libs (Windows; use `%WXWIN%` if you set it) |
 
 If `g++ --version` fails on Windows after install, the `bin` folder is not on PATH for **this** terminal. Close it and open a new one.
 
