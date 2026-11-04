@@ -2,7 +2,9 @@
 
 bool SaveAppSettingsUseCase::Execute(const SaveAppSettingsRequest& request) {
 	AppSettings settings = this->appSettingsService.GetSettings();
-	settings.calendarApiKey = request.calendarApiKey;
+	if (!request.calendarApiKey.empty()) {
+		settings.calendarApiKey = request.calendarApiKey;
+	}
 	settings.aiApiKey = request.aiApiKey;
 	return this->appSettingsService.SaveSettings(settings);
 }

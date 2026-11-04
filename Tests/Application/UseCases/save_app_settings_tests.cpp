@@ -42,3 +42,18 @@ TEST_CASE("SaveAppSettingsUseCase returns false when save fails") {
 	CHECK(appSettings.saveCount == 0);
 	CHECK(appSettings.settings.aiApiKey.empty());
 }
+
+TEST_CASE("SaveAppSettingsUseCase keeps the saved Google tokens when the calendar field is blank") {
+	FakeAppSettingsService settings;
+	settings.settings.calendarApiKey = "access-1";
+	settings.settings.calendarRefreshToken = "refresh-1";
+	SaveAppSettingsUseCase useCase(settings);
+
+	SaveAppSettingsRequest request;
+	request.aiApiKey = "ai-key";
+
+	CHECK(useCase.Execute(request));
+	CHECK(settings.settings.calendarApiKey == "access-1");
+	CHECK(settings.settings.calendarRefreshToken == "refresh-1");
+	CHECK(settings.settings.aiApiKey == "ai-key");
+}
