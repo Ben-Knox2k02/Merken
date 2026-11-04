@@ -38,6 +38,8 @@ class AiQuestion {
 
 			AiQuestionType type = AiQuestionType::Sentence;
 			std::string text = StripNumberPrefix(trimmed);
+			std::string answer = card.GetBack();
+
 			const auto pipe = text.find('|');
 			if (pipe != std::string::npos) {
 				type = ParseType(text.substr(0, pipe));
@@ -45,11 +47,42 @@ class AiQuestion {
 			} else if (text.find("___") != std::string::npos) {
 				type = AiQuestionType::FillIn;
 			}
+
+			const auto answerPipe = text.find('|');
+			if (answerPipe != std::string::npos) {
+				const std::string modelAnswer = Trim(text.substr(answerPipe + 1));
+				text = Trim(text.substr(0, answerPipe));
+				if (!modelAnswer.empty()) {
+					answer = modelAnswer;
+				}
+			}
+
 			if (text.empty()) {
 				return std::nullopt;
 			}
-			return AiQuestion(card.GetCardId(), type, text, card.GetFront());
+			return AiQuestion(card.GetCardId(), type, text, answer);
 		}
+
+		// static std::optional<AiQuestion> Parse(const std::string& line, const Card& card) {
+		// 	const std::string trimmed = Trim(line);
+		// 	if (trimmed.empty()) {
+		// 		return std::nullopt;
+		// 	}
+
+		// 	AiQuestionType type = AiQuestionType::Sentence;
+		// 	std::string text = StripNumberPrefix(trimmed);
+		// 	const auto pipe = text.find('|');
+		// 	if (pipe != std::string::npos) {
+		// 		type = ParseType(text.substr(0, pipe));
+		// 		text = Trim(text.substr(pipe + 1));
+		// 	} else if (text.find("___") != std::string::npos) {
+		// 		type = AiQuestionType::FillIn;
+		// 	}
+		// 	if (text.empty()) {
+		// 		return std::nullopt;
+		// 	}
+		// 	return AiQuestion(card.GetCardId(), type, text, card.GetBack());
+		// }
 
 		static std::vector<AiQuestion> ParseMultiple(
 			const std::string& reply,

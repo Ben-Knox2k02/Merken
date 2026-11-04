@@ -5,7 +5,7 @@
 // rewriting to use nlohmann like the google calendar service 
 
 // gemini api endpoint
-static const std::string kGenerateUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash:generateContent";
+static const std::string kGenerateUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent";
 
 // error logging
 static void LogGeminiError(const std::string& operation, int statusCode, const std::string& detail){
