@@ -18,6 +18,9 @@ ProfileHeader::ProfileHeader(wxWindow* parent)
 	this->badge->SetCursor(wxCursor(wxCURSOR_HAND));
 
 	this->nameLabel = new wxStaticText(this, wxID_ANY, "Profile", wxDefaultPosition, wxDefaultSize, wxST_ELLIPSIZE_END);
+	wxFont nameFont = this->nameLabel->GetFont();
+	nameFont.SetWeight(wxFONTWEIGHT_NORMAL);
+	this->nameLabel->SetFont(nameFont);
 	this->nameLabel->SetForegroundColour(theme.color.label);
 	this->nameLabel->SetBackgroundColour(theme.color.window);
 	this->nameLabel->SetCursor(wxCursor(wxCURSOR_HAND));
