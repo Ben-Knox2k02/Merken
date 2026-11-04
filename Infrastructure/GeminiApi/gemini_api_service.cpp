@@ -111,6 +111,7 @@ std::string GeminiApiService::GenerateResponse(const std::string& prompt, const 
 				}
 			})}
 		};
+		requestBody["generationConfig"]["thinkingConfig"]["thinkingLevel"] = "low";
 		const std::string jsonBody = requestBody.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace);
 
 		//send post request
