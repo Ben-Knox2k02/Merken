@@ -89,8 +89,12 @@ ProfileDialog::ProfileDialog(wxWindow* parent, const GetUserProfileResponse& pro
 	root->Add(fields, 0, wxEXPAND | wxALL, pad);
 	root->Add(buttons, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, pad);
 	this->SetSizer(root);
-	this->SetMinSize(this->FromDIP(wxSize(480, 240)));
-	this->SetSize(this->FromDIP(wxSize(520, 260)));
+	this->Fit();
+	const int width = this->FromDIP(480);
+	const int height = this->GetSize().GetHeight();
+	const wxSize size(width > this->GetSize().GetWidth() ? width : this->GetSize().GetWidth(), height);
+	this->SetMinSize(size);
+	this->SetSize(size);
 	Theme::Get().StyleDialog(this);
 	this->Layout();
 	this->CentreOnParent();
