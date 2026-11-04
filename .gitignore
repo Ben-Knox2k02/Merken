@@ -20,3 +20,4 @@ UI/src/manifest.rc
 
 LOCAL_SRS.md
 LOCAL_PROFILE_ONBOARDING.md
+google_client.json
