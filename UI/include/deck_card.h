@@ -34,14 +34,15 @@ class DeckCard : public wxPanel {
 			this->titleCtrl->SetBackgroundStyle(wxBG_STYLE_TRANSPARENT);
 			this->titleCtrl->Create(this, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxST_ELLIPSIZE_END);
 			this->titleCtrl->SetMinSize(wxSize(0, -1));
-			wxFont titleFont = this->titleCtrl->GetFont();
-			titleFont.SetPointSize(10);
-			titleFont.SetWeight(wxFONTWEIGHT_NORMAL);
-			this->titleCtrl->SetFont(titleFont);
+			wxFont nameFont = this->titleCtrl->GetFont();
+			nameFont.SetWeight(wxFONTWEIGHT_NORMAL);
+			this->titleCtrl->SetFont(nameFont);
 			this->countLabel = new wxStaticText();
 			this->countLabel->SetBackgroundStyle(wxBG_STYLE_TRANSPARENT);
 			this->countLabel->Create(this, wxID_ANY, wxString::Format("%d", cardCount));
-			this->countLabel->SetFont(titleFont);
+			wxFont countFont = nameFont;
+			countFont.SetPointSize(10);
+			this->countLabel->SetFont(countFont);
 			this->ApplyTextColours();
 
 			const int gap = this->FromDIP(Theme::Get().space.sm);
