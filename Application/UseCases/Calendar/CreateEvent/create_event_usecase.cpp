@@ -7,8 +7,8 @@ CreateEventResponse CreateEventUseCase::Execute(const CreateEventRequest& reques
     event.UpdateDescription(request.description);
     event.UpdateReminderMinutes(request.reminderMinutes);
 
-    AppSettings settings = this->appSettingsService.GetSettings();
-    CalendarEvent createdEvent = this->calendarAPIService.CreateEvent(event, settings.calendarApiKey);
+   const std::string accessToken = this->authService.GetAccessToken();
+   CalendarEvent createdEvent = this->calendarAPIService.CreateEvent(event, accessToken);
 
     return CreateEventResponse{
         .calendarEventId = createdEvent.GetCalendarEventId(),

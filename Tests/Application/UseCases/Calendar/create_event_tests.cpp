@@ -1,14 +1,13 @@
 #include "doctest/doctest.h"
 #include "../../../../Application/UseCases/Calendar/CreateEvent/create_event_usecase.h"
 #include "../../../Fakes/fake_calendar_api_service.h"
-#include "../../../Fakes/fake_app_settings_service.h"
+#include "../../../Fakes/fake_calendar_auth_service.h"
 
 TEST_CASE("CreateEventUseCase sends the event and settings to the calendar API") {
 	FakeCalendarApiService calendarApi;
-	FakeAppSettingsService appSettings;
-	appSettings.settings.calendarApiKey = "cal-key";
-	appSettings.settings.aiApiKey = "ai-key";
-	CreateEventUseCase useCase(calendarApi, appSettings);
+	FakeCalendarAuthService auth;
+	auth.accessToken = "cal-key";
+	CreateEventUseCase useCase(calendarApi, auth);
 
 	CreateEventRequest request;
 	request.title = "Study Spanish";
@@ -40,8 +39,8 @@ TEST_CASE("CreateEventUseCase sends the event and settings to the calendar API")
 
 TEST_CASE("CreateEventUseCase uses the default reminder when none is set") {
 	FakeCalendarApiService calendarApi;
-	FakeAppSettingsService appSettings;
-	CreateEventUseCase useCase(calendarApi, appSettings);
+	FakeCalendarAuthService auth;
+	CreateEventUseCase useCase(calendarApi, auth);
 
 	CreateEventRequest request;
 	request.title = "Vocab quiz";

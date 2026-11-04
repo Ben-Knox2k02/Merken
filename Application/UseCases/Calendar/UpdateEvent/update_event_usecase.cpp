@@ -2,10 +2,10 @@
 #include <optional>
 
 bool UpdateEventUseCase::Execute(const UpdateEventRequest& request) {
-	const std::string apiKey = this->appSettingsService.GetSettings().calendarApiKey;
+	const std::string accessToken = this->authService.GetAccessToken();
 	std::optional<CalendarEvent> existing = this->calendarAPIService.GetEvent(
 		request.googleEventId,
-		apiKey);
+		accessToken);
 	if (!existing.has_value()) { return false; }
 
 	existing->UpdateTitle(request.title);
@@ -14,5 +14,5 @@ bool UpdateEventUseCase::Execute(const UpdateEventRequest& request) {
 	existing->UpdateDescription(request.description);
 	existing->UpdateLocation(request.location);
 	existing->UpdateReminderMinutes(request.reminderMinutes);
-	return this->calendarAPIService.UpdateEvent(*existing, apiKey);
+	return this->calendarAPIService.UpdateEvent(*existing, accessToken);
 }

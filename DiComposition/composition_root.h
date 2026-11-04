@@ -26,6 +26,11 @@
 #include "../Application/Services/date_provider_service.h"
 #include "../Application/Services/ai_study_cache_service.h"
 #include "../Application/Services/http_client.h"
+#include "../Application/Services/calendar_auth_service.h"
+#include "../Application/Services/browser_launcher.h"
+#include "../Application/Services/loopback_receiver.h"
+#include "../Application/Services/clock_service.h"
+
 
 #include "../Infrastructure/Persistence/DatabaseContext/database_context.h"
 #include "../Infrastructure/Persistence/Deck/deck_repository.h"
@@ -37,6 +42,11 @@
 #include "../Infrastructure/DateProvider/date_provider_service.h"
 #include "../Infrastructure/AiStudyCache/in_memory_ai_study_cache_service.h"
 #include "../Infrastructure/Http/wx_http_client.h"
+#include "../Infrastructure/GoogleAuth/google_auth_service.h"
+#include "../Infrastructure/GoogleAuth/google_client_config.h"
+#include "../Infrastructure/Platform/windows_browser_launcher.h"
+#include "../Infrastructure/Platform/winsock_loopback_receiver.h"
+#include "../Infrastructure/Platform/system_clock_service.h"
 
 namespace di = boost::di;
 
@@ -45,6 +55,8 @@ inline auto MakeInjector() {
 	// Dynamically compute absolute path right next to the running executable
 	wxFileName exePath(wxStandardPaths::Get().GetExecutablePath());
 	wxString absoluteDbPath = exePath.GetPath() + wxFILE_SEP_PATH + "merken.db";
+	wxString clientConfigPath = exePath.GetPath() + wxFILE_SEP_PATH + "google_client.json";
+	GoogleClientConfig googleConfig = LoadGoogleClientConfig(clientConfigPath.ToStdString());
 
 	return di::make_injector(
 		di::bind<DatabaseContext>().in(di::singleton).to<DatabaseContext>(absoluteDbPath.ToStdString()),
@@ -56,7 +68,12 @@ inline auto MakeInjector() {
 		di::bind<IAIAPIService>().to<GeminiApiService>().in(di::singleton),
 		di::bind<IAppSettingsService>().to<AppSettingsService>().in(di::singleton),
 		di::bind<IDateProviderService>().to<DateProviderService>().in(di::singleton),
-		di::bind<IAiStudyCacheService>().to<InMemoryAiStudyCacheService>().in(di::singleton)
+		di::bind<IAiStudyCacheService>().to<InMemoryAiStudyCacheService>().in(di::singleton),
+		di::bind<GoogleClientConfig>().to(GoogleClientConfig(googleConfig)),
+		di::bind<IBrowserLauncher>().to<WindowsBrowserLauncher>().in(di::singleton),
+		di::bind<ILoopbackReceiver>().to<WinsockLoopbackReceiver>().in(di::singleton),
+		di::bind<IClockService>().to<SystemClockService>().in(di::singleton),
+		di::bind<ICalendarAuthService>().to<GoogleAuthService>().in(di::singleton)
 	);
 }
 

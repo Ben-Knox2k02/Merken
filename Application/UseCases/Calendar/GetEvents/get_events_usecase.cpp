@@ -2,8 +2,8 @@
 
 GetEventsResponse GetEventsUseCase::Execute() {
 	GetEventsResponse response;
-	const std::string apiKey = this->appSettingsService.GetSettings().calendarApiKey;
-	for (const CalendarEvent& event : this->calendarAPIService.GetEvents(apiKey)) {
+	const std::string accessToken = this->authService.GetAccessToken();
+	for (const CalendarEvent& event : this->calendarAPIService.GetEvents(accessToken)) {
 		response.events.push_back(EventResponse{
 			.calendarEventId = event.GetCalendarEventId(),
 			.title = event.GetTitle(),

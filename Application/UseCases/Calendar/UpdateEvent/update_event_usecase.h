@@ -3,21 +3,21 @@
 
 #include "update_event_request.h"
 #include "../../../Services/calendar_api_service.h"
-#include "../../../Services/app_settings_service.h"
+#include "../../../Services/calendar_auth_service.h"
 
 class UpdateEventUseCase {
 	public:
 		UpdateEventUseCase(
 			ICalendarAPIService& calendarAPIService,
-			IAppSettingsService& appSettingsService
+			ICalendarAuthService& authService
 		) : calendarAPIService(calendarAPIService),
-			appSettingsService(appSettingsService) {}
+			authService(authService) {}
 
 		bool Execute(const UpdateEventRequest& request);
 
 	private:
 		ICalendarAPIService& calendarAPIService;
-		IAppSettingsService& appSettingsService;
+		ICalendarAuthService& authService;
 };
 
 #endif

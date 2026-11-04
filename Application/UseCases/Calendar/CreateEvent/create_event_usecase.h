@@ -4,21 +4,21 @@
 #include "create_event_request.h"
 #include "create_event_response.h"
 #include "../../../Services/calendar_api_service.h"
-#include "../../../Services/app_settings_service.h"
+#include "../../../Services/calendar_auth_service.h"
 
 class CreateEventUseCase {
 	public:
 		CreateEventUseCase(
 			ICalendarAPIService& calendarAPIService,
-			IAppSettingsService& appSettingsService
+			ICalendarAuthService& authService
 		) : calendarAPIService(calendarAPIService),
-			appSettingsService(appSettingsService) {}
+			authService(authService) {}
 
 		CreateEventResponse Execute(const CreateEventRequest& request);
 
 	private:
 		ICalendarAPIService& calendarAPIService;
-		IAppSettingsService& appSettingsService;
+		ICalendarAuthService& authService;
 };
 
 #endif

@@ -1,13 +1,13 @@
 #include "doctest/doctest.h"
 #include "../../../../Application/UseCases/Calendar/GetEvents/get_events_usecase.h"
 #include "../../../Fakes/fake_calendar_api_service.h"
-#include "../../../Fakes/fake_app_settings_service.h"
+#include "../../../Fakes/fake_calendar_auth_service.h"
 
 TEST_CASE("GetEventsUseCase returns no events when none exist") {
 	FakeCalendarApiService calendarApi;
-	FakeAppSettingsService appSettings;
-	appSettings.settings.calendarApiKey = "cal-key";
-	GetEventsUseCase useCase(calendarApi, appSettings);
+	FakeCalendarAuthService auth;
+	auth.accessToken = "cal-key";
+	GetEventsUseCase useCase(calendarApi, auth);
 
 	GetEventsResponse response = useCase.Execute();
 
@@ -26,9 +26,9 @@ TEST_CASE("GetEventsUseCase maps calendar events") {
 		"Review vocab",
 		15);
 	calendarApi.SeedEvent(8, "gcal-8", "Vocab quiz", "2026-09-13T09:00:00", "2026-09-13T09:30:00");
-	FakeAppSettingsService appSettings;
-	appSettings.settings.calendarApiKey = "cal-key";
-	GetEventsUseCase useCase(calendarApi, appSettings);
+	FakeCalendarAuthService auth;
+	auth.accessToken = "cal-key";
+	GetEventsUseCase useCase(calendarApi, auth);
 
 	GetEventsResponse response = useCase.Execute();
 
@@ -50,12 +50,11 @@ TEST_CASE("GetEventsUseCase maps calendar events") {
 	CHECK(calendarApi.lastApiKey == "cal-key");
 }
 
-TEST_CASE("GetEventsUseCase uses the calendar API key from settings") {
+TEST_CASE("GetEventsUseCase uses the access token from the auth service") {
 	FakeCalendarApiService calendarApi;
-	FakeAppSettingsService appSettings;
-	appSettings.settings.calendarApiKey = "cal-key";
-	appSettings.settings.aiApiKey = "ai-key";
-	GetEventsUseCase useCase(calendarApi, appSettings);
+	FakeCalendarAuthService auth;
+	auth.accessToken = "cal-key";
+	GetEventsUseCase useCase(calendarApi, auth);
 
 	useCase.Execute();
 

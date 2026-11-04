@@ -3,21 +3,21 @@
 
 #include "get_events_response.h"
 #include "../../../Services/calendar_api_service.h"
-#include "../../../Services/app_settings_service.h"
+#include "../../../Services/calendar_auth_service.h"
 
 class GetEventsUseCase {
 	public:
 		GetEventsUseCase(
 			ICalendarAPIService& calendarAPIService,
-			IAppSettingsService& appSettingsService
+			ICalendarAuthService& authService
 		) : calendarAPIService(calendarAPIService),
-			appSettingsService(appSettingsService) {}
+			authService(authService) {}
 
 		GetEventsResponse Execute();
 
 	private:
 		ICalendarAPIService& calendarAPIService;
-		IAppSettingsService& appSettingsService;
+		ICalendarAuthService& authService;
 };
 
 #endif

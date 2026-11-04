@@ -1,15 +1,14 @@
 #include "doctest/doctest.h"
 #include "../../../../Application/UseCases/Calendar/UpdateEvent/update_event_usecase.h"
 #include "../../../Fakes/fake_calendar_api_service.h"
-#include "../../../Fakes/fake_app_settings_service.h"
+#include "../../../Fakes/fake_calendar_auth_service.h"
 
 TEST_CASE("UpdateEventUseCase updates an existing event") {
 	FakeCalendarApiService calendarApi;
 	calendarApi.SeedEvent(7, "gcal-7", "Study session", "2026-09-12T17:00:00", "2026-09-12T17:30:00");
-	FakeAppSettingsService appSettings;
-	appSettings.settings.calendarApiKey = "cal-key";
-	appSettings.settings.aiApiKey = "ai-key";
-	UpdateEventUseCase useCase(calendarApi, appSettings);
+	FakeCalendarAuthService auth;
+	auth.accessToken = "cal-key";
+	UpdateEventUseCase useCase(calendarApi, auth);
 
 	UpdateEventRequest request;
 	request.calendarEventId = 7;
@@ -36,8 +35,8 @@ TEST_CASE("UpdateEventUseCase updates an existing event") {
 TEST_CASE("UpdateEventUseCase uses the default reminder when none is set") {
 	FakeCalendarApiService calendarApi;
 	calendarApi.SeedEvent(1, "gcal-1", "Vocab quiz", "2026-09-13T08:00:00", "2026-09-13T08:30:00");
-	FakeAppSettingsService appSettings;
-	UpdateEventUseCase useCase(calendarApi, appSettings);
+	FakeCalendarAuthService auth;
+	UpdateEventUseCase useCase(calendarApi, auth);
 
 	UpdateEventRequest request;
 	request.calendarEventId = 1;
@@ -53,8 +52,8 @@ TEST_CASE("UpdateEventUseCase uses the default reminder when none is set") {
 
 TEST_CASE("UpdateEventUseCase returns false when the event is missing") {
 	FakeCalendarApiService calendarApi;
-	FakeAppSettingsService appSettings;
-	UpdateEventUseCase useCase(calendarApi, appSettings);
+	FakeCalendarAuthService auth;
+	UpdateEventUseCase useCase(calendarApi, auth);
 
 	UpdateEventRequest request;
 	request.calendarEventId = 1;
@@ -69,8 +68,8 @@ TEST_CASE("UpdateEventUseCase returns false when the event is missing") {
 
 TEST_CASE("UpdateEventUseCase returns false when the Google event id is empty") {
 	FakeCalendarApiService calendarApi;
-	FakeAppSettingsService appSettings;
-	UpdateEventUseCase useCase(calendarApi, appSettings);
+	FakeCalendarAuthService auth;
+	UpdateEventUseCase useCase(calendarApi, auth);
 
 	UpdateEventRequest request;
 	request.calendarEventId = 1;
@@ -86,8 +85,8 @@ TEST_CASE("UpdateEventUseCase returns false when the calendar API update fails")
 	FakeCalendarApiService calendarApi;
 	calendarApi.SeedEvent(1, "gcal-1", "Vocab quiz", "2026-09-13T09:00:00", "2026-09-13T09:30:00");
 	calendarApi.updateEventSucceeds = false;
-	FakeAppSettingsService appSettings;
-	UpdateEventUseCase useCase(calendarApi, appSettings);
+	FakeCalendarAuthService auth;
+	UpdateEventUseCase useCase(calendarApi, auth);
 
 	UpdateEventRequest request;
 	request.calendarEventId = 1;
