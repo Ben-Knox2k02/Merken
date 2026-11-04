@@ -208,6 +208,18 @@ int Wider(int left, int right) {
 	return left > right ? left : right;
 }
 
+// Tighter than the shared theme tokens, which the deck list still uses.
+// The gutter between cards sits between the old 12 and the tighter 8.
+const int kCardListGapDip = 10;
+
+int CardGap(const wxWindow* window, int dip) {
+	int tight = (dip * 2) / 3;
+	if (tight < 2) {
+		tight = 2;
+	}
+	return window->FromDIP(tight);
+}
+
 }
 
 class CardCanvas : public wxScrolledWindow {
@@ -459,7 +471,7 @@ int FlashCardList::ColumnWidth() const {
 			inner -= bar;
 		}
 	}
-	const int gap = this->FromDIP(Theme::Get().size.listGap);
+	const int gap = this->FromDIP(kCardListGapDip);
 	const int halfGap = gap / 2;
 	if (inner <= halfGap * 2) {
 		return 0;
@@ -480,21 +492,21 @@ int FlashCardList::ScrollY() const {
 void FlashCardList::BuildMetrics(wxDC& dc, int columnWidth) {
 	const Theme& theme = Theme::Get();
 	CardMetrics& m = this->metrics;
-	m.pad = this->FromDIP(theme.size.cardPad);
-	m.gridVGap = this->FromDIP(theme.space.md);
-	m.gridHGap = this->FromDIP(theme.space.lg);
-	m.fieldVGap = this->FromDIP(theme.space.lg);
-	m.fieldHGap = this->FromDIP(theme.space.xl);
-	m.captionTop = this->FromDIP(theme.space.xs);
-	m.wellPadX = this->FromDIP(theme.size.wellPadX);
-	m.wellPadY = this->FromDIP(theme.size.wellPadY);
+	m.pad = CardGap(this, theme.size.cardPad);
+	m.gridVGap = CardGap(this, theme.space.md);
+	m.gridHGap = CardGap(this, theme.space.lg);
+	m.fieldVGap = CardGap(this, theme.space.lg);
+	m.fieldHGap = CardGap(this, theme.space.xl);
+	m.captionTop = CardGap(this, theme.space.xs);
+	m.wellPadX = CardGap(this, theme.size.wellPadX);
+	m.wellPadY = CardGap(this, theme.size.wellPadY);
 	m.badge = this->FromDIP(theme.size.badge);
 	m.cardRadius = this->FromDIP(theme.radius.xs);
 	m.badgeRadius = m.cardRadius;
 	m.wellRadius = this->FromDIP(theme.radius.well);
-	m.actionGap = this->FromDIP(theme.space.xs);
-	m.tagGap = this->FromDIP(theme.space.sm);
-	m.listGap = this->FromDIP(theme.size.listGap);
+	m.actionGap = CardGap(this, theme.space.xs);
+	m.tagGap = CardGap(this, theme.space.sm);
+	m.listGap = this->FromDIP(kCardListGapDip);
 	m.columnGap = (m.listGap / 2) * 2;
 	m.columnW = columnWidth;
 	m.lineH = dc.GetTextExtent("Ag").GetHeight();
