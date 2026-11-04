@@ -222,6 +222,88 @@ int CardGap(const wxWindow* window, int dip) {
 
 }
 
+// The themed dark scrollbar track is near black. On this page that reads as a
+// dim band down the right side, so repaint the track in the window colour.
+void PaintScrollTrack(wxWindow* window) {
+#ifdef __WXMSW__
+	if (window == nullptr || window->GetHWND() == nullptr || window->IsBeingDeleted()) {
+		return;
+	}
+	HWND hwnd = reinterpret_cast<HWND>(window->GetHWND());
+	SCROLLINFO info = {};
+	info.cbSize = sizeof(info);
+	info.fMask = SIF_RANGE | SIF_PAGE | SIF_POS;
+	if (::GetScrollInfo(hwnd, SB_VERT, &info) == FALSE) {
+		return;
+	}
+	const int range = info.nMax - info.nMin + 1;
+	if (range < 1 || info.nPage == 0 || range <= static_cast<int>(info.nPage)) {
+		return;
+	}
+
+	RECT windowRect;
+	::GetWindowRect(hwnd, &windowRect);
+	RECT client;
+	::GetClientRect(hwnd, &client);
+	POINT origin = { 0, 0 };
+	::ClientToScreen(hwnd, &origin);
+	const int clientW = client.right - client.left;
+	const int clientH = client.bottom - client.top;
+	const int barX = (origin.x - windowRect.left) + clientW;
+	const int barY = origin.y - windowRect.top;
+	const int barW = (windowRect.right - windowRect.left) - barX;
+	if (barW < 2 || clientH < 2) {
+		return;
+	}
+
+	const Theme& theme = Theme::Get();
+	int thumbH = static_cast<int>(static_cast<long long>(clientH) * static_cast<int>(info.nPage) / range);
+	const int minThumb = window->FromDIP(28);
+	if (thumbH < minThumb) {
+		thumbH = minThumb;
+	}
+	if (thumbH > clientH) {
+		thumbH = clientH;
+	}
+	const int maxPos = range - static_cast<int>(info.nPage);
+	int thumbY = barY;
+	if (maxPos > 0) {
+		int pos = info.nPos - info.nMin;
+		if (pos < 0) {
+			pos = 0;
+		}
+		if (pos > maxPos) {
+			pos = maxPos;
+		}
+		const int travel = clientH - thumbH;
+		thumbY = barY + static_cast<int>(static_cast<long long>(travel) * pos / maxPos);
+	}
+	int thumbW = window->FromDIP(4);
+	if (thumbW > barW - 2) {
+		thumbW = barW - 2;
+	}
+	if (thumbW < 2) {
+		thumbW = barW;
+	}
+	const int thumbX = barX + (barW - thumbW) / 2;
+
+	static bool painting = false;
+	if (painting) {
+		return;
+	}
+	painting = true;
+	wxWindowDC dc(window);
+	dc.SetPen(*wxTRANSPARENT_PEN);
+	dc.SetBrush(wxBrush(theme.color.window));
+	dc.DrawRectangle(barX, barY, barW, clientH);
+	dc.SetBrush(wxBrush(theme.color.tertiaryLabel));
+	dc.DrawRoundedRectangle(thumbX, thumbY, thumbW, thumbH, thumbW / 2);
+	painting = false;
+#else
+	(void)window;
+#endif
+}
+
 class CardCanvas : public wxScrolledWindow {
 	public:
 		explicit CardCanvas(FlashCardList* owner)
@@ -246,6 +328,15 @@ class CardCanvas : public wxScrolledWindow {
 		FlashCardList* owner;
 
 		void OnPaint(wxPaintEvent&) { this->owner->PaintCards(); }
+#ifdef __WXMSW__
+		WXLRESULT MSWWindowProc(WXUINT message, WXWPARAM wParam, WXLPARAM lParam) override {
+			const WXLRESULT result = wxScrolledWindow::MSWWindowProc(message, wParam, lParam);
+			if (message == WM_NCPAINT || message == WM_VSCROLL || message == WM_MOUSEWHEEL || message == WM_SIZE) {
+				PaintScrollTrack(this);
+			}
+			return result;
+		}
+#endif
 		void OnLeftDown(wxMouseEvent& event) { this->owner->OnCanvasDown(event); }
 		void OnLeftUp(wxMouseEvent& event) { this->owner->OnCanvasUp(event); }
 		void OnMotion(wxMouseEvent& event) { this->owner->OnCanvasMotion(event); }
@@ -1025,6 +1116,7 @@ void FlashCardList::ApplyTheme() {
 	this->Refresh();
 	if (this->scroller != nullptr) {
 		this->scroller->Refresh();
+		PaintScrollTrack(this->scroller);
 	}
 }
 
