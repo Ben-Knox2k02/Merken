@@ -14,3 +14,9 @@ TEST_CASE("AppSettings stores API keys") {
 	CHECK(settings.calendarApiKey == "cal-key");
 	CHECK(settings.aiApiKey == "ai-key");
 }
+
+TEST_CASE("AppSettings starts with no Google tokens"){
+	AppSettings settings;
+	CHECK(settings.calendarRefreshToken.empty());
+	CHECK(settings.calendarTokenExpiresAt == 0);
+}

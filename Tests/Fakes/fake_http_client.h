@@ -17,6 +17,7 @@ class FakeHttpClient : public IHttpClient {
         int getCallCount = 0;
         int postCallCount = 0;
         int patchCallCount = 0;
+        int postFormCallCount = 0;
 
 
         void QueueResponse(int statusCode, const std::string& body, const std::string& error = ""){
@@ -51,6 +52,11 @@ class FakeHttpClient : public IHttpClient {
         HttpResponse PatchJson(const std::string& url, const std::string& jsonBody, const std::vector<HttpHeader>& headers) override{
             this->patchCallCount++;
             this->Record("PATCH", url, jsonBody, headers);
+            return this->NextResponse();
+        }
+        HttpResponse PostForm(const std::string& url, const std::string& formBody, const std::vector<HttpHeader>& headers) override{
+            this->postFormCallCount++;
+            this->Record("POST_FORM", url, formBody, headers);
             return this->NextResponse();
         }
 
