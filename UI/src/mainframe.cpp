@@ -4,8 +4,8 @@ wxDECLARE_APP(App);   // MACRO ONLY NEEDS TO BE USED ONCE
 
 MainFrame::MainFrame(const wxString& title)
     : wxFrame(nullptr, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE),
-      app(wxGetApp()), currentPanel(nullptr), currentSidebarPanel(nullptr), selectedDeckId(0), selectedCardCount(0), studying(false), findDialog(nullptr)
-{
+      app(wxGetApp()), rootSizer(nullptr), sidebarPanel(nullptr), contentPanel(nullptr), currentPanel(nullptr), currentSidebarPanel(nullptr), selectedDeckId(0), selectedCardCount(0), studying(false), findDialog(nullptr)
+	  {
 	//=========== INITIALIZE WIDGETS ===================================== INITIALIZE WIDGETS ================================
 	std::cout << "[TRACE] Entering MainFrame constructor..." << std::endl;
 	
