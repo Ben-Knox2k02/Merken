@@ -18,6 +18,8 @@ class AiPrompt {
 				"The answer answer must be supportable by the card."
 				"Do not use the | character inside the question or the answer."
 				"Reply with only the numbered lines."
+				"sentence: a question in words ending with ? Do not put a blank in the sentence.\n"
+				"fill-in: a cloze with ___ where the answer goes. Do not include the answer in the question.\n"
 				"Deck: " + deck.GetName() + "\n"
 				"Cards:\n";
 

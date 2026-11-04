@@ -49,7 +49,8 @@ class WxHttpClient : public IHttpClient, public wxEvtHandler {
 			const wxString& method,
 			const std::string& url,
 			const std::string* jsonBody,
-			const std::vector<HttpHeader>& headers
+			const std::vector<HttpHeader>& headers,
+			const wxString& contentType
 		);
 
 		void MarkFinished();
