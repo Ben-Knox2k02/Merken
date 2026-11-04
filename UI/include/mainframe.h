@@ -94,8 +94,7 @@ class MainFrame : public wxFrame {
 		void SetCurrentPanel(wxPanel* newPanel);		// LAYOUT
 		void SetCurrentSidebarPanel(wxPanel* newPanel);
 		void ApplyPanelWidths(int sidebarWeight, int contentWeight);
-		
-		
+
 		void OnNew(wxCommandEvent& event);				// FILE
 		void OnOpen(wxCommandEvent& event);
 		void OnSave(wxCommandEvent& event);

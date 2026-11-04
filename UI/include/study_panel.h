@@ -55,7 +55,6 @@ class StudyPanel : public wxPanel {
 
 		void ApplySpread();
 		void ClosePage();
-		void OnPageTick(wxTimerEvent& event);
 		void RefreshGuide();
 		bool CompleteGuide();
 };

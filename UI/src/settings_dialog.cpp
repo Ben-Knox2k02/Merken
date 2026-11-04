@@ -39,6 +39,8 @@ SettingsDialog::SettingsDialog(wxWindow* parent)
 
 	this->okButton = new wxButton(this, wxID_ANY, "OK");
 	this->cancelButton = new wxButton(this, wxID_CANCEL, "Cancel");
+	ApplyButtonPadding(this->okButton);
+	ApplyButtonPadding(this->cancelButton);
 	this->okButton->SetDefault();
 
 	wxBoxSizer* buttons = new wxBoxSizer(wxHORIZONTAL);
