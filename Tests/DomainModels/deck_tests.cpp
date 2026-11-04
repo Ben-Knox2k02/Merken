@@ -22,6 +22,18 @@ TEST_CASE("Deck stores identity and optional description") {
 	CHECK(unnamed.GetCreatedAt() == "");
 }
 
+TEST_CASE("Deck card count can be noted without loading cards") {
+	Deck deck(1, "Spanish");
+	CHECK(deck.GetCardCount() == 0);
+
+	deck.NoteCardCount(40);
+	CHECK(deck.GetCardCount() == 40);
+	CHECK(deck.GetCards().empty());
+
+	deck.AddCard(Card(1, 1, "Hola", "Hello"));
+	CHECK(deck.GetCardCount() == 1);
+}
+
 TEST_CASE("Deck can update name and description") {
 	Deck deck(1, "Spanish", "Beginner vocab");
 	deck.UpdateName("Spanish I");

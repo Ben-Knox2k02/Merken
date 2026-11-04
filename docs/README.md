@@ -36,7 +36,7 @@ Open work for each role is a checklist next to this file. The requirements those
 
 ## Build, test, clean, uninstall
 
-Set up the compiler and wxWidgets first: [SETUP.md](SETUP.md). Windows app builds need MinGW-w64 `g++` on PATH and wxWidgets 3.3 from `build_wxWidgets.bat`.
+Set up the compiler and wxWidgets 3.3 first: [SETUP.md](SETUP.md). The app does not build against wxWidgets 3.2. Windows uses MinGW-w64 `g++` and `build_wxWidgets.bat`. macOS uses Homebrew `wxwidgets` (not `wxwidgets@3.2`). Debian and Ubuntu apt only ship 3.2, so build 3.3 from source. `wx-config --version` must print 3.3 before `./build.sh`.
 
 Run these from the repo root.
 

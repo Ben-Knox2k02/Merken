@@ -14,8 +14,8 @@
 #include "settings_dialog.h"
 #include "centered_message.h"
 #include "theme.h"
-#include "icon_button.h"
 #include "../../Application/UseCases/Profile/GetUserProfile/get_user_profile_usecase.h"
+#include <wx/statline.h>
 
 MainFrame::MainFrame(const wxString& title)
     : wxFrame(nullptr, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE),
@@ -98,7 +98,6 @@ MainFrame::MainFrame(const wxString& title)
 	
 	//============ ATTACH WIDGETS ==================================== ATTACH WIDGETS ========================= 
 	this->SetMenuBar(this->menuBar);
-	this->ApplyMenuIcons();
 	this->CreateStatusBar();
 	this->SetBackgroundColour(Theme::Get().color.window);
 	
@@ -110,10 +109,10 @@ MainFrame::MainFrame(const wxString& title)
 	this->sidebarPanel = new DeckPanelList(this);
 
 	const int edge = this->FromDIP(Theme::Get().size.panelPad);
-	const int gap = this->FromDIP(Theme::Get().space.md);
-	this->rootSizer->Add(this->sidebarPanel, 30, wxEXPAND | wxTOP | wxBOTTOM | wxLEFT, edge);
-	this->rootSizer->AddSpacer(gap);
-	this->rootSizer->Add(this->contentPanel, 70, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, edge);
+	wxStaticLine* paneSplit = new wxStaticLine(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLI_VERTICAL);
+	this->rootSizer->Add(this->sidebarPanel, 20, wxEXPAND | wxTOP | wxBOTTOM | wxLEFT, edge);
+	this->rootSizer->Add(paneSplit, 0, wxEXPAND | wxTOP | wxBOTTOM, edge);
+	this->rootSizer->Add(this->contentPanel, 80, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, edge);
 	
 	this->SetSizer(this->rootSizer);
 	this->Layout();
@@ -215,27 +214,6 @@ void MainFrame::SetSelectedCardCount(int count) {
 	this->UpdateDeckMenus();
 }
 
-void MainFrame::ApplyMenuIcons() {
-	if (this->menuBar == nullptr) {
-		return;
-	}
-	const bool invert = Theme::IsDarkAppearance();
-	auto setIcon = [this, invert](int id, const wxString& path) {
-		wxMenuItem* item = this->menuBar->FindItem(id);
-		if (item != nullptr) {
-			item->SetBitmap(IconButton::LoadIconBundle(path, 16, invert));
-		}
-	};
-	setIcon(wxID_NEW, "UI/assets/add_icon.png");
-	setIcon(ID_EDIT_DECK, "UI/assets/edit_icon.png");
-	setIcon(ID_DELETE_DECK, "UI/assets/delete_icon.png");
-	setIcon(ID_CARDS, "UI/assets/flash_card_icon.png");
-	setIcon(ID_STUDY, "UI/assets/study_icon.png");
-	setIcon(ID_AI, "UI/assets/ai_study_icon.png");
-	setIcon(ID_TODAYS_PROGRESS, "UI/assets/progress.png");
-	setIcon(ID_CALENDAR, "UI/assets/calendar_icon.png");
-}
-
 void MainFrame::ReloadDecks() {
 	if (auto* decks = dynamic_cast<DeckPanelList*>(this->sidebarPanel)) {
 		decks->LoadDecks();
@@ -259,7 +237,6 @@ void MainFrame::ApplyTheme() {
 		this->currentPanel->SetBackgroundColour(theme.color.window);
 		this->currentPanel->Refresh();
 	}
-	this->ApplyMenuIcons();
 	Theme::ApplyTitleBar(this);
 	this->Refresh();
 	this->Update();
@@ -547,8 +524,10 @@ void MainFrame::OnAbout(wxCommandEvent&) {
 	);
 	description->Wrap(dialog.FromDIP(360));
 
+	wxButton* okButton = new wxButton(&dialog, wxID_OK);
+	ApplyButtonPadding(okButton);
 	wxStdDialogButtonSizer* buttons = new wxStdDialogButtonSizer();
-	buttons->AddButton(new wxButton(&dialog, wxID_OK));
+	buttons->AddButton(okButton);
 	buttons->Realize();
 
 	dialog.Bind(wxEVT_BUTTON, [&dialog](wxCommandEvent& event) {
@@ -629,7 +608,7 @@ void MainFrame::ApplyPanelWidths() {
 	if(inner <= 0) {
 		return;
 	}
-	const int deckWidth = inner * 30 / 100;
+	const int deckWidth = inner * 20 / 100;
 	const int cardWidth = inner - deckWidth;
 	if(deckWidth <= 0 || cardWidth <= 0) {
 		return;
