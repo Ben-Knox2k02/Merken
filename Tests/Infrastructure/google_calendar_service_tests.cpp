@@ -1,13 +1,15 @@
 #include "doctest/doctest.h"
+#include <optional>
 #include <string>
 #include "../Fakes/fake_http_client.h"
+#include "../../ThirdParty/nlohmann/json.hpp"
 #include "../../Infrastructure/GoogleCalendar/google_calendar_service.h"
+
 
 static const std::string kBaseUrl = "https://www.googleapis.com/calendar/v3/calendars/primary/events";
 
 static CalendarEvent MakeEvent(){
-    CalendarEvent event(0, "Study Session", "2026-10-14T10:00:00-05:00", "2026-10-14T12:00:00-05:00");
-    event.UpdateDescription("Review biology deck");
+    CalendarEvent event(0, "Study Session", Date::Create(2026, 10, 14).value(), "10:00", "12:00", "Library", "Review Biology Deck");
     event.UpdateReminderMinutes(15);
     return event;
 }
@@ -185,4 +187,103 @@ TEST_CASE("GoogleCalendarService UpdateEvent does not call the API without a tok
     GoogleCalendarService service(http);
     CHECK_FALSE(service.UpdateEvent(MakeSyncedEvent(), ""));
     CHECK(http.patchCallCount == 0);
+}
+
+static std::string JsonField(const std::string& body, const std::string& path1, const std::string& path2){
+    nlohmann::json j = nlohmann::json::parse(body);
+    return j[path1][path2].get<std::string>();
+}
+
+TEST_CASE("GoogleCalendarService CreateEvent sends the date, times and location with a UTC offset"){
+    FakeHttpClient http;
+    GoogleCalendarService service(http);
+    http.QueueResponse(200, R"({"id":"abc123"})");
+
+    service.CreateEvent(MakeEvent(), "token");
+
+    const std::string start = JsonField(http.lastBody, "start", "dateTime");
+    const std::string end = JsonField(http.lastBody, "end", "dateTime");
+    CHECK(start.size() == 25);
+    CHECK(start.rfind("2026-10-14T10:00:00", 0) == 0);
+    CHECK((start[19] == '+' || start[19] == '-'));
+    CHECK(end.rfind("2026-10-14T12:00:00", 0) == 0);
+    CHECK(nlohmann::json::parse(http.lastBody)["location"] == "Library");
+}
+
+TEST_CASE("GoogleCalendarService CreateEvent accepts 12-hour times"){
+    FakeHttpClient http;
+    GoogleCalendarService service(http);
+    http.QueueResponse(200, R"({"id":"abc123"})");
+    CalendarEvent event(0, "Class", Date::Create(2026, 10, 14).value(), "9:05 PM", "10:00 PM", "", "");
+
+    service.CreateEvent(event, "token");
+
+    CHECK(JsonField(http.lastBody, "start", "dateTime").rfind("2026-10-14T21:05:00", 0) == 0);
+}
+
+TEST_CASE("GoogleCalendarService CreateEvent moves the end to the next day when it is before the start"){
+    FakeHttpClient http;
+    GoogleCalendarService service(http);
+    http.QueueResponse(200, R"({"id":"abc123"})");
+    CalendarEvent event(0, "Late night", Date::Create(2026, 12, 31).value(), "23:00", "01:00", "", "");
+
+    service.CreateEvent(event, "token");
+
+    CHECK(JsonField(http.lastBody, "start", "dateTime").rfind("2026-12-31T23:00:00", 0) == 0);
+    CHECK(JsonField(http.lastBody, "end", "dateTime").rfind("2027-01-01T01:00:00", 0) == 0);
+}
+
+TEST_CASE("GoogleCalendarService CreateEvent does not call the API when a time is invalid"){
+    FakeHttpClient http;
+    GoogleCalendarService service(http);
+    CalendarEvent event(0, "Broken", Date::Create(2026, 10, 14).value(), "25:99", "11:00", "", "");
+
+    CalendarEvent created = service.CreateEvent(event, "token");
+
+    CHECK(created.GetGoogleEventId().empty());
+    CHECK(http.postCallCount == 0);
+}
+
+TEST_CASE("GoogleCalendarService UpdateEvent does not call the API when a time is invalid"){
+    FakeHttpClient http;
+    GoogleCalendarService service(http);
+    CalendarEvent event(0, "Broken", Date::Create(2026, 10, 14).value(), "", "", "", "");
+    event.SetGoogleEventId("abc123");
+
+    CHECK_FALSE(service.UpdateEvent(event, "token"));
+    CHECK(http.patchCallCount == 0);
+}
+
+TEST_CASE("GoogleCalendarService GetEvent returns the same date and times that CreateEvent sent"){
+    FakeHttpClient http;
+    GoogleCalendarService service(http);
+    http.QueueResponse(200, R"({"id":"abc123"})");
+    service.CreateEvent(MakeEvent(), "token");
+
+    nlohmann::json sent = nlohmann::json::parse(http.lastBody);
+    sent["id"] = "abc123";
+    http.QueueResponse(200, sent.dump());
+
+    std::optional<CalendarEvent> event = service.GetEvent("abc123", "token");
+
+    REQUIRE(event.has_value());
+    CHECK(event->GetDate() == Date::Create(2026, 10, 14).value());
+    CHECK(event->GetStartTime() == "10:00");
+    CHECK(event->GetEndTime() == "12:00");
+    CHECK(event->GetLocation() == "Library");
+    CHECK(event->GetDescription() == "Review Biology Deck");
+    CHECK(event->GetReminderMinutes() == 15);
+}
+
+TEST_CASE("GoogleCalendarService GetEvent reads an all-day event as a date with no times"){
+    FakeHttpClient http;
+    GoogleCalendarService service(http);
+    http.QueueResponse(200, R"({"id":"abc123","summary":"Holiday","start":{"date":"2026-12-25"},"end":{"date":"2026-12-26"}})");
+
+    std::optional<CalendarEvent> event = service.GetEvent("abc123", "token");
+
+    REQUIRE(event.has_value());
+    CHECK(event->GetDate() == Date::Create(2026, 12, 25).value());
+    CHECK(event->GetStartTime() == "");
+    CHECK(event->GetEndTime() == "");
 }

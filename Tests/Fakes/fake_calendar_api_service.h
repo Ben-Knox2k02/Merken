@@ -24,7 +24,7 @@ class FakeCalendarApiService : public ICalendarAPIService {
 			const std::string& description = "",
 			int reminderMinutes = 60
 		) {
-			CalendarEvent event(calendarEventId, title, startTime, endTime);
+			CalendarEvent event(calendarEventId, title,Date::Create(2026, 1, 1).value(), startTime, endTime, "", "");
 			event.SetGoogleEventId(googleEventId);
 			event.UpdateDescription(description);
 			event.UpdateReminderMinutes(reminderMinutes);
@@ -38,7 +38,7 @@ class FakeCalendarApiService : public ICalendarAPIService {
 
 			const int eventId = this->nextEventId;
 			this->nextEventId += 1;
-			CalendarEvent created(eventId, event.GetTitle(), event.GetStartTime(), event.GetEndTime());
+			CalendarEvent created(eventId, event.GetTitle(),event.GetDate(), event.GetStartTime(), event.GetEndTime(), event.GetLocation(), event.GetDescription());
 			created.UpdateDescription(event.GetDescription());
 			created.UpdateReminderMinutes(event.GetReminderMinutes());
 			created.SetGoogleEventId("gcal-" + std::to_string(eventId));
