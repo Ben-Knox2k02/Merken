@@ -65,19 +65,19 @@ TEST_CASE("Card::RecordReview applies SM-2 intervals for remembered cards") {
 	card.RecordReview(true, today);
 	CHECK(card.GetRepetitionCount() == 1);
 	CHECK(card.GetIntervalDays() == 1);
-	CHECK(card.GetEaseFactor() == doctest::Approx(2.6));
+	CHECK(card.GetEaseFactor() == doctest::Approx(2.5));
 	REQUIRE(card.GetLastReviewedDate().has_value());
 	CHECK(*card.GetLastReviewedDate() == today);
 
 	card.RecordReview(true, today.AddDays(1));
 	CHECK(card.GetRepetitionCount() == 2);
 	CHECK(card.GetIntervalDays() == 6);
-	CHECK(card.GetEaseFactor() == doctest::Approx(2.7));
+	CHECK(card.GetEaseFactor() == doctest::Approx(2.5));
 
 	card.RecordReview(true, today.AddDays(7));
 	CHECK(card.GetRepetitionCount() == 3);
-	CHECK(card.GetIntervalDays() == 16);
-	CHECK(card.GetEaseFactor() == doctest::Approx(2.8));
+	CHECK(card.GetIntervalDays() == 15);
+	CHECK(card.GetEaseFactor() == doctest::Approx(2.5));
 }
 
 TEST_CASE("Card::RecordReview resets a forgotten card") {
@@ -88,14 +88,21 @@ TEST_CASE("Card::RecordReview resets a forgotten card") {
 	card.RecordReview(false, today);
 	CHECK(card.GetRepetitionCount() == 0);
 	CHECK(card.GetIntervalDays() == 1);
-	CHECK(card.GetEaseFactor() == doctest::Approx(2.6));
+	CHECK(card.GetEaseFactor() == doctest::Approx(2.48));
 	REQUIRE(card.GetLastReviewedDate().has_value());
 	CHECK(*card.GetLastReviewedDate() == today);
 }
 
-TEST_CASE("Card::RecordReview does not drop ease at or below 1.3") {
+TEST_CASE("Card::RecordReview does not drop ease below 1.3") {
 	Card card(1, 1, "Hola", "Hello");
 	card.SetReviewState(1, 1.3, 0);
 	card.RecordReview(false, MustCreate(2026, 9, 12));
 	CHECK(card.GetEaseFactor() == doctest::Approx(1.3));
+
+	Card aboveFloor(2, 1, "Hola", "Hello");
+	aboveFloor.SetReviewState(6, 1.5, 2);
+	aboveFloor.RecordReview(false, MustCreate(2026, 9, 12));
+	CHECK(aboveFloor.GetEaseFactor() == doctest::Approx(1.3));
+	CHECK(aboveFloor.GetIntervalDays() == 1);
+	CHECK(aboveFloor.GetRepetitionCount() == 0);
 }
