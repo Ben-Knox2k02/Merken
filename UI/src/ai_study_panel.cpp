@@ -1,6 +1,7 @@
 #include "ai_study_panel.h"
 #include "centered_message.h"
 #include "theme.h"
+#include "icon_button.h"
 #include "mainframe.h"
 #include "app.h"
 #include "../../Application/UseCases/AI/AiStudy/ai_study_usecase.h"
@@ -26,9 +27,9 @@ AiStudyPanel::AiStudyPanel(wxWindow* parent, int deckId)
 	  alive(std::make_shared<bool>(true)) {
 	this->rootSizer = new wxBoxSizer(wxVERTICAL);
 
-	this->header = new wxStaticText(this, wxID_ANY, "AI Study");
-	this->header->SetFont(this->header->GetFont().Bold());
-	this->rootSizer->Add(this->header, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 10);
+	this->header = new wxStaticText(this, wxID_ANY, "AI Study", wxDefaultPosition, wxDefaultSize, wxST_ELLIPSIZE_END);
+	this->backButton = IconButton::Back(this);
+	AddPageHeader(this, this->rootSizer, this->header, this->backButton);
 
 	this->statusLabel = new wxStaticText(this, wxID_ANY, wxEmptyString);
 	this->rootSizer->Add(this->statusLabel, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 4);
@@ -63,10 +64,7 @@ AiStudyPanel::AiStudyPanel(wxWindow* parent, int deckId)
 	this->startAgainButton = new wxButton(this, wxID_ANY, "Start test again");
 	ApplyButtonPadding(this->startAgainButton);
 	this->rootSizer->Add(this->startAgainButton, 0, wxALIGN_CENTER | wxALL, 4);
-
-	this->backButton = new wxButton(this, wxID_ANY, "Back");
-	ApplyButtonPadding(this->backButton);
-	this->rootSizer->Add(this->backButton, 0, wxALIGN_CENTER | wxALL, 16);
+	this->rootSizer->AddSpacer(this->FromDIP(Theme::Get().size.panelPad));
 
 	this->SetSizer(this->rootSizer);
 

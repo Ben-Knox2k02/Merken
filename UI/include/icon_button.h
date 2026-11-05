@@ -42,8 +42,17 @@ class IconButton : public wxBitmapButton {
 		}
 
 		void ApplyTheme() {
+			if (this->imagePath.IsEmpty()) {
+				this->SetBitmapLabel(BackBundle());
+				this->CenterIcon();
+				return;
+			}
 			this->SetBitmapLabel(LoadIconBundle(this->imagePath, kIconSize, this->forceInvert || IsDarkTheme()));
 			this->CenterIcon();
+		}
+
+		static IconButton* Back(wxWindow* parent) {
+			return new IconButton(parent, BackBundle(), "Back");
 		}
 
 		static wxBitmapBundle LoadIconBundle(const wxString& path, int dipSize, bool invert) {
@@ -62,6 +71,72 @@ class IconButton : public wxBitmapButton {
 		wxString imagePath;
 		bool forceInvert;
 		static constexpr int kIconSize = 16;
+
+		IconButton(wxWindow* parent, const wxBitmapBundle& bundle, const wxString& tooltip)
+			: wxBitmapButton(
+				parent,
+				wxID_ANY,
+				bundle,
+				wxDefaultPosition,
+				wxDefaultSize,
+				wxBU_AUTODRAW
+			),
+			imagePath(),
+			forceInvert(false) {
+			if (!tooltip.IsEmpty()) {
+				this->SetToolTip(tooltip);
+			}
+			const int side = wxButton::GetDefaultSize(parent).GetHeight();
+			this->SetMinSize(wxSize(side, side));
+			this->CenterIcon();
+			this->Bind(wxEVT_SIZE, [this](wxSizeEvent& event) {
+				event.Skip();
+				this->CenterIcon();
+			});
+		}
+
+		static wxBitmapBundle BackBundle() {
+			const wxColour colour = Theme::Get().color.label;
+			wxVector<wxBitmap> bitmaps;
+			bitmaps.push_back(DrawChevron(kIconSize, colour));
+			bitmaps.push_back(DrawChevron(kIconSize * 2, colour));
+			bitmaps.push_back(DrawChevron(kIconSize * 3, colour));
+			return wxBitmapBundle::FromBitmaps(bitmaps);
+		}
+
+		static wxBitmap DrawChevron(int pixels, const wxColour& colour) {
+			wxBitmap bitmap(pixels, pixels);
+			bitmap.UseAlpha();
+			wxMemoryDC dc(bitmap);
+			dc.SetBackground(wxBrush(wxColour(0, 0, 0, 0)));
+			dc.Clear();
+			wxGCDC gc(dc);
+			wxGraphicsContext* g = gc.GetGraphicsContext();
+			if (g == nullptr) {
+				dc.SelectObject(wxNullBitmap);
+				return bitmap;
+			}
+			int stroke = (pixels * 12) / 100;
+			if (stroke < 2) {
+				stroke = 2;
+			}
+			wxPen pen(colour, stroke);
+			pen.SetCap(wxCAP_ROUND);
+			pen.SetJoin(wxJOIN_ROUND);
+			g->SetPen(pen);
+			wxGraphicsPath path = g->CreatePath();
+			const double left = pixels * 0.32;
+			const double right = pixels * 0.70;
+			const double top = pixels * 0.22;
+			const double bottom = pixels * 0.78;
+			const double mid = pixels * 0.50;
+			path.MoveToPoint(right, top);
+			path.AddLineToPoint(left, mid);
+			path.AddLineToPoint(right, bottom);
+			g->StrokePath(path);
+			dc.SelectObject(wxNullBitmap);
+			return bitmap;
+		}
 
 		static wxString ResolveAssetPath(const wxString& relative) {
 			wxFileName exe(wxStandardPaths::Get().GetExecutablePath());

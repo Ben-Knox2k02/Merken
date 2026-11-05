@@ -6,6 +6,7 @@
 #include <algorithm>
 #include "flash_card_list.h"
 #include "deck_panel_list.h"
+#include "todays_events_panel.h"
 #include "study_panel.h"
 #include "calendar_panel.h"
 #include "ai_panel.h"
@@ -19,7 +20,7 @@
 
 MainFrame::MainFrame(const wxString& title)
     : wxFrame(nullptr, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE),
-      app(wxGetApp()), currentPanel(nullptr), sidebarPanel(nullptr), selectedDeckId(0), selectedCardCount(0), studying(false), findDialog(nullptr)
+      app(wxGetApp()), currentPanel(nullptr), sidebarPanel(nullptr), eventsPanel(nullptr), eventsSplit(nullptr), eventsColumnOpen(false), showTodaysEvents(false), selectedDeckId(0), selectedCardCount(0), studying(false), findDialog(nullptr)
 {
 	std::cout << "[TRACE] Entering MainFrame constructor..." << std::endl;
 	//=========== INITIALIZE WIDGETS ===================================== INITIALIZE WIDGETS ================================
@@ -105,16 +106,21 @@ MainFrame::MainFrame(const wxString& title)
 	
 	this->contentPanel = new wxPanel(this, wxID_ANY);
 	this->contentPanel->SetBackgroundColour(Theme::Get().color.window);
-	this->SetCurrentPanel(new FlashCardList(this->contentPanel, 0));
 	this->sidebarPanel = new DeckPanelList(this);
+	this->eventsPanel = new TodaysEventsPanel(this);
+	this->eventsSplit = new wxStaticLine(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLI_VERTICAL);
 
 	const int edge = this->FromDIP(Theme::Get().size.panelPad);
 	wxStaticLine* paneSplit = new wxStaticLine(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLI_VERTICAL);
 	this->rootSizer->Add(this->sidebarPanel, 20, wxEXPAND | wxTOP | wxBOTTOM | wxLEFT, edge);
 	this->rootSizer->Add(paneSplit, 0, wxEXPAND | wxTOP | wxBOTTOM, edge);
-	this->rootSizer->Add(this->contentPanel, 80, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, edge);
-	
+	this->rootSizer->Add(this->contentPanel, 60, wxEXPAND | wxTOP | wxBOTTOM, edge);
+	this->rootSizer->Add(this->eventsSplit, 0, wxEXPAND | wxTOP | wxBOTTOM, edge);
+	this->rootSizer->Add(this->eventsPanel, 20, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, edge);
+
 	this->SetSizer(this->rootSizer);
+	this->ShowEventsColumn(false);
+	this->SetCurrentPanel(new FlashCardList(this->contentPanel, this->selectedDeckId));
 	this->Layout();
 	
 	//========= BIND EVENT HANDLERS ==================================== BIND EVENT HANDLERS ===================
@@ -231,6 +237,9 @@ void MainFrame::ApplyTheme() {
 	if (auto* decks = dynamic_cast<DeckPanelList*>(this->sidebarPanel)) {
 		decks->ApplyTheme();
 	}
+	if (auto* events = dynamic_cast<TodaysEventsPanel*>(this->eventsPanel)) {
+		events->ApplyTheme();
+	}
 	if (auto* cards = dynamic_cast<FlashCardList*>(this->currentPanel)) {
 		cards->ApplyTheme();
 	} else if (this->currentPanel != nullptr) {
@@ -249,6 +258,7 @@ void MainFrame::OnSysColourChanged(wxSysColourChangedEvent& event) {
 
 void MainFrame::ShowCardList() {
 	this->SetStudying(false);
+	this->ShowEventsColumn(this->showTodaysEvents);
 	if (auto* decks = dynamic_cast<DeckPanelList*>(this->sidebarPanel)) {
 		decks->RefreshGuide();
 	}
@@ -261,15 +271,18 @@ void MainFrame::ShowStudyDeck() {
 		ShowCenteredMessage(this, "Select a deck first.", "Study Deck", wxOK | wxICON_WARNING);
 		return;
 	}
+	this->ShowEventsColumn(false);
 	this->SetCurrentPanel(new StudyPanel(this->contentPanel, this->selectedDeckId));
 	this->SetStudying(true);
 }
 
 void MainFrame::ShowTodaysProgress() {
+	this->ShowEventsColumn(false);
 	this->SetCurrentPanel(new ProgressPanel(this->contentPanel));
 }
 
 void MainFrame::ShowCalendar() {
+	this->ShowEventsColumn(false);
 	this->SetCurrentPanel(new CalendarPanel(this->contentPanel));
 }
 
@@ -278,6 +291,7 @@ void MainFrame::ShowAiStudy() {
 		ShowCenteredMessage(this, "Select a deck first.", "AI Study", wxOK | wxICON_WARNING);
 		return;
 	}
+	this->ShowEventsColumn(false);
 	this->SetCurrentPanel(new AiStudyPanel(this->contentPanel, this->selectedDeckId));
 	this->SetStudying(true);
 }
@@ -596,20 +610,52 @@ void MainFrame::OnKeyEvent(wxKeyEvent& event) {						// KEY
 	event.Skip();
 }
 
+void MainFrame::ShowEventsColumn(bool show) {
+	if (this->eventsPanel == nullptr || this->eventsSplit == nullptr || this->rootSizer == nullptr) {
+		return;
+	}
+	this->eventsColumnOpen = show;
+	this->rootSizer->Show(this->eventsSplit, show);
+	this->rootSizer->Show(this->eventsPanel, show);
+	if (wxSizerItem* content = this->rootSizer->GetItem(this->contentPanel)) {
+		const int edge = this->FromDIP(Theme::Get().size.panelPad);
+		int flags = wxEXPAND | wxTOP | wxBOTTOM;
+		if (!show) {
+			flags |= wxRIGHT;
+		}
+		content->SetFlag(flags);
+		content->SetBorder(edge);
+		content->SetProportion(show ? 60 : 80);
+	}
+	if (wxSizerItem* events = this->rootSizer->GetItem(this->eventsPanel)) {
+		events->SetProportion(show ? 20 : 0);
+	}
+	this->ApplyPanelWidths();
+	this->Layout();
+	if (show) {
+		if (auto* events = dynamic_cast<TodaysEventsPanel*>(this->eventsPanel)) {
+			events->LoadEvents();
+		}
+	}
+}
+
 void MainFrame::ApplyPanelWidths() {
 	const int clientWidth = this->GetClientSize().GetWidth();
 	if(clientWidth <= 0 || this->sidebarPanel == nullptr || this->contentPanel == nullptr) {
 		return;
 	}
 
+	const bool eventsOpen = this->eventsColumnOpen && this->eventsPanel != nullptr;
 	const int edge = this->FromDIP(Theme::Get().size.panelPad);
 	const int gap = this->FromDIP(Theme::Get().space.md);
-	const int inner = clientWidth - edge - gap - edge;
+	const int gaps = eventsOpen ? gap * 2 : gap;
+	const int inner = clientWidth - edge - gaps - edge;
 	if(inner <= 0) {
 		return;
 	}
 	const int deckWidth = inner * 20 / 100;
-	const int cardWidth = inner - deckWidth;
+	const int eventsWidth = eventsOpen ? inner * 20 / 100 : 0;
+	const int cardWidth = inner - deckWidth - eventsWidth;
 	if(deckWidth <= 0 || cardWidth <= 0) {
 		return;
 	}
@@ -617,6 +663,11 @@ void MainFrame::ApplyPanelWidths() {
 	this->sidebarPanel->SetMaxSize(wxSize(deckWidth, -1));
 	this->contentPanel->SetMinSize(wxSize(cardWidth, -1));
 	this->contentPanel->SetMaxSize(wxSize(cardWidth, -1));
+	if (this->eventsPanel != nullptr) {
+		const wxSize eventsSize(eventsOpen ? eventsWidth : 0, eventsOpen ? -1 : 0);
+		this->eventsPanel->SetMinSize(eventsSize);
+		this->eventsPanel->SetMaxSize(eventsOpen ? wxSize(eventsWidth, -1) : eventsSize);
+	}
 }
 
 void MainFrame::OnWindowResized(wxSizeEvent& event) {				// WINDOW

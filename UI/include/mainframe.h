@@ -28,7 +28,11 @@ class MainFrame : public wxFrame {
 
 		wxBoxSizer* rootSizer;
 
-		wxPanel* sidebarPanel;		
+		wxPanel* sidebarPanel;
+		wxPanel* eventsPanel;
+		wxWindow* eventsSplit;
+		bool eventsColumnOpen;
+		bool showTodaysEvents;
 		wxPanel* contentPanel;		// HUSK TO HOLD currentPanel
 		wxPanel* currentPanel;
 		int selectedDeckId;
@@ -98,6 +102,7 @@ class MainFrame : public wxFrame {
 		void OnMouseEvent(wxMouseEvent& event);			// I/O
 		void OnKeyEvent(wxKeyEvent& event);
 		
+		void ShowEventsColumn(bool show);
 		void ApplyPanelWidths();
 		void OnWindowResized(wxSizeEvent& event);		// WINDOW
 		void OnWindowClosed(wxCloseEvent& event);

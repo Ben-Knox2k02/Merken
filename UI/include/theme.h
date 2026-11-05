@@ -3,6 +3,7 @@
 
 #include <wx/wx.h>
 #include <wx/dcgraph.h>
+#include <wx/statline.h>
 
 inline void ApplyButtonPadding(wxButton* button) {
 	if (button == nullptr) {
@@ -369,6 +370,51 @@ inline void Theme::StyleDialog(wxWindow* root) const {
 	});
 	ApplyTitleBar(root);
 	root->Refresh();
+}
+
+inline void StylePageTitle(wxStaticText* title) {
+	if (title == nullptr) {
+		return;
+	}
+	wxFont font = title->GetFont();
+	font.SetPointSize(font.GetPointSize() + 3);
+	font.SetWeight(wxFONTWEIGHT_NORMAL);
+	title->SetFont(font);
+	title->SetForegroundColour(Theme::Get().color.label);
+	title->SetMinSize(wxSize(0, -1));
+}
+
+// Title, then the card-list gap and underline. Page actions sit on the right.
+// A single action, used for Back, sits on the left of the title.
+inline void AddPageHeader(wxWindow* parent, wxBoxSizer* root, wxStaticText* title, wxSizer* actions, bool actionsOnLeft = false) {
+	StylePageTitle(title);
+	const Theme& theme = Theme::Get();
+	const int pad = parent->FromDIP(theme.size.panelPad);
+	const int gap = parent->FromDIP(theme.space.md);
+	wxBoxSizer* row = new wxBoxSizer(wxHORIZONTAL);
+	if (actionsOnLeft && actions != nullptr) {
+		row->Add(actions, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, gap);
+	}
+	int titleFlags = wxEXPAND;
+	if (!actionsOnLeft) {
+		titleFlags |= wxRIGHT;
+	}
+	row->Add(title, 1, titleFlags, actionsOnLeft ? 0 : gap);
+	if (!actionsOnLeft && actions != nullptr) {
+		row->Add(actions, 0, wxALIGN_TOP);
+	}
+	root->Add(row, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, pad);
+	root->AddSpacer(parent->FromDIP(theme.space.sm));
+	root->Add(new wxStaticLine(parent, wxID_ANY), 0, wxEXPAND);
+}
+
+inline void AddPageHeader(wxWindow* parent, wxBoxSizer* root, wxStaticText* title, wxWindow* action) {
+	wxBoxSizer* actions = nullptr;
+	if (action != nullptr) {
+		actions = new wxBoxSizer(wxHORIZONTAL);
+		actions->Add(action, 0, wxALIGN_CENTER_VERTICAL);
+	}
+	AddPageHeader(parent, root, title, actions, true);
 }
 
 #endif

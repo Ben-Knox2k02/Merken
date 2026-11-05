@@ -3,6 +3,7 @@
 #include "mainframe.h"
 #include "app.h"
 #include "theme.h"
+#include "icon_button.h"
 #include "guide_highlight.h"
 #include "../../Application/UseCases/Deck/StudyDeck/study_deck_usecase.h"
 #include "../../Application/UseCases/Deck/ReviewCard/review_card_usecase.h"
@@ -587,12 +588,9 @@ StudyPanel::StudyPanel(wxWindow* parent, int deckId)
 	this->SetDoubleBuffered(true);
 	this->SetBackgroundColour(theme.color.window);
 
-	this->header = new wxStaticText(this, wxID_ANY, "Study");
-	wxFont titleFont = this->header->GetFont();
-	titleFont.SetPointSize(titleFont.GetPointSize() + 3);
-	this->header->SetFont(titleFont);
-	this->header->SetForegroundColour(theme.color.label);
-	this->rootSizer->Add(this->header, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 10);
+	this->header = new wxStaticText(this, wxID_ANY, "Study", wxDefaultPosition, wxDefaultSize, wxST_ELLIPSIZE_END);
+	this->backButton = IconButton::Back(this);
+	AddPageHeader(this, this->rootSizer, this->header, this->backButton);
 
 	this->cardHost = new wxPanel();
 	this->cardHost->SetBackgroundStyle(wxBG_STYLE_PAINT);
@@ -634,10 +632,7 @@ StudyPanel::StudyPanel(wxWindow* parent, int deckId)
 
 	this->todayLabel = new wxStaticText(this, wxID_ANY, wxEmptyString);
 	this->rootSizer->Add(this->todayLabel, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 4);
-
-	this->backButton = new wxButton(this, wxID_ANY, "Back");
-	ApplyButtonPadding(this->backButton);
-	this->rootSizer->Add(this->backButton, 0, wxALIGN_CENTER | wxALL, 16);
+	this->rootSizer->AddSpacer(this->FromDIP(Theme::Get().size.panelPad));
 
 	this->SetSizer(this->rootSizer);
 

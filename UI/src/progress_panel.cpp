@@ -1,6 +1,7 @@
 #include "progress_panel.h"
 #include "mainframe.h"
 #include "theme.h"
+#include "icon_button.h"
 #include "app.h"
 #include "../../Application/UseCases/Progress/GetTodaysProgress/get_todays_progress_usecase.h"
 #include "../../Application/UseCases/Progress/GetProgressHistory/get_progress_history_usecase.h"
@@ -125,9 +126,9 @@ void HeatmapPanel::OnMotion(wxMouseEvent& event) {
 ProgressPanel::ProgressPanel(wxWindow* parent) : wxPanel(parent) {
 	this->rootSizer = new wxBoxSizer(wxVERTICAL);
 
-	this->header = new wxStaticText(this, wxID_ANY, "Today's Progress");
-	this->header->SetFont(this->header->GetFont().Bold());
-	this->rootSizer->Add(this->header, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 10);
+	this->header = new wxStaticText(this, wxID_ANY, "Today's Progress", wxDefaultPosition, wxDefaultSize, wxST_ELLIPSIZE_END);
+	this->backButton = IconButton::Back(this);
+	AddPageHeader(this, this->rootSizer, this->header, this->backButton);
 
 	this->todayLabel = new wxStaticText(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE_HORIZONTAL);
 	this->rootSizer->Add(this->todayLabel, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 10);
@@ -139,9 +140,7 @@ ProgressPanel::ProgressPanel(wxWindow* parent) : wxPanel(parent) {
 	this->heatmap = new HeatmapPanel(this);
 	this->rootSizer->Add(this->heatmap, 0, wxALIGN_CENTER | wxALL, 12);
 
-	this->backButton = new wxButton(this, wxID_ANY, "Back");
-	ApplyButtonPadding(this->backButton);
-	this->rootSizer->Add(this->backButton, 0, wxALIGN_CENTER | wxALL, 16);
+	this->rootSizer->AddSpacer(this->FromDIP(Theme::Get().size.panelPad));
 
 	this->SetSizer(this->rootSizer);
 	this->backButton->Bind(wxEVT_BUTTON, &ProgressPanel::OnBack, this);

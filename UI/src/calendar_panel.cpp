@@ -1,6 +1,7 @@
 #include "calendar_panel.h"
 #include "mainframe.h"
 #include "theme.h"
+#include "icon_button.h"
 #include "app.h"
 #include "../../Application/UseCases/Calendar/GetEvents/get_events_usecase.h"
 #include <wx/dcbuffer.h>
@@ -15,9 +16,9 @@ CalendarPanel::CalendarPanel(wxWindow* parent)
 	this->SetDoubleBuffered(true);
 	this->rootSizer = new wxBoxSizer(wxVERTICAL);
 
-	this->header = new wxStaticText(this, wxID_ANY, "Calendar");
-	this->header->SetFont(this->header->GetFont().Bold());
-	this->rootSizer->Add(this->header, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 10);
+	this->header = new wxStaticText(this, wxID_ANY, "Calendar", wxDefaultPosition, wxDefaultSize, wxST_ELLIPSIZE_END);
+	this->backButton = IconButton::Back(this);
+	AddPageHeader(this, this->rootSizer, this->header, this->backButton);
 
 	this->statusLabel = new wxStaticText(this, wxID_ANY, "Loading eventsΓÇª");
 	this->rootSizer->Add(this->statusLabel, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 4);
@@ -32,10 +33,6 @@ CalendarPanel::CalendarPanel(wxWindow* parent)
 	this->eventList->AssociateModel(this->eventViewModel);
 	this->eventViewModel->DecRef();
 	this->rootSizer->Add(this->eventList, 1, wxEXPAND | wxALL, 10);
-
-	this->backButton = new wxButton(this, wxID_ANY, "Back");
-	ApplyButtonPadding(this->backButton);
-	this->rootSizer->Add(this->backButton, 0, wxALIGN_CENTER | wxALL, 10);
 
 	this->SetSizer(this->rootSizer);
 	this->Bind(wxEVT_PAINT, &CalendarPanel::OnPaint, this);

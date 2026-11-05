@@ -369,11 +369,6 @@ FlashCardList::FlashCardList(wxWindow* parent, int deckId)
 	this->header = new wxStaticText();
 	this->header->SetBackgroundStyle(wxBG_STYLE_TRANSPARENT);
 	this->header->Create(this, wxID_ANY, "");
-	wxFont titleFont = this->header->GetFont();
-	titleFont.SetPointSize(titleFont.GetPointSize() + 3);
-	this->header->SetFont(titleFont);
-	this->header->SetForegroundColour(Theme::Get().color.label);
-	this->header->SetMinSize(wxSize(0, -1));
 
 	this->description = new wxStaticText();
 	this->description->SetBackgroundStyle(wxBG_STYLE_TRANSPARENT);
@@ -388,9 +383,11 @@ FlashCardList::FlashCardList(wxWindow* parent, int deckId)
 	this->addButton = new wxButton(this, wxID_ANY, "Add Flash Card");
 	this->studyButton = new wxButton(this, wxID_ANY, "Study Deck");
 	this->aiStudyButton = new wxButton(this, wxID_ANY, "AI Study Deck");
+	this->eventsButton = new wxButton(this, wxID_ANY, "Hide Today's Events");
 	ApplyButtonPadding(this->addButton);
 	ApplyButtonPadding(this->studyButton);
 	ApplyButtonPadding(this->aiStudyButton);
+	this->UpdateEventsButton();
 	int sharedWidth = this->addButton->GetMinSize().GetWidth();
 	if (this->studyButton->GetMinSize().GetWidth() > sharedWidth) {
 		sharedWidth = this->studyButton->GetMinSize().GetWidth();
@@ -402,19 +399,13 @@ FlashCardList::FlashCardList(wxWindow* parent, int deckId)
 	this->addButton->SetMinSize(sharedSize);
 	this->studyButton->SetMinSize(sharedSize);
 	this->aiStudyButton->SetMinSize(sharedSize);
-	this->headerButtonSizer->Add(this->addButton, 0, wxRIGHT | wxALIGN_BOTTOM, this->FromDIP(Theme::Get().space.xs));
-	this->headerButtonSizer->Add(this->studyButton, 0, wxRIGHT | wxALIGN_BOTTOM, this->FromDIP(Theme::Get().space.xs));
-	this->headerButtonSizer->Add(this->aiStudyButton, 0);
+	const int buttonGap = this->FromDIP(Theme::Get().space.xs);
+	this->headerButtonSizer->Add(this->addButton, 0, wxRIGHT | wxALIGN_BOTTOM, buttonGap);
+	this->headerButtonSizer->Add(this->studyButton, 0, wxRIGHT | wxALIGN_BOTTOM, buttonGap);
+	this->headerButtonSizer->Add(this->aiStudyButton, 0, wxRIGHT | wxALIGN_BOTTOM, buttonGap);
+	this->headerButtonSizer->Add(this->eventsButton, 0, wxALIGN_BOTTOM);
 
-	wxBoxSizer* headerRow = new wxBoxSizer(wxHORIZONTAL);
-	headerRow->Add(this->header, 1, wxEXPAND | wxRIGHT, this->FromDIP(Theme::Get().space.md));
-	headerRow->Add(this->headerButtonSizer, 0, wxALIGN_TOP);
-
-	wxBoxSizer* headerBlock = new wxBoxSizer(wxVERTICAL);
-	headerBlock->Add(headerRow, 0, wxEXPAND);
-	this->rootSizer->Add(headerBlock, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, pad);
-	this->rootSizer->AddSpacer(this->FromDIP(Theme::Get().space.sm));
-	this->rootSizer->Add(new wxStaticLine(this, wxID_ANY), 0, wxEXPAND);
+	AddPageHeader(this, this->rootSizer, this->header, this->headerButtonSizer);
 	this->rootSizer->Add(
 		this->description,
 		0,
@@ -447,6 +438,7 @@ FlashCardList::FlashCardList(wxWindow* parent, int deckId)
 	this->addButton->Bind(wxEVT_BUTTON, &FlashCardList::OnAdd, this);
 	this->studyButton->Bind(wxEVT_BUTTON, &FlashCardList::OnStudy, this);
 	this->aiStudyButton->Bind(wxEVT_BUTTON, &FlashCardList::OnAiStudy, this);
+	this->eventsButton->Bind(wxEVT_BUTTON, &FlashCardList::OnToggleEvents, this);
 	this->Bind(wxEVT_PAINT, &FlashCardList::OnPaint, this);
 	this->Bind(wxEVT_SIZE, &FlashCardList::OnSize, this);
 	this->Bind(wxEVT_ERASE_BACKGROUND, [](wxEraseEvent&) {});
@@ -1134,6 +1126,22 @@ void FlashCardList::UpdateStudyButtons() {
 	this->aiStudyButton->Enable(canStudy);
 }
 
+void FlashCardList::UpdateEventsButton() {
+	bool open = false;
+	if (auto* frame = dynamic_cast<MainFrame*>(wxGetTopLevelParent(this))) {
+		open = frame->showTodaysEvents;
+	}
+	const wxString hideLabel = "Hide Today's Events";
+	const wxString showLabel = "Show Today's Events";
+	const int padX = this->FromDIP(15);
+	const int hideWidth = this->eventsButton->GetTextExtent(hideLabel).GetWidth();
+	const int showWidth = this->eventsButton->GetTextExtent(showLabel).GetWidth();
+	const int textWidth = hideWidth > showWidth ? hideWidth : showWidth;
+	const int height = wxButton::GetDefaultSize(this).GetHeight();
+	this->eventsButton->SetLabel(open ? hideLabel : showLabel);
+	this->eventsButton->SetMinSize(wxSize(textWidth + padX * 2, height));
+}
+
 void FlashCardList::WrapHeader() {
 	const int pad = this->FromDIP(Theme::Get().size.panelPad);
 	const int minWrap = this->FromDIP(Theme::Get().size.minWrap);
@@ -1285,4 +1293,14 @@ void FlashCardList::OnAiStudy(wxCommandEvent&) {
 	if (auto* frame = dynamic_cast<MainFrame*>(wxGetTopLevelParent(this))) {
 		frame->ShowAiStudy();
 	}
+}
+
+void FlashCardList::OnToggleEvents(wxCommandEvent&) {
+	auto* frame = dynamic_cast<MainFrame*>(wxGetTopLevelParent(this));
+	if (frame == nullptr) {
+		return;
+	}
+	frame->showTodaysEvents = !frame->showTodaysEvents;
+	frame->ShowEventsColumn(frame->showTodaysEvents);
+	this->UpdateEventsButton();
 }

@@ -23,6 +23,7 @@ class FlashCardList : public wxPanel {
 		wxButton* addButton;
 		wxButton* studyButton;
 		wxButton* aiStudyButton;
+		wxButton* eventsButton;
 
 		int deckId;
 
@@ -34,6 +35,7 @@ class FlashCardList : public wxPanel {
 		void OnAdd(wxCommandEvent& event);
 		void OnStudy(wxCommandEvent& event);
 		void OnAiStudy(wxCommandEvent& event);
+		void OnToggleEvents(wxCommandEvent& event);
 
 	private:
 		friend class CardCanvas;
@@ -130,6 +132,7 @@ class FlashCardList : public wxPanel {
 		const CardItem* FindItem(int cardId) const;
 		void UpdateDeckHeader();
 		void UpdateStudyButtons();
+		void UpdateEventsButton();
 		void ShowEmptyState(bool empty);
 		void WrapHeader();
 		void Remeasure();
