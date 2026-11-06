@@ -116,6 +116,13 @@ MainFrame::MainFrame(const wxString& title)
 	this->Layout();
 	std::cout<<"[TRACE] Layout()"<<std::endl;
 	
+	this->CallAfter([this]() {
+		auto useCase = this->app.GetInjector().create<GetUserProfileUseCase>();
+		GetUserProfileResponse profile = useCase.Execute();
+		this->guiding = profile.ok && !profile.guideFinished;
+		this->UpdateDeckMenus();
+	});
+	
 	//========= BIND EVENT HANDLERS ==================================== BIND EVENT HANDLERS ===================
 	std::cout<<"[TRACE] Binding event handlers..."<<std::endl;
 	this->Bind(wxEVT_MENU, &MainFrame::OnAddDeck, this, wxID_NEW);					// FILE
@@ -181,13 +188,7 @@ void MainFrame::UpdateDeckMenus() {
 		return;
 	}
 	
-	bool guiding = false;
-	if(!this->studying) {
-		auto useCase = wxGetApp().GetInjector().create<GetUserProfileUseCase>();
-		GetUserProfileResponse profile = useCase.Execute();
-		guiding = profile.ok && !profile.guideFinished;
-	}
-	
+	this->guiding = false;	
 	const bool unlocked = !this->studying && !guiding;
 	const bool generalUnlocked = !guiding;
 	bool hasDecks = false;
@@ -214,7 +215,9 @@ void MainFrame::UpdateDeckMenus() {
 
 void MainFrame::SetSelectedCardCount(int count) {
 	this->selectedCardCount = count;
-	this->UpdateDeckMenus();
+	this->CallAfter([this]() {
+        this->UpdateDeckMenus();
+    });
 }
 
 void MainFrame::ApplyMenuIcons() {		
