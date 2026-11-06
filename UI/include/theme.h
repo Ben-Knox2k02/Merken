@@ -4,6 +4,16 @@
 #include <wx/wx.h>
 #include <wx/dcgraph.h>
 
+inline void ApplyButtonPadding(wxButton* button) {
+	if (button == nullptr) {
+		return;
+	}
+	const int padX = button->FromDIP(15);
+	const wxSize text = button->GetTextExtent(button->GetLabelText());
+	const int height = wxButton::GetDefaultSize(button).GetHeight();
+	button->SetMinSize(wxSize(text.GetWidth() + padX * 2, height));
+}
+
 // Visual tokens for Merken. Brand primary is #0B2937; surfaces, type, and
 // elevation follow iOS grouped surfaces and macOS hairline cards.
 class Theme {
@@ -52,11 +62,11 @@ class Theme {
 		struct Radius {
 			int xs = 6;
 			int sm = 8;
-			int md = 16;
+			int md = 8;
 			int lg = 14;
 			int well = 8;
 			int chip = 11;
-			int row = 8;
+			int row = 4;
 		};
 
 		struct Space {
@@ -304,7 +314,7 @@ inline void Theme::DrawRounded(wxGCDC& gc, const wxRect& rect, int radiusDip, co
 }
 
 inline void Theme::DrawCard(wxGCDC& gc, wxWindow* window, const wxRect& rect, bool selected) const {
-	const int radius = Dip(window, this->radius.md);
+	const int radius = Dip(window, this->radius.xs);
 	if (selected) {
 		this->DrawRounded(gc, rect, radius, this->color.selectedFill, this->color.selectedFill);
 		return;
