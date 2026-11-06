@@ -118,7 +118,7 @@ void EventPanel::LoadEventsForDate(const wxDateTime& date) {
 void EventPanel::ShowEvents(const GetEventsResponse& response) {
 	this->eventList->DeleteAllItems();
 	
-	for (const auto& ev : response.events) {
+	for(const auto& ev : response.events) {
 		long row = this->eventList->GetItemCount();
 		long index = this->eventList->InsertItem(row, ev.title);
 		this->eventList->SetItemData(index, ev.calendarEventId);
@@ -221,8 +221,9 @@ void EventPanel::OnEditEvent(wxCommandEvent& event) {
 	if(frame) { frame->SetStatusText("Edit Event"); }
 
 	EventDialog dialog(this);
+	dialog.SetTitle("Edit Event");
 	
-	dialog.SetTitle(this->eventList->GetItemText(selected, 0));
+	dialog.SetEventTitle(this->eventList->GetItemText(selected, 0));
 	dialog.SetLocation(this->eventList->GetItemText(selected, 4));
 	dialog.SetDescription(this->eventList->GetItemText(selected, 5));
 	
