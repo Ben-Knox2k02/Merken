@@ -61,14 +61,13 @@ int LabelHeight(wxWindow* win, const wxString& wrapped) {
 }
 
 FlashCardList::FlashCardList(wxWindow* parent, int deckId)
-	: wxPanel(),
+	: wxPanel(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE),
 	  deckId(deckId),
 	  headerGap(nullptr),
 	  lastHeaderWrap(0),
 	  lastDescWrap(0) {
 	std::cout<<"[TRACE] Entering FlashCardList Constructor"<<std::endl;
 	this->SetBackgroundStyle(wxBG_STYLE_PAINT);
-	this->Create(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE);
 	this->SetWindowStyleFlag(this->GetWindowStyleFlag() & ~wxCLIP_CHILDREN);
 	this->SetBackgroundColour(Theme::Get().color.window);
 	
