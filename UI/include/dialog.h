@@ -53,7 +53,7 @@ class EventDialog : public wxDialog {
 		wxTextCtrl* descriptionCtrl;
 		wxTimePickerCtrl* reminderCtrl;
 		
-		wxString GetTitle() const;
+		wxString GetEventTitle() const;
 		wxDateTime GetDate() const;
 		wxDateTime GetStart() const;
 		wxDateTime GetEnd() const;
@@ -61,7 +61,7 @@ class EventDialog : public wxDialog {
 		wxString GetDescription() const;
 		wxDateTime GetReminder() const;
 		
-		void SetTitle(const wxString& title);
+		void SetEventTitle(const wxString& title);
 		void SetDate(const wxDateTime& dt);
 		void SetStart(const wxDateTime& dt);
 		void SetEnd(const wxDateTime& dt);
