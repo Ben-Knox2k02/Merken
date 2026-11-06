@@ -56,6 +56,7 @@ class MainFrame : public wxFrame {
 		int selectedDeckId;
 		int selectedCardCount;
 		bool studying;
+		bool guiding;
 		
 		wxDateTime selectedDate;
 
