@@ -1,0 +1,137 @@
+#ifndef MAINFRAME_H
+#define MAINFRAME_H
+
+#include "app.h"
+#include "flash_card_list.h"
+#include "deck_panel_list.h"
+#include "study_panel.h"
+#include "ai_panel.h"
+#include "ai_study_panel.h"
+#include "progress_panel.h"
+#include "calendar_panel.h"
+#include "event_panel.h"
+#include "settings_dialog.h"
+#include "centered_message.h"
+#include "theme.h"
+#include "icon_button.h"
+#include <wx/fdrepdlg.h>
+#include <vector>
+#include <string>
+#include <filesystem>
+#include <fstream>
+#include <algorithm>
+#include "../../Application/UseCases/Profile/GetUserProfile/get_user_profile_usecase.h"
+
+#define NUM_SHORTCUTS 17
+
+enum {									// CUSTOM IDs
+	ID_CARDS = wxID_HIGHEST + 1,
+	ID_STUDY,
+	ID_CALENDAR,
+	ID_AI,
+	ID_SETTINGS,
+	ID_TODAYS_PROGRESS,
+	ID_SHOW_ANSWER,
+	ID_PREVIOUS_CARD,
+	ID_NEXT_CARD,
+	ID_EDIT_DECK,
+	ID_DELETE_DECK
+};
+
+class MainFrame : public wxFrame {
+	public:
+		MainFrame(const wxString& title);
+		App& app;
+
+		wxBoxSizer* rootSizer;
+		
+		wxPanel* sidebarPanel;			// HUSK TO HOLD currentSidebarPanel
+		wxPanel* currentSidebarPanel;
+		wxPanel* contentPanel;			// HUSK TO HOLD currentPanel
+		wxPanel* currentPanel;
+		
+		int sidebarWeight;
+		int contentWeight;
+		
+		int selectedDeckId;
+		int selectedCardCount;
+		bool studying;
+		
+		wxDateTime selectedDate;
+
+		wxAcceleratorEntry shortcuts[NUM_SHORTCUTS];
+		wxFindReplaceDialog* findDialog;
+		wxFindReplaceData findData;
+
+		wxMenuBar* menuBar;								// MENUS
+		wxMenu* fileMenu;
+		wxMenu* editMenu;
+		wxMenu* searchMenu;
+		wxMenu* viewMenu;
+		wxMenu* studyMenu;
+		wxMenu* calendarMenu;
+		wxMenu* toolsMenu;
+		wxMenu* helpMenu;
+		
+		void OnDeckSelected(int deckId);				// STUDY
+		void ReloadDecks();
+		void UpdateDeckMenus();
+		void SetSelectedCardCount(int count);
+		void SetStudying(bool active);
+		
+		wxDateTime GetSelectedDate() const;				// CALENDAR/EVENT
+		void SetSelectedDate(const wxDateTime& date);
+		
+		void ApplyTheme();								// STYLING
+		void ApplyMenuIcons();
+
+		void ShowCardList();							// NAVIGATION
+		void ShowStudyDeck();
+		void ShowTodaysProgress();
+		void ShowCalendar();
+		void ShowAiStudy();
+
+		void SetCurrentPanel(wxPanel* newPanel);		// LAYOUT
+		void SetCurrentSidebarPanel(wxPanel* newPanel);
+		void ApplyPanelWidths(int sidebarWeight, int contentWeight);
+		
+		
+		void OnNew(wxCommandEvent& event);				// FILE
+		void OnOpen(wxCommandEvent& event);
+		void OnSave(wxCommandEvent& event);
+		void OnAddDeck(wxCommandEvent& event);
+		void OnEditDeck(wxCommandEvent& event);
+		void OnDeleteDeck(wxCommandEvent& event);
+		void OnExit(wxCommandEvent& event);
+		
+		void OnUndo(wxCommandEvent& event);				// EDIT
+		void OnRedo(wxCommandEvent& event);
+		void OnUpdateUndo(wxUpdateUIEvent& event);
+		void OnUpdateRedo(wxUpdateUIEvent& event);
+		void OnCut(wxCommandEvent& event);				
+		void OnCopy(wxCommandEvent& event);
+		void OnPaste(wxCommandEvent& event);
+		void OnSelectAll(wxCommandEvent& event);
+		
+		void OnFind(wxCommandEvent& event);				// SEARCH
+		void OnReplace(wxCommandEvent& event);
+		
+		void OnCards(wxCommandEvent& event);			// VIEW
+		void OnStudy(wxCommandEvent& event);
+		void OnTodaysProgress(wxCommandEvent& event);
+		void OnCalendar(wxCommandEvent& event);
+		void OnAI(wxCommandEvent& event);
+		
+		void OnSettings(wxCommandEvent& event);			// TOOLS
+		
+		void OnAbout(wxCommandEvent& event);			// HELP
+		
+		void OnMouseEvent(wxMouseEvent& event);			// I/O
+		void OnKeyEvent(wxKeyEvent& event);
+		
+		void OnWindowResized(wxSizeEvent& event);		// WINDOW
+		void OnWindowClosed(wxCloseEvent& event);
+		void OnSysColourChanged(wxSysColourChangedEvent& event);
+};
+
+#endif

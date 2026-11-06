@@ -1,0 +1,7 @@
+LIBRARY comctl32.dll
+
+EXPORTS
+     SetWindowSubclass @410 NONAME
+     GetWindowSubclass @411 NONAME
+     RemoveWindowSubclass @412 NONAME
+     DefSubclassProc @413 NONAME

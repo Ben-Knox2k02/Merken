@@ -1,0 +1,25 @@
+#include "study_deck_usecase.h"
+#include <optional>
+
+StudyDeckResponse StudyDeckUseCase::Execute(const StudyDeckRequest& request) {
+	StudyDeckResponse response;
+	response.deckId = request.deckId;
+
+	std::optional<Deck> deck = this->deckRepository.GetDeck(request.deckId);
+	if (!deck.has_value()) {
+		return response;
+	}
+	response.deckName = deck->GetName();
+
+	const Date today = this->dateProviderService.GetCurrentDate();
+	for (const Card& card : deck->GetDueCards(today)) {
+		response.dueCards.push_back(CardResponse{
+			.cardId = card.GetCardId(),
+			.deckId = card.GetDeckId(),
+			.front = card.GetFront(),
+			.back = card.GetBack(),
+			.tags = Tag::Join(card.GetTags())
+		});
+	}
+	return response;
+}
