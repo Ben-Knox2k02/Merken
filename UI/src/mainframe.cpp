@@ -1,4 +1,17 @@
 #include "mainframe.h"
+#include "flash_card_list.h"
+#include "deck_panel_list.h"
+#include "study_panel.h"
+#include "ai_panel.h"
+#include "ai_study_panel.h"
+#include "progress_panel.h"
+#include "calendar_panel.h"
+#include "event_panel.h"
+#include "settings_dialog.h"
+#include "centered_message.h"
+#include "theme.h"
+#include "icon_button.h"
+#include "../../Application/UseCases/Profile/GetUserProfile/get_user_profile_usecase.h"
 
 wxDECLARE_APP(App);   // MACRO ONLY NEEDS TO BE USED ONCE
 
@@ -116,7 +129,7 @@ MainFrame::MainFrame(const wxString& title)
 	this->Layout();
 	std::cout<<"[TRACE] Layout()"<<std::endl;
 	
-	this->CallAfter([this]() {
+	this->CallAfter([this]() {		// RETREIVE PROFILE AFTER GUI
 		auto useCase = this->app.GetInjector().create<GetUserProfileUseCase>();
 		GetUserProfileResponse profile = useCase.Execute();
 		this->guiding = profile.ok && !profile.guideFinished;
@@ -215,9 +228,7 @@ void MainFrame::UpdateDeckMenus() {
 
 void MainFrame::SetSelectedCardCount(int count) {
 	this->selectedCardCount = count;
-	this->CallAfter([this]() {
-        this->UpdateDeckMenus();
-    });
+    this->UpdateDeckMenus();
 }
 
 void MainFrame::ApplyMenuIcons() {		
@@ -292,7 +303,10 @@ void MainFrame::ShowCardList() {
 	this->ApplyPanelWidths(this->sidebarWeight, this->contentWeight);
 
 	DeckPanelList* existingDecks = dynamic_cast<DeckPanelList*>(this->currentSidebarPanel); 
-	if(existingDecks != nullptr) { existingDecks->RefreshGuide(); } 
+	if(existingDecks != nullptr) {
+		existingDecks->RefreshGuide();
+		this->ReloadDecks();
+	} 
 	else { this->SetCurrentSidebarPanel(new DeckPanelList(this->sidebarPanel)); }
 	
 	FlashCardList* existingCards = dynamic_cast<FlashCardList*>(this->currentPanel);
@@ -315,7 +329,10 @@ void MainFrame::ShowStudyDeck() {
 	this->ApplyPanelWidths(this->sidebarWeight, this->contentWeight);
 	
 	DeckPanelList* existingDecks = dynamic_cast<DeckPanelList*>(this->currentSidebarPanel); 
-	if(existingDecks != nullptr) { existingDecks->RefreshGuide(); } 
+	if(existingDecks != nullptr) { 
+		existingDecks->RefreshGuide();
+		this->ReloadDecks();
+	} 
 	else { this->SetCurrentSidebarPanel(new DeckPanelList(this->sidebarPanel)); }
 	
 	StudyPanel* existingStudy = dynamic_cast<StudyPanel*>(this->currentPanel);
@@ -349,7 +366,10 @@ void MainFrame::ShowAiStudy() {
 	this->ApplyPanelWidths(this->sidebarWeight, this->contentWeight);
 	
 	DeckPanelList* existingDecks = dynamic_cast<DeckPanelList*>(this->currentSidebarPanel); 
-	if(existingDecks != nullptr) { existingDecks->RefreshGuide(); } 
+	if(existingDecks != nullptr) { 
+		existingDecks->RefreshGuide();
+		this->ReloadDecks();
+	} 
 	else { this->SetCurrentSidebarPanel(new DeckPanelList(this->sidebarPanel)); }
 	
 	AiStudyPanel* existingAI = dynamic_cast<AiStudyPanel*>(this->currentPanel);
@@ -736,4 +756,3 @@ void MainFrame::OnWindowClosed(wxCloseEvent& event) {
 	wxLogStatus("WINDOW CLOSED");
 	Destroy();
 }
-
