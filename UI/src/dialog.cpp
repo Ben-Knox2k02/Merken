@@ -1,4 +1,5 @@
 #include "dialog.h"
+#include "centered_message.h"
 #include "theme.h"
 
 CardDialog::CardDialog(wxWindow* parent, const wxString& title)
@@ -29,9 +30,13 @@ CardDialog::CardDialog(wxWindow* parent, const wxString& title)
 	this->tagCtrl = new wxTextCtrl(this, wxID_ANY);
 	fields->Add(this->tagCtrl, 1, wxEXPAND);
 
+	wxButton* okButton = new wxButton(this, wxID_OK);
+	wxButton* cancelButton = new wxButton(this, wxID_CANCEL);
+	ApplyButtonPadding(okButton);
+	ApplyButtonPadding(cancelButton);
 	wxStdDialogButtonSizer* buttons = new wxStdDialogButtonSizer();
-	buttons->AddButton(new wxButton(this, wxID_OK));
-	buttons->AddButton(new wxButton(this, wxID_CANCEL));
+	buttons->AddButton(okButton);
+	buttons->AddButton(cancelButton);
 	buttons->Realize();
 
 	this->rootSizer = new wxBoxSizer(wxVERTICAL);
@@ -39,11 +44,8 @@ CardDialog::CardDialog(wxWindow* parent, const wxString& title)
 	this->rootSizer->Add(buttons, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 16);
 
 	this->SetSizer(this->rootSizer);
-	this->SetMinSize(wxSize(480, 360));
-	this->SetSize(wxSize(520, 400));
 	Theme::Get().StyleDialog(this);
-	this->Layout();
-	this->CentreOnParent();
+	SizeAsThirdOfMainWindow(this);
 }
 
 DeckDialog::DeckDialog(wxWindow* parent, const wxString& title)
@@ -68,9 +70,13 @@ DeckDialog::DeckDialog(wxWindow* parent, const wxString& title)
 	this->descriptionCtrl->SetMinSize(wxSize(-1, 80));
 	fields->Add(this->descriptionCtrl, 1, wxEXPAND);
 
+	wxButton* okButton = new wxButton(this, wxID_OK);
+	wxButton* cancelButton = new wxButton(this, wxID_CANCEL);
+	ApplyButtonPadding(okButton);
+	ApplyButtonPadding(cancelButton);
 	wxStdDialogButtonSizer* buttons = new wxStdDialogButtonSizer();
-	buttons->AddButton(new wxButton(this, wxID_OK));
-	buttons->AddButton(new wxButton(this, wxID_CANCEL));
+	buttons->AddButton(okButton);
+	buttons->AddButton(cancelButton);
 	buttons->Realize();
 
 	this->rootSizer = new wxBoxSizer(wxVERTICAL);
@@ -78,11 +84,8 @@ DeckDialog::DeckDialog(wxWindow* parent, const wxString& title)
 	this->rootSizer->Add(buttons, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 16);
 
 	this->SetSizer(this->rootSizer);
-	this->SetMinSize(wxSize(480, 320));
-	this->SetSize(wxSize(520, 360));
 	Theme::Get().StyleDialog(this);
-	this->Layout();
-	this->CentreOnParent();
+	SizeAsThirdOfMainWindow(this);
 }
 
 EventDialog::EventDialog(wxWindow* parent) : wxDialog(parent, wxID_ANY, "Create Event", wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER) {

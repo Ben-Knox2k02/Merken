@@ -1,5 +1,6 @@
 #include "calendar_panel.h"
 #include "mainframe.h"
+#include "theme.h"
 #include "app.h"
 #include "../../Application/UseCases/Calendar/GetEvents/get_events_usecase.h"
 #include <wx/dcbuffer.h>
@@ -33,6 +34,7 @@ CalendarPanel::CalendarPanel(wxWindow* parent)
 	this->rootSizer->Add(this->eventList, 1, wxEXPAND | wxALL, 10);
 
 	this->backButton = new wxButton(this, wxID_ANY, "Back");
+	ApplyButtonPadding(this->backButton);
 	this->rootSizer->Add(this->backButton, 0, wxALIGN_CENTER | wxALL, 10);
 
 	this->SetSizer(this->rootSizer);

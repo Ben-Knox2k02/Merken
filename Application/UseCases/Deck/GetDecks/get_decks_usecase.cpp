@@ -8,7 +8,7 @@ GetDecksResponse GetDecksUseCase::Execute() {
 			.name = deck.GetName(),
 			.description = deck.GetDescription(),
 			.createdAt = deck.GetCreatedAt(),
-			.cardCount = static_cast<int>(deck.GetCards().size())
+			.cardCount = deck.GetCardCount()
 		});
 	}
 	return response;

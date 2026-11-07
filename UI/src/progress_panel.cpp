@@ -1,5 +1,6 @@
 #include "progress_panel.h"
 #include "mainframe.h"
+#include "theme.h"
 #include "app.h"
 #include "../../Application/UseCases/Progress/GetTodaysProgress/get_todays_progress_usecase.h"
 #include "../../Application/UseCases/Progress/GetProgressHistory/get_progress_history_usecase.h"
@@ -139,6 +140,7 @@ ProgressPanel::ProgressPanel(wxWindow* parent) : wxPanel(parent) {
 	this->rootSizer->Add(this->heatmap, 0, wxALIGN_CENTER | wxALL, 12);
 
 	this->backButton = new wxButton(this, wxID_ANY, "Back");
+	ApplyButtonPadding(this->backButton);
 	this->rootSizer->Add(this->backButton, 0, wxALIGN_CENTER | wxALL, 16);
 
 	this->SetSizer(this->rootSizer);
