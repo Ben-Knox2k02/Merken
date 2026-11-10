@@ -1,4 +1,6 @@
 {
     "calendarApiKey": "",
+    "calendarRefreshToken": "",
+    "calendarTokenExpiresAt": "0",
     "aiApiKey": ""
 }

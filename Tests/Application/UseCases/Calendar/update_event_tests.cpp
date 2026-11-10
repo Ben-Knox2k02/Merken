@@ -1,100 +1,165 @@
 #include "doctest/doctest.h"
 #include "../../../../Application/UseCases/Calendar/UpdateEvent/update_event_usecase.h"
 #include "../../../Fakes/fake_calendar_api_service.h"
-#include "../../../Fakes/fake_app_settings_service.h"
+#include "../../../Fakes/fake_calendar_auth_service.h"
+#include "../../../Fakes/fake_event_repository.h"
 
-TEST_CASE("UpdateEventUseCase updates an existing event") {
-	FakeCalendarApiService calendarApi;
-	calendarApi.SeedEvent(7, "gcal-7", "Study session", "2026-09-12T17:00:00", "2026-09-12T17:30:00");
-	FakeAppSettingsService appSettings;
-	appSettings.settings.calendarApiKey = "cal-key";
-	appSettings.settings.aiApiKey = "ai-key";
-	UpdateEventUseCase useCase(calendarApi, appSettings);
+namespace {
 
+UpdateEventRequest SampleUpdate(int eventId) {
 	UpdateEventRequest request;
-	request.calendarEventId = 7;
-	request.googleEventId = "gcal-7";
+	request.calendarEventId = eventId;
 	request.title = "Study Spanish";
+	request.date = Date::Parse("2026-09-12").value();
 	request.description = "Review vocab";
-	request.startTime = "2026-09-12T18:00:00";
-	request.endTime = "2026-09-12T19:00:00";
+	request.startTime = "18:00";
+	request.endTime = "19:00";
+	request.location = "Library";
 	request.reminderMinutes = 15;
+	return request;
+}
 
+}
+
+TEST_CASE("UpdateEventUseCase updates the local event and Google when the event has a Google id") {
+	FakeEventRepository events;
+	const int eventId = events.Seed(
+		Date::Parse("2026-09-11").value(),
+		"Study session",
+		"17:00",
+		"17:30",
+		"Home",
+		"Old",
+		30,
+		"gcal-7"
+	);
+	FakeCalendarApiService calendarApi;
+	FakeCalendarAuthService auth;
+	auth.token = "token";
+	UpdateEventUseCase useCase(events, calendarApi, auth);
+
+	const UpdateEventRequest request = SampleUpdate(eventId);
 	CHECK(useCase.Execute(request));
+
 	REQUIRE(calendarApi.updatedEvents.size() == 1);
 	const CalendarEvent& sent = calendarApi.updatedEvents[0];
-	CHECK(sent.GetCalendarEventId() == 7);
+	CHECK(sent.GetCalendarEventId() == eventId);
 	CHECK(sent.GetGoogleEventId() == "gcal-7");
 	CHECK(sent.GetTitle() == "Study Spanish");
+	CHECK(sent.GetDate() == request.date);
 	CHECK(sent.GetDescription() == "Review vocab");
-	CHECK(sent.GetStartTime() == "2026-09-12T18:00:00");
-	CHECK(sent.GetEndTime() == "2026-09-12T19:00:00");
+	CHECK(sent.GetStartTime() == "18:00");
+	CHECK(sent.GetEndTime() == "19:00");
+	CHECK(sent.GetLocation() == "Library");
 	CHECK(sent.GetReminderMinutes() == 15);
-	CHECK(calendarApi.lastApiKey == "cal-key");
+	CHECK(calendarApi.lastApiKey == "token");
+
+	const std::optional<CalendarEvent> stored = events.GetEvent(eventId);
+	REQUIRE(stored.has_value());
+	CHECK(stored->GetTitle() == "Study Spanish");
+	CHECK(stored->GetLocation() == "Library");
+	CHECK(stored->GetGoogleEventId() == "gcal-7");
 }
 
 TEST_CASE("UpdateEventUseCase uses the default reminder when none is set") {
+	FakeEventRepository events;
+	const int eventId = events.Seed(
+		Date::Parse("2026-09-13").value(),
+		"Vocab quiz",
+		"08:00",
+		"08:30",
+		"",
+		"",
+		15,
+		"gcal-1"
+	);
 	FakeCalendarApiService calendarApi;
-	calendarApi.SeedEvent(1, "gcal-1", "Vocab quiz", "2026-09-13T08:00:00", "2026-09-13T08:30:00");
-	FakeAppSettingsService appSettings;
-	UpdateEventUseCase useCase(calendarApi, appSettings);
+	FakeCalendarAuthService auth;
+	auth.token = "token";
+	UpdateEventUseCase useCase(events, calendarApi, auth);
 
 	UpdateEventRequest request;
-	request.calendarEventId = 1;
-	request.googleEventId = "gcal-1";
+	request.calendarEventId = eventId;
 	request.title = "Vocab quiz";
-	request.startTime = "2026-09-13T09:00:00";
-	request.endTime = "2026-09-13T09:30:00";
+	request.date = Date::Parse("2026-09-13").value();
+	request.startTime = "09:00";
+	request.endTime = "09:30";
 
 	CHECK(useCase.Execute(request));
 	REQUIRE(calendarApi.updatedEvents.size() == 1);
 	CHECK(calendarApi.updatedEvents[0].GetReminderMinutes() == 60);
+	REQUIRE(events.GetEvent(eventId).has_value());
+	CHECK(events.GetEvent(eventId)->GetReminderMinutes() == 60);
 }
 
 TEST_CASE("UpdateEventUseCase returns false when the event is missing") {
+	FakeEventRepository events;
 	FakeCalendarApiService calendarApi;
-	FakeAppSettingsService appSettings;
-	UpdateEventUseCase useCase(calendarApi, appSettings);
+	FakeCalendarAuthService auth;
+	auth.token = "token";
+	UpdateEventUseCase useCase(events, calendarApi, auth);
 
-	UpdateEventRequest request;
-	request.calendarEventId = 1;
-	request.googleEventId = "gcal-missing";
-	request.title = "Vocab quiz";
-	request.startTime = "2026-09-13T09:00:00";
-	request.endTime = "2026-09-13T09:30:00";
-
-	CHECK_FALSE(useCase.Execute(request));
+	CHECK_FALSE(useCase.Execute(SampleUpdate(1)));
 	CHECK(calendarApi.updatedEvents.empty());
 }
 
-TEST_CASE("UpdateEventUseCase returns false when the Google event id is empty") {
+TEST_CASE("UpdateEventUseCase still saves locally when the Google event id is empty") {
+	FakeEventRepository events;
+	const int eventId = events.Seed(Date::Parse("2026-09-13").value(), "Vocab quiz", "09:00", "09:30");
 	FakeCalendarApiService calendarApi;
-	FakeAppSettingsService appSettings;
-	UpdateEventUseCase useCase(calendarApi, appSettings);
+	FakeCalendarAuthService auth;
+	auth.token = "token";
+	UpdateEventUseCase useCase(events, calendarApi, auth);
 
-	UpdateEventRequest request;
-	request.calendarEventId = 1;
-	request.title = "Vocab quiz";
-	request.startTime = "2026-09-13T09:00:00";
-	request.endTime = "2026-09-13T09:30:00";
-
-	CHECK_FALSE(useCase.Execute(request));
+	CHECK(useCase.Execute(SampleUpdate(eventId)));
 	CHECK(calendarApi.updatedEvents.empty());
+	REQUIRE(events.GetEvent(eventId).has_value());
+	CHECK(events.GetEvent(eventId)->GetTitle() == "Study Spanish");
+	CHECK(events.GetEvent(eventId)->GetGoogleEventId().empty());
 }
 
-TEST_CASE("UpdateEventUseCase returns false when the calendar API update fails") {
+TEST_CASE("UpdateEventUseCase still saves locally when the calendar API update fails") {
+	FakeEventRepository events;
+	const int eventId = events.Seed(
+		Date::Parse("2026-09-13").value(),
+		"Vocab quiz",
+		"09:00",
+		"09:30",
+		"",
+		"",
+		60,
+		"gcal-1"
+	);
 	FakeCalendarApiService calendarApi;
-	calendarApi.SeedEvent(1, "gcal-1", "Vocab quiz", "2026-09-13T09:00:00", "2026-09-13T09:30:00");
 	calendarApi.updateEventSucceeds = false;
-	FakeAppSettingsService appSettings;
-	UpdateEventUseCase useCase(calendarApi, appSettings);
+	FakeCalendarAuthService auth;
+	auth.token = "token";
+	UpdateEventUseCase useCase(events, calendarApi, auth);
 
-	UpdateEventRequest request;
-	request.calendarEventId = 1;
-	request.googleEventId = "gcal-1";
-	request.title = "Vocab quiz";
-	request.startTime = "2026-09-13T09:00:00";
-	request.endTime = "2026-09-13T09:30:00";
+	CHECK(useCase.Execute(SampleUpdate(eventId)));
+	REQUIRE(calendarApi.updatedEvents.size() == 1);
+	REQUIRE(events.GetEvent(eventId).has_value());
+	CHECK(events.GetEvent(eventId)->GetTitle() == "Study Spanish");
+}
 
-	CHECK_FALSE(useCase.Execute(request));
+TEST_CASE("UpdateEventUseCase skips Google when there is no access token") {
+	FakeEventRepository events;
+	const int eventId = events.Seed(
+		Date::Parse("2026-09-13").value(),
+		"Vocab quiz",
+		"09:00",
+		"09:30",
+		"",
+		"",
+		60,
+		"gcal-1"
+	);
+	FakeCalendarApiService calendarApi;
+	FakeCalendarAuthService auth;
+	UpdateEventUseCase useCase(events, calendarApi, auth);
+
+	CHECK(useCase.Execute(SampleUpdate(eventId)));
+	CHECK(calendarApi.updatedEvents.empty());
+	REQUIRE(events.GetEvent(eventId).has_value());
+	CHECK(events.GetEvent(eventId)->GetTitle() == "Study Spanish");
 }

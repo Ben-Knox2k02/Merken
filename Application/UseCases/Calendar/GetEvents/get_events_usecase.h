@@ -2,22 +2,20 @@
 #define GET_EVENTS_USE_CASE_H
 
 #include "get_events_response.h"
-#include "../../../Services/calendar_api_service.h"
-#include "../../../Services/app_settings_service.h"
+#include "../../../Repositories/event_repository.h"
 
 class GetEventsUseCase {
 	public:
-		GetEventsUseCase(
-			ICalendarAPIService& calendarAPIService,
-			IAppSettingsService& appSettingsService
-		) : calendarAPIService(calendarAPIService),
-			appSettingsService(appSettingsService) {}
+		explicit GetEventsUseCase(IEventRepository& eventRepository)
+			: eventRepository(eventRepository) {}
 
 		GetEventsResponse Execute();
+		GetEventsResponse ExecuteForDate(const Date& date);
 
 	private:
-		ICalendarAPIService& calendarAPIService;
-		IAppSettingsService& appSettingsService;
+		GetEventsResponse MapEvents(const std::vector<CalendarEvent>& events);
+
+		IEventRepository& eventRepository;
 };
 
 #endif

@@ -84,5 +84,18 @@ std::vector<std::string> DbScripts::GetScripts() const {
 			CREATE INDEX IF NOT EXISTS idx_review_events_date
 			ON review_events(reviewed_on, review_id);
 		)",
+		R"(
+			CREATE TABLE IF NOT EXISTS calendar_events (
+				calendar_event_id INTEGER PRIMARY KEY AUTOINCREMENT,
+				title TEXT NOT NULL,
+				event_date TEXT NOT NULL,
+				start_time TEXT NOT NULL,
+				end_time TEXT NOT NULL,
+				location TEXT NOT NULL DEFAULT '',
+				description TEXT NOT NULL DEFAULT '',
+				reminder_minutes INTEGER NOT NULL DEFAULT 60,
+				google_event_id TEXT NOT NULL DEFAULT ''
+			);
+		)",
 	};
 }

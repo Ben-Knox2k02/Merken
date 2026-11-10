@@ -3,6 +3,8 @@
 
 #include <wx/wx.h>
 #include <wx/dataview.h>
+#include <wx/spinctrl.h>
+#include "../../DomainModels/date.h"
 
 class CardDialog : public wxDialog {
 	public:
@@ -27,21 +29,38 @@ class DeckDialog : public wxDialog {
 
 class EventDialog : public wxDialog {
 	public:
-		EventDialog(wxWindow* parent);
-		
-		wxBoxSizer* rootSizer;
-		
-		wxStaticText* titleText;
-		wxStaticText* descriptionText;
-		wxStaticText* dateText;
-		wxStaticText* locationText;
-		wxStaticText* reminderText;
-		
+		explicit EventDialog(wxWindow* parent, const wxString& title = "Add Event");
+
+		void SetEventTitle(const std::string& title);
+		std::string GetEventTitle() const;
+		void SetEventDate(const Date& date);
+		Date GetEventDate() const;
+		void SetStartTime(const std::string& clock);
+		std::string GetStartTime() const;
+		void SetEndTime(const std::string& clock);
+		std::string GetEndTime() const;
+		void SetLocation(const std::string& location);
+		std::string GetLocation() const;
+		void SetDescription(const std::string& description);
+		std::string GetDescription() const;
+		void SetReminderMinutes(int minutes);
+		int GetReminderMinutes() const;
+
+	private:
 		wxTextCtrl* titleCtrl;
-		wxTextCtrl* descriptionCtrl;
-		wxTextCtrl* dateCtrl;
+		wxChoice* monthCtrl;
+		wxChoice* dayCtrl;
+		wxSpinCtrl* yearCtrl;
+		wxChoice* startHourCtrl;
+		wxChoice* startMinuteCtrl;
+		wxChoice* endHourCtrl;
+		wxChoice* endMinuteCtrl;
 		wxTextCtrl* locationCtrl;
-		wxTextCtrl* reminderCtrl;
+		wxTextCtrl* descriptionCtrl;
+		wxChoice* reminderCtrl;
+
+		void RefreshDays();
+		void OnOk(wxCommandEvent& event);
 };
 
 #endif

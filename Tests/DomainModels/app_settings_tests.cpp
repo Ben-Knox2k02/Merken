@@ -4,6 +4,8 @@
 TEST_CASE("AppSettings defaults to empty keys") {
 	AppSettings settings;
 	CHECK(settings.calendarApiKey.empty());
+	CHECK(settings.calendarRefreshToken.empty());
+	CHECK(settings.calendarTokenExpiresAt == 0);
 	CHECK(settings.aiApiKey.empty());
 }
 

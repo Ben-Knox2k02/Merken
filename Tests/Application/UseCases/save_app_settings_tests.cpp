@@ -30,6 +30,25 @@ TEST_CASE("SaveAppSettingsUseCase keeps the saved theme") {
 	CHECK(appSettings.settings.aiApiKey == "ai-key");
 }
 
+TEST_CASE("SaveAppSettingsUseCase keeps the Google refresh token") {
+	FakeAppSettingsService appSettings;
+	appSettings.settings.calendarRefreshToken = "refresh";
+	appSettings.settings.calendarTokenExpiresAt = 123;
+	appSettings.settings.theme = "dark";
+	SaveAppSettingsUseCase useCase(appSettings);
+
+	SaveAppSettingsRequest request;
+	request.calendarApiKey = "cal-key";
+	request.aiApiKey = "ai-key";
+
+	CHECK(useCase.Execute(request));
+	CHECK(appSettings.settings.calendarApiKey == "cal-key");
+	CHECK(appSettings.settings.aiApiKey == "ai-key");
+	CHECK(appSettings.settings.calendarRefreshToken == "refresh");
+	CHECK(appSettings.settings.calendarTokenExpiresAt == 123);
+	CHECK(appSettings.settings.theme == "dark");
+}
+
 TEST_CASE("SaveAppSettingsUseCase returns false when save fails") {
 	FakeAppSettingsService appSettings;
 	appSettings.saveSucceeds = false;

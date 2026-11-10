@@ -10,6 +10,22 @@ TEST_CASE("CalendarEvent defaults description, reminder, and google id") {
 	CHECK(event.GetEndTime() == "2026-09-12T19:00:00");
 	CHECK(event.GetReminderMinutes() == 60);
 	CHECK(event.GetGoogleEventId() == "");
+	CHECK(event.GetLocation().empty());
+	CHECK(event.GetDate() == Date::Create(1970, 1, 1).value());
+}
+
+TEST_CASE("CalendarEvent stores a date and location") {
+	const Date date = Date::Parse("2026-09-12").value();
+	CalendarEvent event(3, "Study", date, "18:00", "19:00", "Library", "Review vocab");
+	CHECK(event.GetDate() == date);
+	CHECK(event.GetLocation() == "Library");
+	CHECK(event.GetDescription() == "Review vocab");
+	CHECK(event.GetReminderMinutes() == 60);
+
+	event.UpdateDate(Date::Parse("2026-09-13").value());
+	event.UpdateLocation("Home");
+	CHECK(event.GetDate() == Date::Parse("2026-09-13").value());
+	CHECK(event.GetLocation() == "Home");
 }
 
 TEST_CASE("CalendarEvent fields can be updated") {
