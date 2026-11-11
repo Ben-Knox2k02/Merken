@@ -34,12 +34,12 @@ inline Card MapCardRow(wxSQLite3::ResultSet& result) {
 	Card card(
 		result.GetInt(0),
 		result.GetInt(1),
-		result.GetString(2).ToStdString(),
-		result.GetString(3).ToStdString()
+		result.GetString(2).ToStdString(wxConvUTF8),
+		result.GetString(3).ToStdString(wxConvUTF8)
 	);
-	card.UpdateTags(Tag::Split(result.GetString(4).ToStdString()));
+	card.UpdateTags(Tag::Split(result.GetString(4).ToStdString(wxConvUTF8)));
 	if (result.GetInt(5) == static_cast<int>(CardType::MultipleChoice)) {
-		card.SetMultipleChoice(SplitCsv(result.GetString(6).ToStdString()));
+		card.SetMultipleChoice(SplitCsv(result.GetString(6).ToStdString(wxConvUTF8)));
 	}
 	card.SetReviewState(result.GetInt(9), result.GetDouble(10), result.GetInt(11));
 	std::optional<Date> nextReviewDate = Date::Parse(result.GetString(7).ToStdString());

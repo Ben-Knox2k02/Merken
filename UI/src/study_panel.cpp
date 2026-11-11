@@ -803,7 +803,7 @@ void StudyPanel::StartStudy() {
 	this->deckName = response.deckName;
 	this->dueCards = response.dueCards;
 	this->startingCount = static_cast<int>(this->dueCards.size());
-	this->header->SetLabel(this->deckName.empty() ? "Study" : wxString(this->deckName));
+	this->header->SetLabel(this->deckName.empty() ? "Study" : wxString::FromUTF8(this->deckName.c_str()));
 	this->ShowCurrentCard();
 }
 
@@ -856,7 +856,7 @@ void StudyPanel::ShowCurrentCard() {
 
 	this->answerVisible = false;
 	this->ClosePage();
-	this->card->SetText(wxString(this->dueCards.front().front), StudyCardSide::Front);
+	this->card->SetText(wxString::FromUTF8(this->dueCards.front().front.c_str()), StudyCardSide::Front);
 	this->summaryLabel->Hide();
 	this->showAnswerButton->Show();
 	this->showAnswerButton->Enable();
@@ -920,7 +920,7 @@ void StudyPanel::OnShowAnswer(wxCommandEvent&) {
 	this->answerVisible = true;
 	this->showAnswerButton->Disable();
 	GuideHighlight::SetBorder(this->showAnswerButton, false);
-	this->backCard->SetText(wxString(this->dueCards.front().back), StudyCardSide::Back);
+	this->backCard->SetText(wxString::FromUTF8(this->dueCards.front().back.c_str()), StudyCardSide::Back);
 	this->ApplySpread();
 	this->rememberedButton->Enable();
 	this->forgotButton->Enable();

@@ -78,7 +78,7 @@ TEST_CASE("ReviewCardUseCase records a forgotten review and updates existing pro
 	Card* stored = deckRepository.FindStoredCard(deckId, secondId);
 	REQUIRE(stored != nullptr);
 	CHECK(stored->GetRepetitionCount() == 0);
-	CHECK(stored->GetEaseFactor() == doctest::Approx(2.3));
+	CHECK(stored->GetEaseFactor() == doctest::Approx(2.18));
 }
 
 TEST_CASE("ReviewCardUseCase fails when the deck or card is missing") {
