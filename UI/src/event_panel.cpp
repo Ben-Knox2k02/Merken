@@ -144,6 +144,7 @@ void EventPanel::OnAddEvent(wxCommandEvent& event) {
 	if(frame) { frame->SetStatusText("Add Event"); }
 	
 	EventDialog dialog(this);
+	dialog.SetTitle("Create Event");
 	
 	if(this->currentDate.IsValid()) {
 		dialog.SetDate(this->currentDate);
@@ -153,7 +154,7 @@ void EventPanel::OnAddEvent(wxCommandEvent& event) {
 	
 	if(dialog.ShowModal() == wxID_OK) {
 		CreateEventRequest request;
-		request.title = dialog.GetTitle().ToStdString();
+		request.title = dialog.GetEventTitle().ToStdString();
 		request.location = dialog.GetLocation().ToStdString();
 		request.description = dialog.GetDescription().ToStdString();
 		
