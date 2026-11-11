@@ -70,12 +70,13 @@ class Card {
 		void RecordReview(bool remembered, const Date& reviewedOnDate) {
 			this->lastReviewedDate = reviewedOnDate;
 
+			// Study is pass or fail. Remembered is SM-2 grade 4, so ease stays put.
+			// Forgot is grade 2. Ease then follows EF + (0.1 - (5-q)*(0.08+(5-q)*0.02)).
+			const int quality = remembered ? 4 : 2;
+
 			if (!remembered) {
 				this->repetitionCount = 0;
 				this->intervalDays = 1;
-				if (this->easeFactor > 1.3) {
-					this->easeFactor -= 0.2;
-				}
 			} else {
 				this->repetitionCount += 1;
 				if (this->repetitionCount == 1) {
@@ -85,7 +86,12 @@ class Card {
 				} else {
 					this->intervalDays = static_cast<int>(this->intervalDays * this->easeFactor);
 				}
-				this->easeFactor += 0.1;
+			}
+
+			const int gap = 5 - quality;
+			this->easeFactor += 0.1 - (gap * (0.08 + (gap * 0.02)));
+			if (this->easeFactor < 1.3) {
+				this->easeFactor = 1.3;
 			}
 		}
 
