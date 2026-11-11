@@ -1,26 +1,27 @@
 #ifndef DELETE_EVENT_USECASE_H
 #define DELETE_EVENT_USECASE_H
 
-#include "../../../Repositories/event_repository.h"
-#include "../../../Services/calendar_api_service.h" // or GoogleCalendarService
-#include "../../../Services/calendar_auth_service.h"
 #include "delete_event_request.h"
-#include <memory>
+#include "../../../Repositories/event_repository.h"
+#include "../../../Services/calendar_api_service.h"
+#include "../../../Services/calendar_auth_service.h"
 
 class DeleteEventUseCase {
 	public:
 		DeleteEventUseCase(
 			IEventRepository& eventRepository,
-			std::shared_ptr<ICalendarAPIService> calendarService,
+			ICalendarAPIService& calendarAPIService,
 			ICalendarAuthService& authService
-		);
+		) : eventRepository(eventRepository),
+			calendarAPIService(calendarAPIService),
+			authService(authService) {}
 
-		void Execute(const DeleteEventRequest& request);
+		bool Execute(const DeleteEventRequest& request);
 	
 	private:
 		IEventRepository& eventRepository;
-		std::shared_ptr<ICalendarAPIService> calendarService_;
-		ICalendarAuthService& authService_;
+		ICalendarAPIService& calendarAPIService;
+		ICalendarAuthService& authService;
 };
 
 #endif
