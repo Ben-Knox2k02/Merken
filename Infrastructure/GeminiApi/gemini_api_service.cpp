@@ -2,8 +2,6 @@
 #include "../../ThirdParty/nlohmann/json.hpp"
 #include <iostream>
 
-// rewriting to use nlohmann like the google calendar service 
-
 // gemini api endpoint
 static const std::string kGenerateUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent";
 
@@ -121,7 +119,7 @@ std::string GeminiApiService::GenerateResponse(const std::string& prompt, const 
 
 		if (!response.Ok()) {
 			LogGeminiError("GenerateResponse", response.statusCode, DescribeFailure(response));
-			 return ""; 
+			return ""; 
 		}
 
 		nlohmann::json parsed = nlohmann::json::parse(response.body, nullptr, false);
