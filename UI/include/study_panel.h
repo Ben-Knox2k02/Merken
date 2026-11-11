@@ -2,7 +2,6 @@
 #define STUDY_PANEL_H
 
 #include <wx/wx.h>
-#include <wx/dcbuffer.h>
 #include <string>
 #include <vector>
 #include "../../Application/UseCases/Deck/GetCards/card_response.h"
@@ -55,7 +54,6 @@ class StudyPanel : public wxPanel {
 
 		void ApplySpread();
 		void ClosePage();
-		void OnPageTick(wxTimerEvent& event);
 		void RefreshGuide();
 		bool CompleteGuide();
 };
