@@ -150,6 +150,7 @@ bool EventRepository::DeleteEvent(int eventId) {
 		stmt.Bind(1, eventId);
 		return stmt.ExecuteUpdate() > 0;
 	} catch (const wxSQLite3::Exception&) {
+		wxLogDebug("SQLite Delete Error: %s", e.GetMessage());
 		return false;
 	}
 }
