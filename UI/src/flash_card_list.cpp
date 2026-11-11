@@ -5,6 +5,9 @@
 #include "../../Application/UseCases/Deck/UpdateCard/update_card_usecase.h"
 #include "../../Application/UseCases/Deck/DeleteCard/delete_card_usecase.h"
 #include "../../Application/UseCases/Profile/GetUserProfile/get_user_profile_usecase.h"
+#ifdef __WXMSW__
+#include <wx/msw/wrapwin.h>
+#endif
 #include <wx/renderer.h>
 #include <wx/statline.h>
 #include <wx/tokenzr.h>
@@ -222,31 +225,47 @@ void FlashCardList::LoadCards() {
 	}
 
 	// An empty column is not shown, so one card would stretch across the whole row.
+	std::cout<<"[TRACE] adding spacers"<<std::endl;
 	if (this->leftCol->GetItemCount() == 0) {
 		this->leftCol->AddSpacer(0);
 	}
 	if (this->rightCol->GetItemCount() == 0) {
 		this->rightCol->AddSpacer(0);
 	}
+	std::cout<<"[TRACE] spacers added"<<std::endl;
 
 	this->scroller->FitInside();
+	std::cout<<"FitInside()"<<std::endl;
 	this->scroller->Layout();
+	std::cout<<"Layout()"<<std::endl;
 	this->ShowEmptyState(this->cards.empty());
+	std::cout<<"ShowEmptyState()"<<std::endl;
 	this->UpdateStudyButtons();
+	std::cout<<"UpdateStudyButtons()"<<std::endl;
 	this->RefreshGuide();
-	if (auto* frame = dynamic_cast<MainFrame*>(wxGetTopLevelParent(this))) {
-		frame->SetSelectedCardCount(static_cast<int>(this->cards.size()));
-	}
+	std::cout<<"RefreshGuide()"<<std::endl;
+   
 
 	this->CallAfter([this]() {
+		std::cout<<"CallAfter[(this]()\n";
+		 if (auto* frame = dynamic_cast<MainFrame*>(wxGetTopLevelParent(this))) {
+			std::cout<<"Setting card count\n";
+			frame->SetSelectedCardCount(static_cast<int>(this->cards.size()));
+			std::cout<<"card count set\n";
+		}
 		this->lastHeaderWrap = 0;
 		this->lastDescWrap = 0;
+		std::cout<<"WrapHeader()\n";
 		this->WrapHeader();
+		std::cout<<"Layout()\n";
 		this->Layout();
 		for (FlashCard* card : this->cards) {
+			std::cout<<"card->RelayoutContents()\n";
 			card->RelayoutContents();
 		}
+		std::cout<<"Layout()\n";
 		this->scroller->Layout();
+		std::cout<<"FitInside()\n";
 		this->scroller->FitInside();
 	});
 	
