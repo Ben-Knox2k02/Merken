@@ -18,6 +18,7 @@ class FakeHttpClient : public IHttpClient {
         int postCallCount = 0;
         int patchCallCount = 0;
         int postFormCallCount = 0;
+        int deleteCallCount = 0;
 
 
         void QueueResponse(int statusCode, const std::string& body, const std::string& error = ""){
@@ -57,6 +58,11 @@ class FakeHttpClient : public IHttpClient {
         HttpResponse PostForm(const std::string& url, const std::string& formBody, const std::vector<HttpHeader>& headers) override{
             this->postFormCallCount++;
             this->Record("POST_FORM", url, formBody, headers);
+            return this->NextResponse();
+        }
+        HttpResponse Delete(const std::string& url, const std::vector<HttpHeader>& headers) override{
+            this->deleteCallCount++;
+            this->Record("DELETE", url, "", headers);
             return this->NextResponse();
         }
 
