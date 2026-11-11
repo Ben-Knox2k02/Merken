@@ -127,7 +127,7 @@ void EventPanel::ShowEvents(const GetEventsResponse& response) {
 		this->eventList->SetItem(index, 3, ev.endTime);
 		this->eventList->SetItem(index, 4, ev.location);
 		this->eventList->SetItem(index, 5, ev.description);
-		this->eventList->SetItem(index, 6, wxString::Format("%d minutes", ev.reminderMinutes));
+		this->eventList->SetItem(index, 6, wxString::Format("%d hours before", ev.reminderMinutes / 60));
 	}
 }
 
