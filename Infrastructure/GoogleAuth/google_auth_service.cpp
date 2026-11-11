@@ -112,13 +112,13 @@ static bool ParseTokenResponse(const std::string& body, std::string& accessToken
 	expiresInSeconds = (json.contains("expires_in") && json["expires_in"].is_number()) ? json["expires_in"].get<long long>() : 3600;
 	return !accessToken.empty();
 }
-
+//Full OAuth sign-in: browser consent -> redirects to local port -> exchange the authorization code for tokens
 bool GoogleAuthService::SignIn() {
 	if (this->config.clientId.empty()) {
 		LogAuthError("SignIn", "Google client ID is not configured (google_client.json)");
 		return false;
 	}
-
+	//start a local listener on a free port for Google to redirect to
 	const int port = this->loopbackReceiver.Start();
 	if (port <= 0) {
 		LogAuthError("SignIn", "Could not listen on a local port for Google's redirect");
@@ -129,7 +129,7 @@ bool GoogleAuthService::SignIn() {
 	//PKCE: the verifier stays here; only its hash goes to Google until the code exchange
 	const std::string codeVerifier = RandomUrlSafeString(32);
 	const std::string codeChallenge = CodeChallengeS256(codeVerifier);
-	const std::string state = RandomUrlSafeString(16);
+	const std::string state = RandomUrlSafeString(16); //a random value to check on return so the response belongs to this sign in
 
 	const std::string url = kAuthUrl + "?" + FormEncode({
 		{"client_id", this->config.clientId},
@@ -139,17 +139,17 @@ bool GoogleAuthService::SignIn() {
 		{"code_challenge", codeChallenge},
 		{"code_challenge_method", "S256"},
 		{"state", state},
-		{"access_type", "offline"},
+		{"access_type", "offline"}, //access_type=offline and prompt=consent makes Google issue a refresh token
 		{"prompt", "consent"}
 	});
 
-	if (!this->browserLauncher.Open(url)) {
+	if (!this->browserLauncher.Open(url)) { //open the user's default browser on Google's consent page
 		this->loopbackReceiver.Stop();
 		LogAuthError("SignIn", "Could not open the browser");
 		return false;
 	}
-
-	const std::string target = this->loopbackReceiver.WaitForRedirect(kSignInTimeoutSeconds);
+	//block until Google redirects back or the timeout expires. The target looks like /?code=...&state=...
+	const std::string target = this->loopbackReceiver.WaitForRedirect(kSignInTimeoutSeconds); 
 	this->loopbackReceiver.Stop();
 
 	if (target.empty()) {
@@ -161,7 +161,7 @@ bool GoogleAuthService::SignIn() {
 		LogAuthError("SignIn", "Google returned an error: " + error);
 		return false;
 	}
-	if (GetQueryParam(target, "state") != state) {
+	if (GetQueryParam(target, "state") != state) { //reject the response if the state does not match what we sent
 		LogAuthError("SignIn", "The state value did not match, so the response was ignored");
 		return false;
 	}
@@ -170,15 +170,16 @@ bool GoogleAuthService::SignIn() {
 		LogAuthError("SignIn", "Google's redirect had no authorization code");
 		return false;
 	}
-
-	return this->ExchangeCode(code, codeVerifier, redirectUri);
+	//trade the authorization code and the unhashed verifier for tokens. 
+	//The verifier is hashed on google's end and checked with the code challenge we sent earlier
+	return this->ExchangeCode(code, codeVerifier, redirectUri); 
 }
-
+//sends code, verifier, and client credentials directy to Google (not through browser)
 bool GoogleAuthService::ExchangeCode(const std::string& code, const std::string& codeVerifier, const std::string& redirectUri) {
 	std::vector<std::pair<std::string, std::string>> fields = {
 		{"grant_type", "authorization_code"},
 		{"code", code},
-		{"code_verifier", codeVerifier},
+		{"code_verifier", codeVerifier}, //Google hashes this verifier and compares it to the challenge from the sign in URL
 		{"redirect_uri", redirectUri},
 		{"client_id", this->config.clientId}
 	};
@@ -204,7 +205,7 @@ bool GoogleAuthService::ExchangeCode(const std::string& code, const std::string&
 		return false;
 	}
 
-	AppSettings settings = this->appSettingsService.GetSettings();
+	AppSettings settings = this->appSettingsService.GetSettings(); //save tokens, the settings service stores and encrypts them with DPAPI
 	settings.calendarApiKey = accessToken;
 	settings.calendarRefreshToken = refreshToken;
 	settings.calendarTokenExpiresAt = this->clock.NowSeconds() + expiresIn;
@@ -214,7 +215,7 @@ bool GoogleAuthService::ExchangeCode(const std::string& code, const std::string&
 	}
 	return true;
 }
-
+//returns a valid access token, refreshing it first if it has expired.
 std::string GoogleAuthService::GetAccessToken() {
 	AppSettings settings = this->appSettingsService.GetSettings();
 
@@ -224,12 +225,12 @@ std::string GoogleAuthService::GetAccessToken() {
 	}
 
 	const long long now = this->clock.NowSeconds();
-	if (!settings.calendarApiKey.empty() && settings.calendarTokenExpiresAt > now + kExpirySkewSeconds) {
+	if (!settings.calendarApiKey.empty() && settings.calendarTokenExpiresAt > now + kExpirySkewSeconds) { //still valid (with a 60 second margin) so reuse it
 		return settings.calendarApiKey;
 	}
-	return this->RefreshAccessToken(settings);
+	return this->RefreshAccessToken(settings); //get a new access token if expired
 }
-
+//exchanges the refresh token for a new access token. Returns "" if Google refuses (likely due to invalid or expired refresh token)
 std::string GoogleAuthService::RefreshAccessToken(AppSettings settings) {
 	if (this->config.clientId.empty()) {
 		LogAuthError("RefreshAccessToken", "Google client ID is not configured (google_client.json)");
@@ -261,7 +262,7 @@ std::string GoogleAuthService::RefreshAccessToken(AppSettings settings) {
 
 	settings.calendarApiKey = accessToken;
 	settings.calendarTokenExpiresAt = this->clock.NowSeconds() + expiresIn;
-	if (!newRefreshToken.empty()) {
+	if (!newRefreshToken.empty()) { //Google usually does not send a new refresh token here, so keep the old one unless it does
 		settings.calendarRefreshToken = newRefreshToken;
 	}
 	if (!this->appSettingsService.SaveSettings(settings)) {
@@ -269,7 +270,7 @@ std::string GoogleAuthService::RefreshAccessToken(AppSettings settings) {
 	}
 	return accessToken;
 }
-
+//clears the stored tokens. The user has to sign in again.
 void GoogleAuthService::SignOut() {
 	AppSettings settings = this->appSettingsService.GetSettings();
 	settings.calendarApiKey.clear();
@@ -279,7 +280,7 @@ void GoogleAuthService::SignOut() {
 		LogAuthError("SignOut", "Could not save the cleared tokens");
 	}
 }
-
+//checks if the user is currently signed in by verifying the presence of tokens.
 bool GoogleAuthService::IsSignedIn() {
 	AppSettings settings = this->appSettingsService.GetSettings();
 	return !settings.calendarRefreshToken.empty() || !settings.calendarApiKey.empty();
