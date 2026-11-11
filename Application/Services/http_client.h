@@ -44,6 +44,10 @@ class IHttpClient {
 			const std::vector<HttpHeader>& headers = {}
 		) = 0;
 		
+		virtual HttpResponse Delete(
+			const std::string& url,
+			const std::vector<HttpHeader>& headers = {}
+		) = 0;
 		
 };
 
