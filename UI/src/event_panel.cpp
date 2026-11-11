@@ -250,7 +250,7 @@ void EventPanel::OnEditEvent(wxCommandEvent& event) {
 	if(dialog.ShowModal() == wxID_OK) {	
 		UpdateEventRequest request;
 		request.calendarEventId = eventId;
-		request.title = dialog.GetTitle().ToStdString();
+		request.title = dialog.GetEventTitle().ToStdString();
 		request.location = dialog.GetLocation().ToStdString();
 		request.description = dialog.GetDescription().ToStdString();
 		
