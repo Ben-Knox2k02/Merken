@@ -91,3 +91,17 @@ TEST_CASE("AiPrompt, GeminiApiService and AiQuestion integration test"){
     CHECK(questions[1].GetType() == AiQuestionType::Sentence);
     CHECK(questions[1].GetText() == "What Spanish word means goodbye?");
 }
+
+// checks that the service sets the thinking level to low in the request body, which should make Gemini respond faster
+TEST_CASE("GeminiApiService::GenerateResponse asks for low thinking to keep replies fast")
+{
+    FakeHttpClient http;
+    GeminiApiService service(http);
+    http.QueueResponse(200, MakeSuccessBody("ok"));
+
+    service.GenerateResponse("hi", "key");
+
+    nlohmann::json sent = nlohmann::json::parse(http.lastBody, nullptr, false);
+    REQUIRE(sent.is_object());
+    CHECK(sent["generationConfig"]["thinkingConfig"]["thinkingLevel"] == "low");
+}
