@@ -2,7 +2,6 @@
 #define FLASH_CARD_NUMBER_H
 
 #include <wx/wx.h>
-#include <wx/dcgraph.h>
 #include "theme.h"
 
 class FlashCardNumber : public wxPanel {
@@ -42,19 +41,26 @@ class FlashCardNumber : public wxPanel {
 
 		void OnPaint(wxPaintEvent&) {
 			wxPaintDC dc(this);
-			wxGCDC gc(dc);
 			const wxSize size = this->GetClientSize();
 			if (size.GetWidth() < 2 || size.GetHeight() < 2) {
 				return;
 			}
 
 			const Theme& theme = Theme::Get();
-			theme.DrawBadge(gc, this, wxRect(0, 0, size.GetWidth() - 1, size.GetHeight() - 1));
+			dc.SetPen(*wxTRANSPARENT_PEN);
+			dc.SetBrush(wxBrush(theme.color.fill));
+			dc.DrawRoundedRectangle(
+				0,
+				0,
+				size.GetWidth() - 1,
+				size.GetHeight() - 1,
+				this->FromDIP(theme.radius.xs)
+			);
 
-			gc.SetFont(this->GetFont());
-			gc.SetTextForeground(theme.color.label);
-			const wxSize extent = gc.GetTextExtent(this->label);
-			gc.DrawText(
+			dc.SetFont(this->GetFont());
+			dc.SetTextForeground(theme.color.label);
+			const wxSize extent = dc.GetTextExtent(this->label);
+			dc.DrawText(
 				this->label,
 				(size.GetWidth() - extent.GetWidth()) / 2,
 				(size.GetHeight() - extent.GetHeight()) / 2

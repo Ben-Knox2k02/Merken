@@ -85,7 +85,6 @@ MainFrame::MainFrame(const wxString& title)
 	//============ ATTACH WIDGETS ==================================== ATTACH WIDGETS =========================
 	std::cout<<"[TRACE] attaching widgets..."<<std::endl;
 	this->SetMenuBar(this->menuBar);
-	this->ApplyMenuIcons();
 	this->CreateStatusBar();
 	this->SetBackgroundColour(Theme::Get().color.window);
 	std::cout<<"[TRACE] Theme Applied"<<std::endl;
@@ -263,6 +262,7 @@ void MainFrame::ApplyTheme() {
 		this->currentPanel->Refresh();
 	}
 	this->ApplyMenuIcons();
+	Theme::ApplyTitleBar(this);
 	this->Refresh();
 }
 
@@ -647,8 +647,10 @@ void MainFrame::OnAbout(wxCommandEvent&) {
 	);
 	description->Wrap(dialog.FromDIP(360));
 
+	wxButton* okButton = new wxButton(&dialog, wxID_OK);
+	ApplyButtonPadding(okButton);
 	wxStdDialogButtonSizer* buttons = new wxStdDialogButtonSizer();
-	buttons->AddButton(new wxButton(&dialog, wxID_OK));
+	buttons->AddButton(okButton);
 	buttons->Realize();
 
 	dialog.Bind(wxEVT_BUTTON, [&dialog](wxCommandEvent& event) {
@@ -716,6 +718,7 @@ void MainFrame::OnKeyEvent(wxKeyEvent& event) {						// KEY
 	else { wxLogStatus("Key event %c", keyChar); }
 	event.Skip();
 }
+
 
 
 

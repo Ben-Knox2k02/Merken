@@ -3,14 +3,13 @@
 
 #include <functional>
 #include <wx/wx.h>
-#include <wx/dcgraph.h>
+#include <wx/dcbuffer.h>
 #include <wx/gbsizer.h>
 #include <wx/statline.h>
 #include <wx/tokenzr.h>
 #include <wx/wrapsizer.h>
 #include "flash_card_tag.h"
 #include "flash_card_number.h"
-#include "icon_button.h"
 #include "theme.h"
 
 class FlashCardWell : public wxPanel {
@@ -77,7 +76,8 @@ class FlashCard : public wxPanel {
 			selected(false),
 			lastFrontWrap(0),
 			lastBackWrap(0),
-			relayouting(false) {
+			relayouting(false),
+			laidOutSize(0, 0) {
 			this->SetBackgroundStyle(wxBG_STYLE_PAINT);
 			this->Create(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE);
 			this->SetWindowStyleFlag(this->GetWindowStyleFlag() & ~wxCLIP_CHILDREN);
@@ -127,8 +127,16 @@ class FlashCard : public wxPanel {
 
 			this->RebuildTags();
 
-			this->editButton = new IconButton(this, "UI/assets/edit_icon.png", "Edit");
-			this->deleteButton = new IconButton(this, "UI/assets/delete_icon.png", "Delete");
+			this->editButton = new wxButton(this, wxID_ANY, "Edit");
+			this->deleteButton = new wxButton(this, wxID_ANY, "Delete");
+			ApplyButtonPadding(this->editButton);
+			ApplyButtonPadding(this->deleteButton);
+			const int sharedWidth = this->editButton->GetMinSize().GetWidth() > this->deleteButton->GetMinSize().GetWidth()
+				? this->editButton->GetMinSize().GetWidth()
+				: this->deleteButton->GetMinSize().GetWidth();
+			const wxSize sharedSize(sharedWidth, wxButton::GetDefaultSize(this).GetHeight());
+			this->editButton->SetMinSize(sharedSize);
+			this->deleteButton->SetMinSize(sharedSize);
 			this->editButton->Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
 				if (this->onEdit) {
 					this->onEdit();
@@ -165,9 +173,24 @@ class FlashCard : public wxPanel {
 			this->Bind(wxEVT_PAINT, &FlashCard::OnPaint, this);
 			this->Bind(wxEVT_SIZE, &FlashCard::OnSize, this);
 			this->Bind(wxEVT_ERASE_BACKGROUND, [](wxEraseEvent&) {});
-			this->CallAfter([this]() {
-				this->RelayoutContents();
-			});
+		}
+
+		void SetContent(int number, const wxString& front, const wxString& back, const wxString& tags) {
+			this->numberBox->SetNumber(number);
+			this->front = front;
+			this->back = back;
+			this->lastFrontWrap = 0;
+			this->lastBackWrap = 0;
+			this->laidOutSize = wxSize(0, 0);
+			this->frontCtrl->SetLabel(TruncateSentences(front));
+			this->backCtrl->SetLabel(TruncateSentences(back));
+			if (this->tags != tags) {
+				this->tags = tags;
+				this->RebuildTags();
+			}
+			this->WrapFields();
+			this->RelayoutTags();
+			this->Layout();
 		}
 
 		void RelayoutContents() {
@@ -218,8 +241,6 @@ class FlashCard : public wxPanel {
 
 		void ApplyTheme() {
 			this->ApplyTextColours();
-			this->editButton->ApplyTheme();
-			this->deleteButton->ApplyTheme();
 			this->Refresh();
 			this->frontWell->Refresh();
 			this->backWell->Refresh();
@@ -241,18 +262,19 @@ class FlashCard : public wxPanel {
 		wxStaticText* frontCtrl;
 		wxStaticText* backCtrl;
 		wxWrapSizer* tagSizer;
-		IconButton* editButton;
-		IconButton* deleteButton;
+		wxButton* editButton;
+		wxButton* deleteButton;
 		std::function<void()> onEdit;
 		std::function<void()> onDelete;
 		bool selected;
 		int lastFrontWrap;
 		int lastBackWrap;
 		bool relayouting;
+		wxSize laidOutSize;
 
 		wxStaticText* MakeCaption(const wxString& label) {
 			wxStaticText* caption = new wxStaticText();
-			caption->SetBackgroundStyle(wxBG_STYLE_TRANSPARENT);
+			caption->SetBackgroundStyle(wxBG_STYLE_COLOUR);
 			caption->Create(this, wxID_ANY, label);
 			return caption;
 		}
@@ -459,34 +481,43 @@ class FlashCard : public wxPanel {
 		}
 
 		void OnSize(wxSizeEvent& event) {
-			if (this->relayouting) {
+			const wxSize size = event.GetSize();
+			if (this->relayouting || size == this->laidOutSize) {
 				event.Skip();
 				return;
 			}
 			this->relayouting = true;
+			this->laidOutSize = size;
 			this->WrapFields();
 			this->RelayoutTags();
 			this->Layout();
-			this->Refresh();
+			if (this->IsShownOnScreen()) {
+				this->Refresh();
+			}
 			this->relayouting = false;
 			event.Skip();
 		}
 
 		void OnPaint(wxPaintEvent&) {
-			wxPaintDC dc(this);
-			wxGCDC gc(dc);
+			wxAutoBufferedPaintDC dc(this);
 			const wxSize size = this->GetClientSize();
 			if (size.GetWidth() < 2 || size.GetHeight() < 2) {
 				return;
 			}
 
 			const Theme& theme = Theme::Get();
-			theme.FillCanvas(gc, this, size);
-			theme.DrawCard(
-				gc,
-				this,
-				wxRect(0, 0, size.GetWidth() - 1, size.GetHeight() - 1),
-				this->selected
+			dc.SetPen(*wxTRANSPARENT_PEN);
+			dc.SetBrush(wxBrush(theme.CanvasBehind(this)));
+			dc.DrawRectangle(0, 0, size.GetWidth(), size.GetHeight());
+
+			const wxColour fill = this->selected ? theme.color.selectedFill : theme.color.card;
+			dc.SetBrush(wxBrush(fill));
+			dc.DrawRoundedRectangle(
+				0,
+				0,
+				size.GetWidth() - 1,
+				size.GetHeight() - 1,
+				this->FromDIP(theme.radius.xs)
 			);
 		}
 
@@ -495,6 +526,9 @@ class FlashCard : public wxPanel {
 			this->frontCaption->SetForegroundColour(caption);
 			this->backCaption->SetForegroundColour(caption);
 			this->tagsCaption->SetForegroundColour(caption);
+			this->frontCaption->SetBackgroundColour(fill);
+			this->backCaption->SetBackgroundColour(fill);
+			this->tagsCaption->SetBackgroundColour(fill);
 			this->frontCtrl->SetForegroundColour(caption);
 			this->backCtrl->SetForegroundColour(caption);
 			this->SetBackgroundColour(wxNullColour);

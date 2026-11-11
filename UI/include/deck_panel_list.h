@@ -3,7 +3,6 @@
 
 #include "mainframe.h"
 #include "deck_card.h"
-#include "icon_button.h"
 #include "profile_header.h"
 #include "dialog.h"
 #include "centered_message.h"
@@ -20,13 +19,14 @@ class DeckPanelList : public wxPanel {
 		App& app;
 
 		wxBoxSizer* rootSizer;
-		wxFlexGridSizer* buttonSizer;
+		wxBoxSizer* buttonSizer;
 		ProfileHeader* profileHeader;
+		wxStaticText* decksHeading;
 		wxScrolledWindow* scroller;
 		wxBoxSizer* listSizer;
-		IconButton* addDeckButton;
-		IconButton* editDeckButton;
-		IconButton* deleteDeckButton;
+		wxButton* addDeckButton;
+		wxButton* editDeckButton;
+		wxButton* deleteDeckButton;
 
 		void LoadDecks();
 		void ApplyTheme();
