@@ -14,6 +14,7 @@ class ICalendarAPIService {
 		virtual std::optional<CalendarEvent> GetEvent(const std::string& googleEventId, const std::string& apiKey) = 0;
 		virtual std::vector<CalendarEvent> GetEvents(const std::string& apiKey) = 0;
 		virtual bool UpdateEvent(const CalendarEvent& event, const std::string& apiKey) = 0;
+		virtual bool DeleteEvent(const std::string& googleEventId, const std::string& apiKey) = 0;
 };
 
 #endif

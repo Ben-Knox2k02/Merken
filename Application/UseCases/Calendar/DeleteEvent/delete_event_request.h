@@ -4,7 +4,7 @@
 #include <string>
 
 struct DeleteEventRequest {
-    std::string id; // Unique identifier of the event to delete
+    std::string id; // Google event ID of the event to delete
 };
 
 #endif

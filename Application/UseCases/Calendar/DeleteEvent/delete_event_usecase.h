@@ -2,19 +2,22 @@
 #define DELETE_EVENT_USECASE_H
 
 #include "delete_event_request.h"
-#include <memory>
-
-// Forward declaration or include your calendar service/repository interface
-class GoogleCalendarService; 
+#include "../../../Services/calendar_api_service.h"
+#include "../../../Services/calendar_auth_service.h"
 
 class DeleteEventUseCase {
-public:
-    explicit DeleteEventUseCase(std::shared_ptr<GoogleCalendarService> calendarService);
-    
-    void Execute(const DeleteEventRequest& request);
+	public:
+		DeleteEventUseCase(
+			ICalendarAPIService& calendarAPIService,
+			ICalendarAuthService& authService
+		) : calendarAPIService(calendarAPIService),
+			authService(authService) {}
 
-private:
-    std::shared_ptr<GoogleCalendarService> calendarService_;
+		bool Execute(const DeleteEventRequest& request);
+
+	private:
+		ICalendarAPIService& calendarAPIService;
+		ICalendarAuthService& authService;
 };
 
 #endif

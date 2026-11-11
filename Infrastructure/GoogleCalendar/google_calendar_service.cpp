@@ -403,3 +403,26 @@ bool GoogleCalendarService::UpdateEvent(const CalendarEvent& event, const std::s
 
 }
 
+bool GoogleCalendarService::DeleteEvent(const std::string& googleEventId, const std::string& accessToken) {
+	if (accessToken.empty()){
+		LogCalendarError("DeleteEvent", 0, "No access token provided");
+		return false;
+	}
+	if (googleEventId.empty()){
+		LogCalendarError("DeleteEvent", 0, "No Google event ID provided");
+		return false;
+	}
+	try {
+		const std::string url = kEventsUrl + "/" + UrlEncode(googleEventId);
+		HttpResponse response = this->httpClient.Delete(url, AuthHeaders(accessToken));
+		if (IsSuccessStatus(response.statusCode) || response.statusCode == 404 || response.statusCode == 410){
+			return true;
+		}
+		LogCalendarError("DeleteEvent", response.statusCode, DescribeFailure(response));
+		return false;
+	} catch (const std::exception& e){
+		LogCalendarError("DeleteEvent", 0, e.what());
+	}
+	return false;
+}
+
