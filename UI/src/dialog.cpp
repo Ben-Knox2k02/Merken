@@ -174,7 +174,7 @@ EventDialog::EventDialog(wxWindow* parent) : wxDialog(parent, wxID_ANY, "Create 
 	this->SetSize(targetWidth, -1);
 }
 
-wxString EventDialog::GetTitle() const { return this->titleCtrl->GetValue(); }
+wxString EventDialog::GetEventTitle() const { return this->titleCtrl->GetValue(); }
 
 wxDateTime EventDialog::GetDate() const { return this->dateCtrl->GetValue(); }
 
@@ -223,7 +223,7 @@ wxDateTime EventDialog::GetReminder() const {
 	else { return wxDateTime::Now(); }
 }
 
-void EventDialog::SetTitle(const wxString& title) { this->titleCtrl->SetValue(title); }
+void EventDialog::SetEventTitle(const wxString& title) { this->titleCtrl->SetValue(title); }
 
 void EventDialog::SetDate(const wxDateTime& dt) { this->dateCtrl->SetValue(dt); }
 
