@@ -2,17 +2,41 @@
 #include <optional>
 
 bool UpdateEventUseCase::Execute(const UpdateEventRequest& request) {
-	const std::string accessToken = this->authService.GetAccessToken();
-	std::optional<CalendarEvent> existing = this->calendarAPIService.GetEvent(
-		request.googleEventId,
-		accessToken);
-	if (!existing.has_value()) { return false; }
+    CalendarEvent event(
+        request.calendarEventId,
+        request.title,
+        request.date,
+        request.startTime,
+        request.endTime,
+        request.location,
+        request.description
+    );
+    event.UpdateReminderMinutes(request.reminderMinutes);
 
-	existing->UpdateTitle(request.title);
-	existing->UpdateDate(request.date);
-	existing->UpdateTimeRange(request.startTime, request.endTime);
-	existing->UpdateDescription(request.description);
-	existing->UpdateLocation(request.location);
-	existing->UpdateReminderMinutes(request.reminderMinutes);
-	return this->calendarAPIService.UpdateEvent(*existing, accessToken);
+    // OVERWRITE THE LOCAL SQLITE DATABASE
+    bool localSuccess = this->eventRepository.UpdateEvent(event);
+    if(!localSuccess) {
+        return false;
+    }
+
+    // Optional Sync with Google Calendar API
+    if(!request.googleEventId.empty()) {
+        const std::string accessToken = this->authService.GetAccessToken();
+        std::optional<CalendarEvent> existing = this->calendarAPIService.GetEvent(
+            request.googleEventId,
+            accessToken);
+            
+        if(existing.has_value()) {
+            existing->UpdateTitle(request.title);
+            existing->UpdateDate(request.date);
+            existing->UpdateTimeRange(request.startTime, request.endTime);
+            existing->UpdateDescription(request.description);
+            existing->UpdateLocation(request.location);
+            existing->UpdateReminderMinutes(request.reminderMinutes);
+            
+            this->calendarAPIService.UpdateEvent(*existing, accessToken);
+        }
+    }
+
+    return true;
 }
