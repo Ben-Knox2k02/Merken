@@ -22,6 +22,8 @@ class MonthCalendar : public wxPanel {
 		Date selected;
 
 		int CellSize() const;
+		int ColumnWidth(int column) const;
+		int ColumnLeft(int column) const;
 		int HeaderHeight() const;
 		int LeadDays() const;
 		int HitDay(const wxPoint& position) const;
@@ -37,6 +39,8 @@ class CalendarPanel : public wxPanel {
 
 		wxBoxSizer* rootSizer;
 		wxStaticText* header;
+		wxPanel* calendarColumn;
+		wxPanel* eventColumn;
 		wxButton* previousButton;
 		wxButton* nextButton;
 		wxStaticText* monthLabel;
@@ -65,6 +69,8 @@ class CalendarPanel : public wxPanel {
 
 		void SyncMonthLabel();
 		void ShowDay(const GetEventsResponse& response);
+		void ApplyColumnWidths();
+		void OnSize(wxSizeEvent& event);
 		void UpdateActionButtons();
 		int SelectedEventId() const;
 		const EventResponse* SelectedEvent() const;

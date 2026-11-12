@@ -93,7 +93,28 @@ void MonthCalendar::ShiftMonth(int delta) {
 }
 
 int MonthCalendar::CellSize() const {
-	return this->FromDIP(36);
+	const int width = this->GetClientSize().GetWidth();
+	if (width < 7) {
+		return this->FromDIP(36);
+	}
+	const int fitted = width / 7;
+	return fitted < 1 ? 1 : fitted;
+}
+
+int MonthCalendar::ColumnWidth(int column) const {
+	const int width = this->GetClientSize().GetWidth();
+	if (width < 7) {
+		return this->CellSize();
+	}
+	return this->CellSize() + (column < width % 7 ? 1 : 0);
+}
+
+int MonthCalendar::ColumnLeft(int column) const {
+	int left = 0;
+	for (int index = 0; index < column; ++index) {
+		left += this->ColumnWidth(index);
+	}
+	return left;
 }
 
 int MonthCalendar::HeaderHeight() const {
@@ -111,11 +132,15 @@ int MonthCalendar::LeadDays() const {
 
 wxRect MonthCalendar::DayRect(int row, int column) const {
 	const int cell = this->CellSize();
-	const int gap = this->FromDIP(2);
+	const int columnWidth = this->ColumnWidth(column);
+	int gap = this->FromDIP(2);
+	if (gap * 2 >= cell || gap * 2 >= columnWidth) {
+		gap = 0;
+	}
 	return wxRect(
-		column * cell + gap,
+		this->ColumnLeft(column) + gap,
 		this->HeaderHeight() + row * cell + gap,
-		cell - gap * 2,
+		columnWidth - gap * 2,
 		cell - gap * 2
 	);
 }
@@ -128,7 +153,16 @@ int MonthCalendar::HitDay(const wxPoint& position) const {
 	if (cell < 1) {
 		return 0;
 	}
-	const int column = position.x / cell;
+	int column = -1;
+	int x = 0;
+	for (int index = 0; index < 7; ++index) {
+		const int span = this->ColumnWidth(index);
+		if (position.x >= x && position.x < x + span) {
+			column = index;
+			break;
+		}
+		x += span;
+	}
 	const int row = (position.y - this->HeaderHeight()) / cell;
 	if (column < 0 || column > 6 || row < 0 || row > 5) {
 		return 0;
@@ -167,7 +201,7 @@ void MonthCalendar::OnPaint(wxPaintEvent&) {
 			static_cast<wxDateTime::WeekDay>(column),
 			wxDateTime::Name_Abbr
 		);
-		const wxRect header(column * this->CellSize(), 0, this->CellSize(), this->HeaderHeight());
+		const wxRect header(this->ColumnLeft(column), 0, this->ColumnWidth(column), this->HeaderHeight());
 		const wxSize extent = dc.GetTextExtent(name);
 		dc.DrawText(
 			name,
@@ -237,39 +271,64 @@ CalendarPanel::CalendarPanel(wxWindow* parent) : wxPanel(parent) {
 	this->header->SetFont(this->header->GetFont().Bold());
 	this->rootSizer->Add(this->header, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 10);
 
+	const wxColour background = this->GetBackgroundColour();
+	this->calendarColumn = new wxPanel(this, wxID_ANY);
+	this->eventColumn = new wxPanel(this, wxID_ANY);
+	this->calendarColumn->SetBackgroundColour(background);
+	this->eventColumn->SetBackgroundColour(background);
+
 	wxBoxSizer* monthRow = new wxBoxSizer(wxHORIZONTAL);
-	this->previousButton = new wxButton(this, wxID_ANY, "Previous");
-	this->nextButton = new wxButton(this, wxID_ANY, "Next");
+	this->previousButton = new wxButton(this->calendarColumn, wxID_ANY, "Previous");
+	this->nextButton = new wxButton(this->calendarColumn, wxID_ANY, "Next");
 	ApplyButtonPadding(this->previousButton);
 	ApplyButtonPadding(this->nextButton);
-	this->monthLabel = new wxStaticText(this, wxID_ANY, wxEmptyString);
+	const wxSize previousSize = this->previousButton->GetMinSize();
+	const wxSize nextSize = this->nextButton->GetMinSize();
+	const int sideWidth = previousSize.GetWidth() > nextSize.GetWidth()
+		? previousSize.GetWidth()
+		: nextSize.GetWidth();
+	const int sideHeight = previousSize.GetHeight() > nextSize.GetHeight()
+		? previousSize.GetHeight()
+		: nextSize.GetHeight();
+	this->previousButton->SetMinSize(wxSize(sideWidth, sideHeight));
+	this->nextButton->SetMinSize(wxSize(sideWidth, sideHeight));
+	this->monthLabel = new wxStaticText(
+		this->calendarColumn,
+		wxID_ANY,
+		wxEmptyString,
+		wxDefaultPosition,
+		wxDefaultSize,
+		wxALIGN_CENTER_HORIZONTAL | wxST_ELLIPSIZE_END
+	);
+	this->monthLabel->SetMinSize(wxSize(this->FromDIP(48), -1));
 	monthRow->Add(this->previousButton, 0, wxALIGN_CENTER_VERTICAL);
 	monthRow->Add(this->monthLabel, 1, wxALIGN_CENTER_VERTICAL | wxLEFT | wxRIGHT, 8);
 	monthRow->Add(this->nextButton, 0, wxALIGN_CENTER_VERTICAL);
-	this->rootSizer->Add(monthRow, 0, wxEXPAND | wxLEFT | wxRIGHT, 10);
 
-	this->monthGrid = new MonthCalendar(this);
-	this->rootSizer->Add(this->monthGrid, 0, wxLEFT | wxRIGHT | wxBOTTOM, 10);
+	this->monthGrid = new MonthCalendar(this->calendarColumn);
+	wxBoxSizer* calendarSizer = new wxBoxSizer(wxVERTICAL);
+	calendarSizer->Add(monthRow, 0, wxEXPAND);
+	calendarSizer->Add(this->monthGrid, 0, wxEXPAND | wxTOP, 8);
+	this->calendarColumn->SetSizer(calendarSizer);
 
 	wxBoxSizer* actions = new wxBoxSizer(wxHORIZONTAL);
-	this->addButton = new wxButton(this, wxID_ANY, "Add");
-	this->editButton = new wxButton(this, wxID_ANY, "Edit");
-	this->deleteButton = new wxButton(this, wxID_ANY, "Delete");
+	this->addButton = new wxButton(this->eventColumn, wxID_ANY, "Add");
+	this->editButton = new wxButton(this->eventColumn, wxID_ANY, "Edit");
+	this->deleteButton = new wxButton(this->eventColumn, wxID_ANY, "Delete");
 	ApplyButtonPadding(this->addButton);
 	ApplyButtonPadding(this->editButton);
 	ApplyButtonPadding(this->deleteButton);
 	this->editButton->Enable(false);
 	this->deleteButton->Enable(false);
-	this->statusLabel = new wxStaticText(this, wxID_ANY, wxEmptyString);
+	this->statusLabel = new wxStaticText(this->eventColumn, wxID_ANY, wxEmptyString);
+	actions->Add(this->statusLabel, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 8);
+	actions->AddStretchSpacer(1);
 	actions->Add(this->addButton, 0);
 	actions->Add(this->editButton, 0, wxLEFT, 8);
 	actions->Add(this->deleteButton, 0, wxLEFT, 8);
-	actions->AddStretchSpacer(1);
-	actions->Add(this->statusLabel, 0, wxALIGN_CENTER_VERTICAL | wxLEFT, 8);
-	this->rootSizer->Add(actions, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 10);
 
 	this->eventList = new wxListCtrl(
-		this,
+		this->eventColumn,
 		wxID_ANY,
 		wxDefaultPosition,
 		wxDefaultSize,
@@ -280,7 +339,15 @@ CalendarPanel::CalendarPanel(wxWindow* parent) : wxPanel(parent) {
 	this->eventList->AppendColumn("End", wxLIST_FORMAT_LEFT, this->FromDIP(80));
 	this->eventList->AppendColumn("Location", wxLIST_FORMAT_LEFT, this->FromDIP(160));
 	this->eventList->SetMinSize(wxSize(-1, this->FromDIP(120)));
-	this->rootSizer->Add(this->eventList, 1, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 10);
+	wxBoxSizer* eventSizer = new wxBoxSizer(wxVERTICAL);
+	eventSizer->Add(actions, 0, wxEXPAND | wxBOTTOM, 8);
+	eventSizer->Add(this->eventList, 1, wxEXPAND);
+	this->eventColumn->SetSizer(eventSizer);
+
+	wxBoxSizer* columns = new wxBoxSizer(wxHORIZONTAL);
+	columns->Add(this->calendarColumn, 30, wxEXPAND | wxRIGHT, 10);
+	columns->Add(this->eventColumn, 70, wxEXPAND);
+	this->rootSizer->Add(columns, 1, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 10);
 
 	this->backButton = new wxButton(this, wxID_ANY, "Back");
 	ApplyButtonPadding(this->backButton);
@@ -288,6 +355,7 @@ CalendarPanel::CalendarPanel(wxWindow* parent) : wxPanel(parent) {
 
 	this->SetSizer(this->rootSizer);
 	this->Bind(wxEVT_PAINT, &CalendarPanel::OnPaint, this);
+	this->Bind(wxEVT_SIZE, &CalendarPanel::OnSize, this);
 	this->previousButton->Bind(wxEVT_BUTTON, &CalendarPanel::OnPrevious, this);
 	this->nextButton->Bind(wxEVT_BUTTON, &CalendarPanel::OnNext, this);
 	this->monthGrid->Bind(wxEVT_BUTTON, &CalendarPanel::OnDateChanged, this);
@@ -329,13 +397,16 @@ void CalendarPanel::ShowDay(const GetEventsResponse& response) {
 		this->eventList->SetItem(index, 3, Utf8Text(event.location));
 		this->eventList->SetItemData(index, event.calendarEventId);
 	}
+	if (this->dayEvents.empty()) {
+		const long index = this->eventList->InsertItem(0, "No events.");
+		this->eventList->SetItemTextColour(index, wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT));
+		this->eventList->SetItemData(index, 0);
+	}
 
 	wxString status;
-	if (this->dayEvents.empty()) {
-		status = "No events.";
-	} else if (this->dayEvents.size() == 1) {
+	if (this->dayEvents.size() == 1) {
 		status = "1 event";
-	} else {
+	} else if (this->dayEvents.size() > 1) {
 		status = wxString::Format("%d events", static_cast<int>(this->dayEvents.size()));
 	}
 	if (!this->notice.empty()) {
@@ -374,9 +445,55 @@ const EventResponse* CalendarPanel::SelectedEvent() const {
 	return nullptr;
 }
 
+void CalendarPanel::ApplyColumnWidths() {
+	if (this->calendarColumn == nullptr || this->eventColumn == nullptr) {
+		return;
+	}
+	const int pad = this->FromDIP(10);
+	const int gap = this->FromDIP(10);
+	const int inner = this->GetClientSize().GetWidth() - pad - gap - pad;
+	if (inner <= 0) {
+		return;
+	}
+	const int calendarWidth = inner * 30 / 100;
+	const int eventWidth = inner - calendarWidth;
+	if (calendarWidth <= 0 || eventWidth <= 0) {
+		return;
+	}
+	if (this->calendarColumn->GetMinSize().GetWidth() == calendarWidth
+		&& this->eventColumn->GetMinSize().GetWidth() == eventWidth) {
+		return;
+	}
+
+	this->calendarColumn->SetMinSize(wxSize(calendarWidth, -1));
+	this->calendarColumn->SetMaxSize(wxSize(calendarWidth, -1));
+	this->eventColumn->SetMinSize(wxSize(eventWidth, -1));
+	this->eventColumn->SetMaxSize(wxSize(eventWidth, -1));
+
+	int cell = calendarWidth / 7;
+	if (cell < 1) {
+		cell = 1;
+	}
+	this->monthGrid->SetMinSize(wxSize(calendarWidth, this->FromDIP(22) + cell * 6));
+	this->monthGrid->SetMaxSize(wxSize(calendarWidth, this->FromDIP(22) + cell * 6));
+	this->eventList->SetMinSize(wxSize(eventWidth, this->FromDIP(120)));
+	this->Layout();
+	this->monthGrid->Refresh();
+}
+
+void CalendarPanel::OnSize(wxSizeEvent& event) {
+	this->ApplyColumnWidths();
+	event.Skip();
+}
+
 void CalendarPanel::OnPaint(wxPaintEvent&) {
+	const wxColour background = this->GetBackgroundColour();
+	if (this->calendarColumn != nullptr && this->calendarColumn->GetBackgroundColour() != background) {
+		this->calendarColumn->SetBackgroundColour(background);
+		this->eventColumn->SetBackgroundColour(background);
+	}
 	wxAutoBufferedPaintDC dc(this);
-	dc.SetBackground(wxBrush(this->GetBackgroundColour()));
+	dc.SetBackground(wxBrush(background));
 	dc.Clear();
 }
 
