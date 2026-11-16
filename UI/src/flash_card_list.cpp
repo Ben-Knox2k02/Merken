@@ -584,10 +584,13 @@ int FlashCardList::ScrollY() const {
 void FlashCardList::BuildMetrics(wxDC& dc, int columnWidth) {
 	const Theme& theme = Theme::Get();
 	CardMetrics& m = this->metrics;
-	m.pad = CardGap(this, theme.size.cardPad);
+	// Padding inside the card and the gaps between Front, Back, and Tags use
+	// the full theme size. The gap under the tags matches that. The gap under
+	// the footer line stays tight. CardGap still tightens the wells.
+	m.pad = this->FromDIP(theme.size.cardPad);
 	m.gridVGap = CardGap(this, theme.space.md);
 	m.gridHGap = CardGap(this, theme.space.lg);
-	m.fieldVGap = CardGap(this, theme.space.lg);
+	m.fieldVGap = this->FromDIP(theme.space.xxl);
 	m.fieldHGap = CardGap(this, theme.space.xl);
 	m.captionTop = CardGap(this, theme.space.xs);
 	m.wellPadX = CardGap(this, theme.size.wellPadX);
@@ -694,7 +697,8 @@ FlashCardList::FieldLayout FlashCardList::LayoutAt(const CardItem& item, int x, 
 	}
 
 	const int row0 = Wider(m.badge, fieldsH);
-	const int ruleY = contentY + row0 + m.gridVGap;
+	const int belowTags = layout.hasTags ? m.fieldVGap : m.gridVGap;
+	const int ruleY = contentY + row0 + belowTags;
 	const int actionY = ruleY + m.ruleH + m.gridVGap;
 	const int height = (actionY - y) + m.buttonH + m.pad;
 	const int gridW = m.badge + m.gridHGap + m.fieldsW;
