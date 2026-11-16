@@ -82,6 +82,17 @@ for file in UI/src/*.cpp; do
 	compile_cpp "$file"
 done
 
+# Objective-C++ is only needed for the macOS push-button face.
+if [[ "$(uname -s)" == "Darwin" ]]; then
+	shopt -s nullglob
+	for file in UI/src/*.mm; do
+		obj="obj/$(basename "${file%.mm}").o"
+		echo "$file"
+		g++ -std=c++17 -x objective-c++ -c "$file" $INC -o "$obj"
+	done
+	shopt -u nullglob
+fi
+
 compile_cpp ThirdParty/wxSQLite3/src/wxsqlite3.cpp
 
 echo "ThirdParty/wxSQLite3/src/sqlite3mc_amalgamation.c"

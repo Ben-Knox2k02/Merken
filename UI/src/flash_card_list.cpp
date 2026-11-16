@@ -5,6 +5,7 @@
 #include "theme.h"
 #include "guide_highlight.h"
 #include "flash_card_tag.h"
+#include "native_push_button.h"
 #include "app.h"
 #include "../../Application/UseCases/Deck/GetCards/get_cards_usecase.h"
 #include "../../Application/UseCases/Deck/GetDecks/get_decks_usecase.h"
@@ -176,6 +177,12 @@ void DrawLines(wxDC& dc, const wxString& wrapped, int x, int y, int lineH) {
 }
 
 void DrawAction(wxWindow* window, wxDC& dc, const wxRect& rect, const wxString& label, bool enabled, bool hover, bool pressed) {
+	// macOS draws the rounded push-button bezel, including the label.
+	// Windows and Linux use the themed button, then the label below.
+	if (DrawPlatformPushButton(window, dc, rect, label, enabled, pressed)) {
+		return;
+	}
+
 	int flags = 0;
 	if (!enabled) {
 		flags |= wxCONTROL_DISABLED;
@@ -186,15 +193,9 @@ void DrawAction(wxWindow* window, wxDC& dc, const wxRect& rect, const wxString& 
 	}
 	wxRendererNative::Get().DrawPushButton(window, dc, rect, flags);
 
-	const Theme& theme = Theme::Get();
-	wxColour text = theme.dark
-		? theme.color.label
-		: wxSystemSettings::GetColour(wxSYS_COLOUR_BTNTEXT);
-	if (!enabled) {
-		text = theme.dark
-			? theme.color.tertiaryLabel
-			: wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT);
-	}
+	const wxColour text = enabled
+		? wxSystemSettings::GetColour(wxSYS_COLOUR_BTNTEXT)
+		: wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT);
 	dc.SetTextForeground(text);
 	const wxSize extent = dc.GetTextExtent(label);
 	dc.DrawText(
@@ -608,10 +609,21 @@ void FlashCardList::BuildMetrics(wxDC& dc, int columnWidth) {
 	m.captionW = Wider(m.captionW, dc.GetTextExtent("Back:").GetWidth());
 	m.captionW = Wider(m.captionW, dc.GetTextExtent("Tags:").GetWidth());
 	const int labelW = Wider(dc.GetTextExtent("Edit").GetWidth(), dc.GetTextExtent("Delete").GetWidth());
-	m.buttonW = labelW + this->FromDIP(15) * 2;
-	m.buttonH = wxButton::GetDefaultSize(this->scroller).GetHeight();
-	if (m.buttonH < m.lineH) {
-		m.buttonH = m.lineH;
+	const wxSize editSize = PlatformPushButtonSize(this->scroller, "Edit");
+	const wxSize deleteSize = PlatformPushButtonSize(this->scroller, "Delete");
+	const int nativeW = Wider(editSize.GetWidth(), deleteSize.GetWidth());
+	const int nativeH = Wider(editSize.GetHeight(), deleteSize.GetHeight());
+	if (nativeW > 0 && nativeH > 0) {
+		// Use the bezel's own size. The default button height is shorter and
+		// would squash the rounded Mac push button.
+		m.buttonW = nativeW;
+		m.buttonH = nativeH;
+	} else {
+		m.buttonW = labelW + this->FromDIP(15) * 2;
+		m.buttonH = wxButton::GetDefaultSize(this->scroller).GetHeight();
+		if (m.buttonH < m.lineH) {
+			m.buttonH = m.lineH;
+		}
 	}
 	m.ruleH = 2;
 	m.fieldsW = columnWidth - 2 * m.pad - m.badge - m.gridHGap;
