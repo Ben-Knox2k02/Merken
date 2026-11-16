@@ -41,8 +41,8 @@ class CalendarPanel : public wxPanel {
 		wxStaticText* header;
 		wxPanel* calendarColumn;
 		wxPanel* eventColumn;
-		wxButton* previousButton;
-		wxButton* nextButton;
+		wxWindow* previousButton;
+		wxWindow* nextButton;
 		wxStaticText* monthLabel;
 		MonthCalendar* monthGrid;
 		wxButton* addButton;

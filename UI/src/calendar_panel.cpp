@@ -9,11 +9,152 @@
 #include "../../Application/UseCases/Calendar/UpdateEvent/update_event_usecase.h"
 #include "../../Application/UseCases/Calendar/DeleteEvent/delete_event_usecase.h"
 #include <wx/dcbuffer.h>
+#include <wx/renderer.h>
 #include <optional>
 
 wxDECLARE_APP(App);
 
 namespace {
+
+wxPoint ChevronDrawOrigin(wxDC& dc, const wxString& glyph, const wxSize& buttonSize) {
+	wxCoord textWidth = 0;
+	wxCoord textHeight = 0;
+	dc.GetTextExtent(glyph, &textWidth, &textHeight);
+	if (textWidth < 1 || textHeight < 1) {
+		return wxPoint(0, 0);
+	}
+	const int pad = 2;
+	const int tempWidth = textWidth + pad * 2;
+	const int tempHeight = textHeight + pad * 2;
+	wxBitmap temp;
+#ifdef __WXMSW__
+	temp.Create(tempWidth, tempHeight, dc);
+#else
+	temp.Create(tempWidth, tempHeight);
+#endif
+	if (!temp.IsOk()) {
+		return wxPoint((buttonSize.GetWidth() - textWidth) / 2, (buttonSize.GetHeight() - textHeight) / 2);
+	}
+	{
+		wxMemoryDC memory(temp);
+		memory.SetBackground(*wxWHITE_BRUSH);
+		memory.Clear();
+		memory.SetFont(dc.GetFont());
+		memory.SetTextForeground(*wxBLACK);
+		memory.DrawText(glyph, pad, pad);
+	}
+	const wxImage image = temp.ConvertToImage();
+	int minX = tempWidth;
+	int minY = tempHeight;
+	int maxX = -1;
+	int maxY = -1;
+	for (int y = 0; y < tempHeight; ++y) {
+		for (int x = 0; x < tempWidth; ++x) {
+			const int lum = (image.GetRed(x, y) * 30 + image.GetGreen(x, y) * 59 + image.GetBlue(x, y) * 11) / 100;
+			if (lum >= 240) {
+				continue;
+			}
+			if (x < minX) {
+				minX = x;
+			}
+			if (y < minY) {
+				minY = y;
+			}
+			if (x > maxX) {
+				maxX = x;
+			}
+			if (y > maxY) {
+				maxY = y;
+			}
+		}
+	}
+	if (maxX < minX || maxY < minY) {
+		return wxPoint((buttonSize.GetWidth() - textWidth) / 2, (buttonSize.GetHeight() - textHeight) / 2);
+	}
+	const int inkWidth = maxX - minX + 1;
+	const int inkHeight = maxY - minY + 1;
+	return wxPoint(
+		(buttonSize.GetWidth() - inkWidth) / 2 - (minX - pad),
+		(buttonSize.GetHeight() - inkHeight) / 2 - (minY - pad)
+	);
+}
+
+class ChevronButton : public wxPanel {
+	public:
+		ChevronButton(wxWindow* parent, const wxString& glyph, const wxSize& size)
+			: wxPanel(parent, wxID_ANY, wxDefaultPosition, size, wxBORDER_NONE | wxWANTS_CHARS),
+			  glyph(glyph),
+			  font(parent->GetFont()),
+			  pressed(false),
+			  inside(false) {
+			this->font.SetPointSize(16);
+			this->SetBackgroundStyle(wxBG_STYLE_PAINT);
+			this->SetMinSize(size);
+			this->SetMaxSize(size);
+			this->Bind(wxEVT_PAINT, &ChevronButton::OnPaint, this);
+			this->Bind(wxEVT_LEFT_DOWN, &ChevronButton::OnLeftDown, this);
+			this->Bind(wxEVT_LEFT_UP, &ChevronButton::OnLeftUp, this);
+			this->Bind(wxEVT_ENTER_WINDOW, &ChevronButton::OnEnter, this);
+			this->Bind(wxEVT_LEAVE_WINDOW, &ChevronButton::OnLeave, this);
+		}
+
+	private:
+		void OnPaint(wxPaintEvent&) {
+			wxAutoBufferedPaintDC dc(this);
+			int flags = 0;
+			if (this->pressed && this->inside) {
+				flags |= wxCONTROL_PRESSED;
+			} else if (this->inside) {
+				flags |= wxCONTROL_CURRENT;
+			}
+			if (this->HasFocus()) {
+				flags |= wxCONTROL_FOCUSED;
+			}
+			const wxRect rect(this->GetClientSize());
+			wxRendererNative::Get().DrawPushButton(this, dc, rect, flags);
+			dc.SetFont(this->font);
+			dc.SetTextForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_BTNTEXT));
+			const wxPoint origin = ChevronDrawOrigin(dc, this->glyph, rect.GetSize());
+			dc.DrawText(this->glyph, origin.x, origin.y);
+		}
+
+		void OnLeftDown(wxMouseEvent&) {
+			this->pressed = true;
+			this->inside = true;
+			this->CaptureMouse();
+			this->Refresh();
+		}
+
+		void OnLeftUp(wxMouseEvent& event) {
+			const bool fire = this->pressed && this->GetClientRect().Contains(event.GetPosition());
+			this->pressed = false;
+			if (this->HasCapture()) {
+				this->ReleaseMouse();
+			}
+			this->Refresh();
+			if (!fire) {
+				return;
+			}
+			wxCommandEvent click(wxEVT_BUTTON, this->GetId());
+			click.SetEventObject(this);
+			this->ProcessWindowEvent(click);
+		}
+
+		void OnEnter(wxMouseEvent&) {
+			this->inside = true;
+			this->Refresh();
+		}
+
+		void OnLeave(wxMouseEvent&) {
+			this->inside = false;
+			this->Refresh();
+		}
+
+		wxString glyph;
+		wxFont font;
+		bool pressed;
+		bool inside;
+};
 
 wxString Utf8Text(const std::string& value) {
 	const wxString text = wxString::FromUTF8(value.c_str());
@@ -278,20 +419,25 @@ CalendarPanel::CalendarPanel(wxWindow* parent) : wxPanel(parent) {
 	this->eventColumn->SetBackgroundColour(background);
 
 	wxBoxSizer* monthRow = new wxBoxSizer(wxHORIZONTAL);
-	this->previousButton = new wxButton(this->calendarColumn, wxID_ANY, "Previous");
-	this->nextButton = new wxButton(this->calendarColumn, wxID_ANY, "Next");
-	ApplyButtonPadding(this->previousButton);
-	ApplyButtonPadding(this->nextButton);
-	const wxSize previousSize = this->previousButton->GetMinSize();
-	const wxSize nextSize = this->nextButton->GetMinSize();
-	const int sideWidth = previousSize.GetWidth() > nextSize.GetWidth()
-		? previousSize.GetWidth()
-		: nextSize.GetWidth();
-	const int sideHeight = previousSize.GetHeight() > nextSize.GetHeight()
-		? previousSize.GetHeight()
-		: nextSize.GetHeight();
-	this->previousButton->SetMinSize(wxSize(sideWidth, sideHeight));
-	this->nextButton->SetMinSize(wxSize(sideWidth, sideHeight));
+	wxFont chevronFont = this->GetFont();
+	chevronFont.SetPointSize(16);
+	wxMemoryDC measure;
+	wxBitmap measureBitmap(8, 8);
+	measure.SelectObject(measureBitmap);
+	measure.SetFont(chevronFont);
+	const int previousWidth = measure.GetTextExtent(wxString(L"\u2039")).GetWidth();
+	const int nextWidth = measure.GetTextExtent(wxString(L"\u203A")).GetWidth();
+	measure.SelectObject(wxNullBitmap);
+	const int textWidth = previousWidth > nextWidth ? previousWidth : nextWidth;
+	const int chevronHeight = wxButton::GetDefaultSize().GetHeight();
+	const int chevronWidth = textWidth + this->FromDIP(30);
+	const wxSize chevronSize(chevronWidth, chevronHeight);
+	this->previousButton = new ChevronButton(this->calendarColumn, wxString(L"\u2039"), chevronSize);
+	this->nextButton = new ChevronButton(this->calendarColumn, wxString(L"\u203A"), chevronSize);
+	this->previousButton->SetMinSize(chevronSize);
+	this->nextButton->SetMinSize(chevronSize);
+	this->previousButton->SetMaxSize(chevronSize);
+	this->nextButton->SetMaxSize(chevronSize);
 	this->monthLabel = new wxStaticText(
 		this->calendarColumn,
 		wxID_ANY,
