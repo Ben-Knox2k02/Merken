@@ -98,7 +98,6 @@ MainFrame::MainFrame(const wxString& title)
 	
 	//============ ATTACH WIDGETS ==================================== ATTACH WIDGETS ========================= 
 	this->SetMenuBar(this->menuBar);
-	this->CreateStatusBar();
 	this->SetBackgroundColour(Theme::Get().color.window);
 	
 	this->rootSizer = new wxBoxSizer(wxHORIZONTAL);

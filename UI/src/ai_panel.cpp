@@ -62,7 +62,5 @@ void AIPanel::OnPaint(wxPaintEvent& event) {				// PAINT METHOD FOR DOUBLE BUFFE
 }
 
 void AIPanel::OnSubmit(wxCommandEvent& event) {
-	wxFrame* frame = wxDynamicCast(wxGetTopLevelParent(this), wxFrame);
-	if(frame) { frame->SetStatusText("ASK GEMINI"); }
 	event.Skip();
 }

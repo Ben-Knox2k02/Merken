@@ -441,8 +441,8 @@ FlashCardList::FlashCardList(wxWindow* parent, int deckId)
 	emptySizer->AddStretchSpacer(1);
 	this->emptyPanel->SetSizer(emptySizer);
 
-	this->rootSizer->Add(this->scroller, 1, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, pad);
-	this->rootSizer->Add(this->emptyPanel, 1, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, pad);
+	this->rootSizer->Add(this->scroller, 1, wxEXPAND | wxLEFT | wxRIGHT, pad);
+	this->rootSizer->Add(this->emptyPanel, 1, wxEXPAND | wxLEFT | wxRIGHT, pad);
 	this->SetSizer(this->rootSizer);
 
 	this->addButton->Bind(wxEVT_BUTTON, &FlashCardList::OnAdd, this);

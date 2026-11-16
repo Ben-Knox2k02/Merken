@@ -560,7 +560,7 @@ CalendarPanel::CalendarPanel(wxWindow* parent) : wxPanel(parent) {
 	eventSizer->AddSpacer(this->FromDIP(theme.space.sm));
 	eventSizer->Add(new wxStaticLine(this->eventColumn, wxID_ANY), 0, wxEXPAND);
 	eventSizer->Add(this->statusLabel, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, pad);
-	eventSizer->Add(this->eventList, 1, wxEXPAND | wxLEFT | wxRIGHT | wxTOP | wxBOTTOM, pad);
+	eventSizer->Add(this->eventList, 1, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, pad);
 	this->eventColumn->SetSizer(eventSizer);
 
 	wxBoxSizer* columns = new wxBoxSizer(wxHORIZONTAL);
