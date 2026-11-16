@@ -9,7 +9,7 @@ wxSize PlatformPushButtonSize(wxWindow*, const wxString&) {
 	return wxSize(0, 0);
 }
 
-bool DrawPlatformPushButton(wxWindow*, wxDC&, const wxRect&, const wxString&, bool, bool) {
+bool DrawPlatformPushButton(wxWindow*, wxDC&, const wxRect&, const wxString&, bool, bool, bool) {
 	return false;
 }
 

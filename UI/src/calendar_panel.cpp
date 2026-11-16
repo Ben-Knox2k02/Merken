@@ -1,6 +1,7 @@
 #include "calendar_panel.h"
 #include "mainframe.h"
 #include "theme.h"
+#include "native_push_button.h"
 #include "app.h"
 #include "dialog.h"
 #include "centered_message.h"
@@ -101,19 +102,40 @@ class ChevronButton : public wxPanel {
 	private:
 		void OnPaint(wxPaintEvent&) {
 			wxAutoBufferedPaintDC dc(this);
-			int flags = 0;
-			if (this->pressed && this->inside) {
-				flags |= wxCONTROL_PRESSED;
-			} else if (this->inside) {
-				flags |= wxCONTROL_CURRENT;
-			}
-			if (this->HasFocus()) {
-				flags |= wxCONTROL_FOCUSED;
-			}
 			const wxRect rect(this->GetClientSize());
-			wxRendererNative::Get().DrawPushButton(this, dc, rect, flags);
+			wxColour backdrop = this->GetBackgroundColour();
+			if (this->GetParent() != nullptr && this->GetParent()->GetBackgroundColour().IsOk()) {
+				backdrop = this->GetParent()->GetBackgroundColour();
+			}
+			dc.SetPen(*wxTRANSPARENT_PEN);
+			dc.SetBrush(wxBrush(backdrop));
+			dc.DrawRectangle(rect);
+
+			const bool enabled = this->IsEnabled();
+			const bool down = enabled && this->pressed && this->inside;
+			// An empty label draws only the face. The chevron is centered on
+			// its ink afterwards, which the button title rect does not do.
+			if (!DrawPlatformPushButton(this, dc, rect, wxString(), enabled, down, this->HasFocus())) {
+				int flags = 0;
+				if (!enabled) {
+					flags |= wxCONTROL_DISABLED;
+				} else if (down) {
+					flags |= wxCONTROL_PRESSED;
+				} else if (this->inside) {
+					flags |= wxCONTROL_CURRENT;
+				}
+				if (this->HasFocus()) {
+					flags |= wxCONTROL_FOCUSED;
+				}
+				wxRendererNative::Get().DrawPushButton(this, dc, rect, flags);
+			}
+
 			dc.SetFont(this->font);
-			dc.SetTextForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_BTNTEXT));
+			dc.SetTextForeground(
+				enabled
+					? wxSystemSettings::GetColour(wxSYS_COLOUR_BTNTEXT)
+					: wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT)
+			);
 			const wxPoint origin = ChevronDrawOrigin(dc, this->glyph, rect.GetSize());
 			dc.DrawText(this->glyph, origin.x, origin.y);
 		}
@@ -429,8 +451,15 @@ CalendarPanel::CalendarPanel(wxWindow* parent) : wxPanel(parent) {
 	const int nextWidth = measure.GetTextExtent(wxString(L"\u203A")).GetWidth();
 	measure.SelectObject(wxNullBitmap);
 	const int textWidth = previousWidth > nextWidth ? previousWidth : nextWidth;
-	const int chevronHeight = wxButton::GetDefaultSize().GetHeight();
-	const int chevronWidth = textWidth + this->FromDIP(30);
+	const wxSize nativeFace = PlatformPushButtonSize(this, wxString());
+	int chevronHeight = nativeFace.GetHeight();
+	if (chevronHeight < 1) {
+		chevronHeight = wxButton::GetDefaultSize().GetHeight();
+	}
+	int chevronWidth = textWidth + this->FromDIP(30);
+	if (nativeFace.GetWidth() > chevronWidth) {
+		chevronWidth = nativeFace.GetWidth();
+	}
 	const wxSize chevronSize(chevronWidth, chevronHeight);
 	this->previousButton = new ChevronButton(this->calendarColumn, wxString(L"\u2039"), chevronSize);
 	this->nextButton = new ChevronButton(this->calendarColumn, wxString(L"\u203A"), chevronSize);

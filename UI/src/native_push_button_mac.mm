@@ -74,7 +74,8 @@ bool DrawPlatformPushButton(
 	const wxRect& rect,
 	const wxString& label,
 	bool enabled,
-	bool pressed
+	bool pressed,
+	bool focused
 ) {
 	if (window == nullptr || rect.width < 2 || rect.height < 2) {
 		return false;
@@ -103,6 +104,12 @@ bool DrawPlatformPushButton(
 	NSGraphicsContext* former = [NSGraphicsContext currentContext];
 	[NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithCGContext:cgContext flipped:YES]];
 	[cell drawWithFrame:controlRect inView:view];
+	if (focused) {
+		NSSetFocusRingStyle(NSFocusRingOnly);
+		CGContextBeginTransparencyLayerWithRect(cgContext, NSRectToCGRect(controlRect), nullptr);
+		[cell drawFocusRingMaskWithFrame:controlRect inView:view];
+		CGContextEndTransparencyLayer(cgContext);
+	}
 	[NSGraphicsContext setCurrentContext:former];
 	CGContextRestoreGState(cgContext);
 	return true;

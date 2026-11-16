@@ -15,7 +15,8 @@ bool DrawPlatformPushButton(
 	const wxRect& rect,
 	const wxString& label,
 	bool enabled,
-	bool pressed
+	bool pressed,
+	bool focused = false
 );
 
 #endif
