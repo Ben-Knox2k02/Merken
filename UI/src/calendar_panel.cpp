@@ -485,12 +485,18 @@ CalendarPanel::CalendarPanel(wxWindow* parent) : wxPanel(parent) {
 	calendarTitleFont.SetPointSize(calendarTitleFont.GetPointSize() + 3);
 	this->header->SetFont(calendarTitleFont);
 	this->header->SetForegroundColour(theme.color.label);
+	this->backButton = new ChevronButton(this->calendarColumn, wxString(L"\u2190"), chevronSize);
+	this->backButton->SetMinSize(chevronSize);
+	this->backButton->SetMaxSize(chevronSize);
+	wxBoxSizer* titleRow = new wxBoxSizer(wxHORIZONTAL);
+	titleRow->Add(this->backButton, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, this->FromDIP(theme.space.sm));
+	titleRow->Add(this->header, 1, wxALIGN_CENTER_VERTICAL);
 	wxBoxSizer* monthBlock = new wxBoxSizer(wxVERTICAL);
 	monthBlock->Add(monthRow, 0, wxEXPAND);
 	monthBlock->Add(this->monthGrid, 0, wxEXPAND | wxTOP, 8);
 	wxBoxSizer* calendarSizer = new wxBoxSizer(wxVERTICAL);
 	calendarSizer->AddSpacer(this->FromDIP(theme.size.panelPad));
-	calendarSizer->Add(this->header, 0, wxEXPAND | wxLEFT | wxRIGHT, columnPad);
+	calendarSizer->Add(titleRow, 0, wxEXPAND | wxLEFT | wxRIGHT, columnPad);
 	calendarSizer->Add(monthBlock, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, columnPad);
 	this->calendarColumn->SetSizer(calendarSizer);
 
@@ -562,11 +568,7 @@ CalendarPanel::CalendarPanel(wxWindow* parent) : wxPanel(parent) {
 	columns->Add(this->calendarColumn, 25, wxEXPAND);
 	columns->Add(this->columnSplit, 0, wxEXPAND);
 	columns->Add(this->eventColumn, 75, wxEXPAND);
-	this->rootSizer->Add(columns, 1, wxEXPAND | wxBOTTOM, 10);
-
-	this->backButton = new wxButton(this, wxID_ANY, "Back");
-	ApplyButtonPadding(this->backButton);
-	this->rootSizer->Add(this->backButton, 0, wxALIGN_CENTER | wxALL, 10);
+	this->rootSizer->Add(columns, 1, wxEXPAND);
 
 	this->SetSizer(this->rootSizer);
 	this->Bind(wxEVT_PAINT, &CalendarPanel::OnPaint, this);

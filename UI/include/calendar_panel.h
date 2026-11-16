@@ -53,7 +53,7 @@ class CalendarPanel : public wxPanel {
 		wxButton* deleteButton;
 		wxStaticText* statusLabel;
 		wxListCtrl* eventList;
-		wxButton* backButton;
+		wxWindow* backButton;
 
 		void LoadEvents();
 		void OnPaint(wxPaintEvent& event);

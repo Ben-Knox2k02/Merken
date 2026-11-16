@@ -4,6 +4,34 @@
 #include <cstdio>
 #include <optional>
 
+namespace {
+
+// One third of the main window is shorter than these forms. Fitting first keeps
+// every field at its minimum and leaves the buttons below the last row.
+void FitDialogToContent(wxDialog* dialog) {
+	dialog->Fit();
+	const wxSize fitted = dialog->GetSize();
+	wxSize size = fitted;
+	wxWindow* mainWindow = dialog->GetParent();
+	if (mainWindow != nullptr) {
+		const wxSize mainSize = mainWindow->GetSize();
+		const int thirdWidth = mainSize.GetWidth() / 3;
+		const int thirdHeight = mainSize.GetHeight() / 3;
+		if (thirdWidth > size.GetWidth()) {
+			size.SetWidth(thirdWidth);
+		}
+		if (thirdHeight > size.GetHeight()) {
+			size.SetHeight(thirdHeight);
+		}
+	}
+	dialog->SetMinSize(fitted);
+	dialog->SetSize(size);
+	dialog->Layout();
+	dialog->CentreOnParent();
+}
+
+}
+
 CardDialog::CardDialog(wxWindow* parent, const wxString& title)
 	: wxDialog(
 		wxGetTopLevelParent(parent),
@@ -30,6 +58,11 @@ CardDialog::CardDialog(wxWindow* parent, const wxString& title)
 
 	fields->Add(new wxStaticText(this, wxID_ANY, "Tags:"), 0, wxALIGN_CENTER_VERTICAL);
 	this->tagCtrl = new wxTextCtrl(this, wxID_ANY);
+	int tagHeight = this->tagCtrl->GetBestSize().GetHeight();
+	if (tagHeight < this->FromDIP(16)) {
+		tagHeight = this->FromDIP(22);
+	}
+	this->tagCtrl->SetMinSize(wxSize(-1, tagHeight));
 	fields->Add(this->tagCtrl, 1, wxEXPAND);
 
 	wxButton* okButton = new wxButton(this, wxID_OK);
@@ -47,7 +80,7 @@ CardDialog::CardDialog(wxWindow* parent, const wxString& title)
 
 	this->SetSizer(this->rootSizer);
 	Theme::Get().StyleDialog(this);
-	SizeAsThirdOfMainWindow(this);
+	FitDialogToContent(this);
 }
 
 DeckDialog::DeckDialog(wxWindow* parent, const wxString& title)
@@ -219,8 +252,16 @@ EventDialog::EventDialog(wxWindow* parent, const wxString& title)
 	fields->Add(this->locationCtrl, 1, wxEXPAND);
 
 	fields->Add(new wxStaticText(this, wxID_ANY, "Description:"), 0, wxALIGN_TOP | wxTOP, 4);
-	this->descriptionCtrl = new wxTextCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE);
-	this->descriptionCtrl->SetMinSize(wxSize(-1, 80));
+	const wxSize descriptionSize(-1, this->FromDIP(80));
+	this->descriptionCtrl = new wxTextCtrl(
+		this,
+		wxID_ANY,
+		wxEmptyString,
+		wxDefaultPosition,
+		descriptionSize,
+		wxTE_MULTILINE
+	);
+	this->descriptionCtrl->SetMinSize(descriptionSize);
 	fields->Add(this->descriptionCtrl, 1, wxEXPAND);
 
 	fields->Add(new wxStaticText(this, wxID_ANY, "Reminder:"), 0, wxALIGN_CENTER_VERTICAL);
@@ -243,7 +284,6 @@ EventDialog::EventDialog(wxWindow* parent, const wxString& title)
 	rootSizer->Add(buttons, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 16);
 	this->SetSizer(rootSizer);
 	Theme::Get().StyleDialog(this);
-	SizeAsThirdOfMainWindow(this);
 
 	this->monthCtrl->Bind(wxEVT_CHOICE, [this](wxCommandEvent&) { this->RefreshDays(); });
 	this->yearCtrl->Bind(wxEVT_SPINCTRL, [this](wxSpinEvent&) { this->RefreshDays(); });
@@ -264,6 +304,7 @@ EventDialog::EventDialog(wxWindow* parent, const wxString& title)
 	this->SetStartTime("09:00");
 	this->SetEndTime("10:00");
 	this->SetReminderMinutes(60);
+	FitDialogToContent(this);
 }
 
 void EventDialog::RefreshDays() {
