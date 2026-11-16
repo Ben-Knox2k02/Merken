@@ -19,7 +19,7 @@
 
 MainFrame::MainFrame(const wxString& title)
     : wxFrame(nullptr, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE),
-      app(wxGetApp()), currentPanel(nullptr), sidebarPanel(nullptr), selectedDeckId(0), selectedCardCount(0), studying(false), findDialog(nullptr)
+      app(wxGetApp()), currentPanel(nullptr), sidebarPanel(nullptr), paneSplit(nullptr), selectedDeckId(0), selectedCardCount(0), studying(false), findDialog(nullptr)
 {
 	std::cout << "[TRACE] Entering MainFrame constructor..." << std::endl;
 	//=========== INITIALIZE WIDGETS ===================================== INITIALIZE WIDGETS ================================
@@ -109,10 +109,10 @@ MainFrame::MainFrame(const wxString& title)
 	this->sidebarPanel = new DeckPanelList(this);
 
 	const int edge = this->FromDIP(Theme::Get().size.panelPad);
-	wxStaticLine* paneSplit = new wxStaticLine(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLI_VERTICAL);
-	this->rootSizer->Add(this->sidebarPanel, 20, wxEXPAND | wxTOP | wxBOTTOM | wxLEFT, edge);
-	this->rootSizer->Add(paneSplit, 0, wxEXPAND | wxTOP | wxBOTTOM, edge);
-	this->rootSizer->Add(this->contentPanel, 80, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, edge);
+	this->paneSplit = new wxStaticLine(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLI_VERTICAL);
+	this->rootSizer->Add(this->sidebarPanel, 25, wxEXPAND | wxTOP | wxBOTTOM | wxLEFT, edge);
+	this->rootSizer->Add(this->paneSplit, 0, wxEXPAND | wxTOP | wxBOTTOM, edge);
+	this->rootSizer->Add(this->contentPanel, 75, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, edge);
 	
 	this->SetSizer(this->rootSizer);
 	this->Layout();
@@ -604,11 +604,39 @@ void MainFrame::ApplyPanelWidths() {
 
 	const int edge = this->FromDIP(Theme::Get().size.panelPad);
 	const int gap = this->FromDIP(Theme::Get().space.md);
+	const bool showDecks = dynamic_cast<CalendarPanel*>(this->currentPanel) == nullptr;
+	if (this->rootSizer != nullptr) {
+		this->rootSizer->Show(this->sidebarPanel, showDecks);
+		if (this->paneSplit != nullptr) {
+			this->rootSizer->Show(this->paneSplit, showDecks);
+		}
+		if (wxSizerItem* content = this->rootSizer->GetItem(this->contentPanel)) {
+			int flags = wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT;
+			if (!showDecks) {
+				flags |= wxLEFT;
+			}
+			content->SetFlag(flags);
+			content->SetBorder(edge);
+		}
+	}
+	if (!showDecks) {
+		const int contentWidth = clientWidth - edge * 2;
+		if (contentWidth <= 0) {
+			return;
+		}
+		this->sidebarPanel->SetMinSize(wxSize(0, -1));
+		this->sidebarPanel->SetMaxSize(wxSize(0, -1));
+		this->contentPanel->SetMinSize(wxSize(contentWidth, -1));
+		this->contentPanel->SetMaxSize(wxSize(contentWidth, -1));
+		this->Layout();
+		return;
+	}
+
 	const int inner = clientWidth - edge - gap - edge;
 	if(inner <= 0) {
 		return;
 	}
-	const int deckWidth = inner * 20 / 100;
+	const int deckWidth = inner * 25 / 100;
 	const int cardWidth = inner - deckWidth;
 	if(deckWidth <= 0 || cardWidth <= 0) {
 		return;
@@ -617,6 +645,7 @@ void MainFrame::ApplyPanelWidths() {
 	this->sidebarPanel->SetMaxSize(wxSize(deckWidth, -1));
 	this->contentPanel->SetMinSize(wxSize(cardWidth, -1));
 	this->contentPanel->SetMaxSize(wxSize(cardWidth, -1));
+	this->Layout();
 }
 
 void MainFrame::OnWindowResized(wxSizeEvent& event) {				// WINDOW

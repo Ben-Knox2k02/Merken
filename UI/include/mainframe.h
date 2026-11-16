@@ -5,6 +5,8 @@
 #include <wx/wx.h>
 #include <wx/fdrepdlg.h>
 
+class wxStaticLine;
+
 #define NUM_SHORTCUTS 17
 
 enum {									// CUSTOM IDs
@@ -28,7 +30,8 @@ class MainFrame : public wxFrame {
 
 		wxBoxSizer* rootSizer;
 
-		wxPanel* sidebarPanel;		
+		wxPanel* sidebarPanel;
+		wxStaticLine* paneSplit;
 		wxPanel* contentPanel;		// HUSK TO HOLD currentPanel
 		wxPanel* currentPanel;
 		int selectedDeckId;

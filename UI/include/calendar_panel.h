@@ -3,6 +3,8 @@
 
 #include <wx/wx.h>
 #include <wx/listctrl.h>
+
+class wxStaticLine;
 #include <vector>
 #include "../../Application/UseCases/Calendar/GetEvents/get_events_response.h"
 #include "../../DomainModels/date.h"
@@ -40,6 +42,7 @@ class CalendarPanel : public wxPanel {
 		wxBoxSizer* rootSizer;
 		wxStaticText* header;
 		wxPanel* calendarColumn;
+		wxStaticLine* columnSplit;
 		wxPanel* eventColumn;
 		wxWindow* previousButton;
 		wxWindow* nextButton;
