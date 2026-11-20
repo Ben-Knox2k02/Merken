@@ -10,6 +10,7 @@ rm -f "$OUT" "${OUT}.exe"
 echo "Building $OUT"
 
 mkdir -p obj
+rm -f obj/*.o
 INC="-IThirdParty/doctest"
 
 compile_cpp() {
@@ -27,9 +28,10 @@ compile_cpp Infrastructure/GoogleCalendar/google_calendar_service.cpp
 compile_cpp Infrastructure/GoogleAuth/google_pkce.cpp
 compile_cpp Infrastructure/GoogleAuth/google_client_config.cpp
 compile_cpp Infrastructure/GoogleAuth/google_auth_service.cpp
+compile_cpp Infrastructure/GeminiApi/gemini_api_service.cpp
 
 echo "Linking..."
-g++ obj/main.o obj/google_calendar_service.o obj/google_pkce.o obj/google_client_config.o obj/google_auth_service.o $(find obj \( -name '*_tests.o' -o -name '*_usecase.o' \) | sort) -o "$OUT"
+g++ obj/main.o obj/google_calendar_service.o obj/google_pkce.o obj/google_client_config.o obj/google_auth_service.o obj/gemini_api_service.o $(find obj \( -name '*_tests.o' -o -name '*_usecase.o' \) | sort) -o "$OUT"
 
 echo "Running $OUT"
 "./$OUT"

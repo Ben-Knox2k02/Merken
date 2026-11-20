@@ -38,6 +38,7 @@ class AiQuestion {
 
 			AiQuestionType type = AiQuestionType::Sentence;
 			std::string text = StripNumberPrefix(trimmed);
+			std::string answer = card.GetBack();
 			const auto pipe = text.find('|');
 			if (pipe != std::string::npos) {
 				type = ParseType(text.substr(0, pipe));
@@ -45,10 +46,18 @@ class AiQuestion {
 			} else if (text.find("___") != std::string::npos) {
 				type = AiQuestionType::FillIn;
 			}
+			const auto answerPipe = text.find('|');
+			if (answerPipe != std::string::npos) {
+				const std::string modelAnswer = Trim(text.substr(answerPipe + 1));
+				text = Trim(text.substr(0, answerPipe));
+				if (!modelAnswer.empty()) {
+					answer = modelAnswer;
+				}
+			}
 			if (text.empty()) {
 				return std::nullopt;
 			}
-			return AiQuestion(card.GetCardId(), type, text, card.GetFront());
+			return AiQuestion(card.GetCardId(), type, text, answer);
 		}
 
 		static std::vector<AiQuestion> ParseMultiple(

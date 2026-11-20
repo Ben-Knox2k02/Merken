@@ -10,7 +10,9 @@ TEST_CASE("AiPrompt::Build asks for one tagged question per card") {
 	const std::string text = AiPrompt::Build(deck).GetText();
 
 	CHECK(text.find("EACH flashcard") != std::string::npos);
+	CHECK(text.find("<n>. <type> | <question> | <answer>") != std::string::npos);
 	CHECK(text.find("sentence or fill-in") != std::string::npos);
+	CHECK(text.find("Do not just restate the front of the card") != std::string::npos);
 	CHECK(text.find("Do not put a blank in the sentence") != std::string::npos);
 	CHECK(text.find("cloze with ___") != std::string::npos);
 	CHECK(text.find("Deck: Spanish") != std::string::npos);

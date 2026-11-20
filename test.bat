@@ -8,6 +8,7 @@ echo Cleaning previous test artifacts...
 if exist %OUT% del /q %OUT%
 
 if not exist obj mkdir obj
+if exist obj\*.o del /q obj\*.o
 
 echo Building %OUT%
 
@@ -42,8 +43,12 @@ echo Infrastructure\GoogleAuth\google_auth_service.cpp
 g++ -std=c++17 -c Infrastructure\GoogleAuth\google_auth_service.cpp -I ThirdParty\doctest -o obj\google_auth_service.o
 if errorlevel 1 exit /b 1
 
+echo Infrastructure\GeminiApi\gemini_api_service.cpp
+g++ -std=c++17 -c Infrastructure\GeminiApi\gemini_api_service.cpp -I ThirdParty\doctest -o obj\gemini_api_service.o
+if errorlevel 1 exit /b 1
+
 echo Linking...
-g++ obj\main.o obj\google_calendar_service.o obj\google_pkce.o obj\google_client_config.o obj\google_auth_service.o obj\*_tests.o obj\*_usecase.o -o %OUT%
+g++ obj\main.o obj\google_calendar_service.o obj\google_pkce.o obj\google_client_config.o obj\google_auth_service.o obj\gemini_api_service.o obj\*_tests.o obj\*_usecase.o -o %OUT%
 if errorlevel 1 exit /b 1
 
 echo Running %OUT%
