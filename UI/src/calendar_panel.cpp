@@ -25,6 +25,19 @@ wxString Utf8Text(const std::string& value) {
 	return text;
 }
 
+wxString ReminderLabel(int minutes) {
+	switch (minutes) {
+		case 5: return "5 minutes";
+		case 10: return "10 minutes";
+		case 15: return "15 minutes";
+		case 30: return "30 minutes";
+		case 60: return "1 hour";
+		case 120: return "2 hours";
+		case 1440: return "1 day";
+		default: return wxString();
+	}
+}
+
 }
 
 MonthCalendar::MonthCalendar(wxWindow* parent)
@@ -376,6 +389,8 @@ CalendarPanel::CalendarPanel(wxWindow* parent) : wxPanel(parent) {
 	this->eventList->AppendColumn("Start", wxLIST_FORMAT_LEFT, this->FromDIP(80));
 	this->eventList->AppendColumn("End", wxLIST_FORMAT_LEFT, this->FromDIP(80));
 	this->eventList->AppendColumn("Location", wxLIST_FORMAT_LEFT, this->FromDIP(160));
+	this->eventList->AppendColumn("Description", wxLIST_FORMAT_LEFT, this->FromDIP(200));
+	this->eventList->AppendColumn("Reminder", wxLIST_FORMAT_LEFT, this->FromDIP(120));
 	this->eventList->SetMinSize(wxSize(-1, this->FromDIP(120)));
 
 	wxBoxSizer* eventSizer = new wxBoxSizer(wxVERTICAL);
@@ -436,6 +451,8 @@ void CalendarPanel::ShowDay(const GetEventsResponse& response) {
 		this->eventList->SetItem(index, 1, Utf8Text(event.startTime));
 		this->eventList->SetItem(index, 2, Utf8Text(event.endTime));
 		this->eventList->SetItem(index, 3, Utf8Text(event.location));
+		this->eventList->SetItem(index, 4, Utf8Text(event.description));
+		this->eventList->SetItem(index, 5, ReminderLabel(event.reminderMinutes));
 		this->eventList->SetItemData(index, event.calendarEventId);
 	}
 	if (this->dayEvents.empty()) {
