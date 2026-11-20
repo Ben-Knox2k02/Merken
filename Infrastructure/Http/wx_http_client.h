@@ -35,6 +35,11 @@ class WxHttpClient : public IHttpClient, public wxEvtHandler {
 			const std::vector<HttpHeader>& headers = {}
 		) override;
 
+		HttpResponse Delete(
+			const std::string& url,
+			const std::vector<HttpHeader>& headers = {}
+		) override;
+
 	private:
 		HttpResponse Execute(
 			const wxString& method,

@@ -9,6 +9,7 @@
 #include "../../Application/UseCases/Calendar/CreateEvent/create_event_usecase.h"
 #include "../../Application/UseCases/Calendar/UpdateEvent/update_event_usecase.h"
 #include "../../Application/UseCases/Calendar/DeleteEvent/delete_event_usecase.h"
+#include "../../Application/UseCases/Calendar/ImportGoogleEvents/import_google_events_usecase.h"
 #include <wx/dcbuffer.h>
 #include <wx/statline.h>
 #include <optional>
@@ -23,6 +24,19 @@ wxString Utf8Text(const std::string& value) {
 		return wxString::From8BitData(value.c_str());
 	}
 	return text;
+}
+
+wxString ReminderLabel(int minutes) {
+	switch (minutes) {
+		case 5: return "5 minutes";
+		case 10: return "10 minutes";
+		case 15: return "15 minutes";
+		case 30: return "30 minutes";
+		case 60: return "1 hour";
+		case 120: return "2 hours";
+		case 1440: return "1 day";
+		default: return wxString();
+	}
 }
 
 }
@@ -376,6 +390,8 @@ CalendarPanel::CalendarPanel(wxWindow* parent) : wxPanel(parent) {
 	this->eventList->AppendColumn("Start", wxLIST_FORMAT_LEFT, this->FromDIP(80));
 	this->eventList->AppendColumn("End", wxLIST_FORMAT_LEFT, this->FromDIP(80));
 	this->eventList->AppendColumn("Location", wxLIST_FORMAT_LEFT, this->FromDIP(160));
+	this->eventList->AppendColumn("Description", wxLIST_FORMAT_LEFT, this->FromDIP(200));
+	this->eventList->AppendColumn("Reminder", wxLIST_FORMAT_LEFT, this->FromDIP(120));
 	this->eventList->SetMinSize(wxSize(-1, this->FromDIP(120)));
 
 	wxBoxSizer* eventSizer = new wxBoxSizer(wxVERTICAL);
@@ -408,6 +424,7 @@ CalendarPanel::CalendarPanel(wxWindow* parent) : wxPanel(parent) {
 	this->eventList->Bind(wxEVT_LIST_ITEM_DESELECTED, &CalendarPanel::OnSelectionChanged, this);
 
 	this->SyncMonthLabel();
+	wxGetApp().GetInjector().create<ImportGoogleEventsUseCase>().Execute();
 	this->LoadEvents();
 }
 
@@ -436,6 +453,8 @@ void CalendarPanel::ShowDay(const GetEventsResponse& response) {
 		this->eventList->SetItem(index, 1, Utf8Text(event.startTime));
 		this->eventList->SetItem(index, 2, Utf8Text(event.endTime));
 		this->eventList->SetItem(index, 3, Utf8Text(event.location));
+		this->eventList->SetItem(index, 4, Utf8Text(event.description));
+		this->eventList->SetItem(index, 5, ReminderLabel(event.reminderMinutes));
 		this->eventList->SetItemData(index, event.calendarEventId);
 	}
 	if (this->dayEvents.empty()) {
@@ -661,7 +680,7 @@ void CalendarPanel::OnDelete(wxCommandEvent&) {
 	const int eventId = selected->calendarEventId;
 	const bool onGoogle = !selected->googleEventId.empty();
 	const wxString message = onGoogle
-		? "Delete this event from Merken? It stays on Google Calendar."
+		? "Delete this event from Merken and from Google Calendar?"
 		: "Delete this event?";
 	if (ShowCenteredMessage(this, message, "Delete Event", wxYES_NO | wxICON_WARNING) != wxID_YES) {
 		return;
@@ -670,9 +689,18 @@ void CalendarPanel::OnDelete(wxCommandEvent&) {
 	DeleteEventRequest request;
 	request.calendarEventId = eventId;
 	auto useCase = wxGetApp().GetInjector().create<DeleteEventUseCase>();
-	if (!useCase.Execute(request)) {
+	const DeleteEventResponse response = useCase.Execute(request);
+	if (!response.deleted) {
 		ShowCenteredMessage(this, "Could not delete the event.", "Calendar", wxOK | wxICON_ERROR);
 		return;
+	}
+	if (response.googleFailed) {
+		ShowCenteredMessage(
+			this,
+			"Removed from Merken. It could not be removed from Google Calendar.",
+			"Calendar",
+			wxOK | wxICON_WARNING
+		);
 	}
 	this->LoadEvents();
 }

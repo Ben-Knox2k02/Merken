@@ -10,6 +10,8 @@ class FakeCalendarApiService : public ICalendarAPIService {
 	public:
 		int nextEventId = 1;
 		bool updateEventSucceeds = true;
+		bool deleteEventSucceeds = true;
+		std::vector<std::string> deletedGoogleEventIds;
 		std::vector<CalendarEvent> events;
 		std::vector<CalendarEvent> createdEvents;
 		std::vector<CalendarEvent> updatedEvents;
@@ -71,6 +73,12 @@ class FakeCalendarApiService : public ICalendarAPIService {
 				return false;
 			}
 			return this->updateEventSucceeds;
+		}
+
+		bool DeleteEvent(const std::string& googleEventId, const std::string& apiKey) override {
+			this->lastApiKey = apiKey;
+			this->deletedGoogleEventIds.push_back(googleEventId);
+			return this->deleteEventSucceeds && !googleEventId.empty();
 		}
 };
 
