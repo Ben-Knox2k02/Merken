@@ -24,7 +24,7 @@ class StudyPanel : public wxPanel {
 		wxButton* showAnswerButton;
 		wxButton* rememberedButton;
 		wxButton* forgotButton;
-		wxButton* backButton;
+		wxWindow* backButton;
 
 		void StartStudy();
 		void ShowCurrentCard();

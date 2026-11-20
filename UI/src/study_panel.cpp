@@ -1,9 +1,11 @@
 #include "study_panel.h"
 #include "centered_message.h"
+#include "chevron_button.h"
 #include "mainframe.h"
 #include "app.h"
 #include "theme.h"
 #include "guide_highlight.h"
+#include <wx/statline.h>
 #include "../../Application/UseCases/Deck/StudyDeck/study_deck_usecase.h"
 #include "../../Application/UseCases/Deck/ReviewCard/review_card_usecase.h"
 #include "../../Application/UseCases/Profile/GetUserProfile/get_user_profile_usecase.h"
@@ -587,12 +589,33 @@ StudyPanel::StudyPanel(wxWindow* parent, int deckId)
 	this->SetDoubleBuffered(true);
 	this->SetBackgroundColour(theme.color.window);
 
-	this->header = new wxStaticText(this, wxID_ANY, "Study");
+	this->header = new wxStaticText(
+		this,
+		wxID_ANY,
+		"Study",
+		wxDefaultPosition,
+		wxDefaultSize,
+		wxALIGN_CENTRE_HORIZONTAL
+	);
 	wxFont titleFont = this->header->GetFont();
 	titleFont.SetPointSize(titleFont.GetPointSize() + 3);
 	this->header->SetFont(titleFont);
 	this->header->SetForegroundColour(theme.color.label);
-	this->rootSizer->Add(this->header, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 10);
+	const wxSize backSize = ChevronButtonSize(this, wxString(L"\u2039"));
+	this->backButton = new ChevronButton(this, wxString(L"\u2039"), backSize);
+	// Same inset as the Calendar title row: cardPad inside the page.
+	const int leftPad = this->FromDIP(theme.size.cardPad);
+	const int rightPad = this->FromDIP(theme.size.panelPad);
+	wxBoxSizer* titleRow = new wxBoxSizer(wxHORIZONTAL);
+	titleRow->Add(this->backButton, 0, wxALIGN_CENTER_VERTICAL | wxLEFT, leftPad);
+	titleRow->Add(this->header, 1, wxALIGN_CENTER);
+	titleRow->AddSpacer(leftPad + backSize.GetWidth());
+	this->rootSizer->AddSpacer(this->FromDIP(theme.size.panelPad));
+	this->rootSizer->Add(titleRow, 0, wxEXPAND);
+	this->rootSizer->AddSpacer(this->FromDIP(theme.space.sm));
+
+	wxBoxSizer* body = new wxBoxSizer(wxVERTICAL);
+	body->Add(new wxStaticLine(this, wxID_ANY), 0, wxEXPAND);
 
 	this->cardHost = new wxPanel();
 	this->cardHost->SetBackgroundStyle(wxBG_STYLE_PAINT);
@@ -608,10 +631,10 @@ StudyPanel::StudyPanel(wxWindow* parent, int deckId)
 	this->backCard = new StudyCard(this->cardHost);
 	this->card = new StudyCard(this->cardHost);
 	this->backCard->Hide();
-	this->rootSizer->Add(this->cardHost, 1, wxEXPAND);
+	body->Add(this->cardHost, 1, wxEXPAND);
 
 	this->summaryLabel = new wxStaticText(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE_HORIZONTAL);
-	this->rootSizer->Add(this->summaryLabel, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 10);
+	body->Add(this->summaryLabel, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 10);
 
 	wxBoxSizer* gradeSizer = new wxBoxSizer(wxHORIZONTAL);
 	this->showAnswerButton = new wxButton(this, wxID_ANY, "Show Answer");
@@ -623,21 +646,22 @@ StudyPanel::StudyPanel(wxWindow* parent, int deckId)
 	gradeSizer->Add(this->showAnswerButton, 0, wxRIGHT, 8);
 	gradeSizer->Add(this->rememberedButton, 0, wxRIGHT, 8);
 	gradeSizer->Add(this->forgotButton, 0);
-	this->rootSizer->Add(gradeSizer, 0, wxALIGN_CENTER | wxALL, 10);
+	body->Add(gradeSizer, 0, wxALIGN_CENTER | wxALL, 10);
 
 	this->progressLabel = new wxStaticText(this, wxID_ANY, "0 / 0");
-	this->rootSizer->Add(this->progressLabel, 0, wxALIGN_CENTER_HORIZONTAL | wxTOP, 8);
+	body->Add(this->progressLabel, 0, wxALIGN_CENTER_HORIZONTAL | wxTOP, 8);
 
 	this->progressBar = new wxGauge(this, wxID_ANY, 1);
 	this->progressBar->SetMinSize(wxSize(280, -1));
-	this->rootSizer->Add(this->progressBar, 0, wxALIGN_CENTER | wxALL, 8);
+	body->Add(this->progressBar, 0, wxALIGN_CENTER | wxALL, 8);
 
 	this->todayLabel = new wxStaticText(this, wxID_ANY, wxEmptyString);
-	this->rootSizer->Add(this->todayLabel, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 4);
-
-	this->backButton = new wxButton(this, wxID_ANY, "Back");
-	ApplyButtonPadding(this->backButton);
-	this->rootSizer->Add(this->backButton, 0, wxALIGN_CENTER | wxALL, 16);
+	body->Add(this->todayLabel, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 4);
+	wxBoxSizer* inset = new wxBoxSizer(wxHORIZONTAL);
+	inset->AddSpacer(leftPad);
+	inset->Add(body, 1, wxEXPAND);
+	inset->AddSpacer(rightPad);
+	this->rootSizer->Add(inset, 1, wxEXPAND);
 
 	this->SetSizer(this->rootSizer);
 

@@ -1,8 +1,10 @@
 #include "ai_study_panel.h"
 #include "centered_message.h"
+#include "chevron_button.h"
 #include "theme.h"
 #include "mainframe.h"
 #include "app.h"
+#include <wx/statline.h>
 #include "../../Application/UseCases/AI/AiStudy/ai_study_usecase.h"
 #include "../../Application/UseCases/AI/RecordAiStudyGrade/record_ai_study_grade_usecase.h"
 #include <thread>
@@ -26,27 +28,51 @@ AiStudyPanel::AiStudyPanel(wxWindow* parent, int deckId)
 	  alive(std::make_shared<bool>(true)) {
 	this->rootSizer = new wxBoxSizer(wxVERTICAL);
 
-	this->header = new wxStaticText(this, wxID_ANY, "AI Study");
-	this->header->SetFont(this->header->GetFont().Bold());
-	this->rootSizer->Add(this->header, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 10);
+	const Theme& theme = Theme::Get();
+	this->header = new wxStaticText(
+		this,
+		wxID_ANY,
+		"AI Study",
+		wxDefaultPosition,
+		wxDefaultSize,
+		wxALIGN_CENTRE_HORIZONTAL
+	);
+	wxFont titleFont = this->header->GetFont();
+	titleFont.SetPointSize(titleFont.GetPointSize() + 3);
+	this->header->SetFont(titleFont);
+	this->header->SetForegroundColour(theme.color.label);
+	const wxSize backSize = ChevronButtonSize(this, wxString(L"\u2039"));
+	this->backButton = new ChevronButton(this, wxString(L"\u2039"), backSize);
+	const int leftPad = this->FromDIP(theme.size.cardPad);
+	const int rightPad = this->FromDIP(theme.size.panelPad);
+	wxBoxSizer* titleRow = new wxBoxSizer(wxHORIZONTAL);
+	titleRow->Add(this->backButton, 0, wxALIGN_CENTER_VERTICAL | wxLEFT, leftPad);
+	titleRow->Add(this->header, 1, wxALIGN_CENTER);
+	titleRow->AddSpacer(leftPad + backSize.GetWidth());
+	this->rootSizer->AddSpacer(this->FromDIP(theme.size.panelPad));
+	this->rootSizer->Add(titleRow, 0, wxEXPAND);
+	this->rootSizer->AddSpacer(this->FromDIP(theme.space.sm));
+
+	wxBoxSizer* body = new wxBoxSizer(wxVERTICAL);
+	body->Add(new wxStaticLine(this, wxID_ANY), 0, wxEXPAND);
 
 	this->statusLabel = new wxStaticText(this, wxID_ANY, wxEmptyString);
-	this->rootSizer->Add(this->statusLabel, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 4);
+	body->Add(this->statusLabel, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 4);
 
 	this->typeLabel = new wxStaticText(this, wxID_ANY, wxEmptyString);
-	this->rootSizer->Add(this->typeLabel, 0, wxALIGN_CENTER_HORIZONTAL | wxTOP, 16);
+	body->Add(this->typeLabel, 0, wxALIGN_CENTER_HORIZONTAL | wxTOP, 16);
 
 	this->questionText = new wxStaticText(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE_HORIZONTAL);
 	wxFont questionFont = this->questionText->GetFont();
 	questionFont.SetPointSize(questionFont.GetPointSize() + 4);
 	this->questionText->SetFont(questionFont);
-	this->rootSizer->Add(this->questionText, 1, wxEXPAND | wxALL, 20);
+	body->Add(this->questionText, 1, wxEXPAND | wxALL, 20);
 
 	this->answerText = new wxStaticText(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE_HORIZONTAL);
-	this->rootSizer->Add(this->answerText, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 8);
+	body->Add(this->answerText, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 8);
 
 	this->scoreLabel = new wxStaticText(this, wxID_ANY, wxEmptyString);
-	this->rootSizer->Add(this->scoreLabel, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 8);
+	body->Add(this->scoreLabel, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 8);
 
 	wxBoxSizer* gradeSizer = new wxBoxSizer(wxHORIZONTAL);
 	this->showAnswerButton = new wxButton(this, wxID_ANY, "Show answer");
@@ -58,15 +84,16 @@ AiStudyPanel::AiStudyPanel(wxWindow* parent, int deckId)
 	gradeSizer->Add(this->showAnswerButton, 0, wxRIGHT, 8);
 	gradeSizer->Add(this->gotItButton, 0, wxRIGHT, 8);
 	gradeSizer->Add(this->missedItButton, 0);
-	this->rootSizer->Add(gradeSizer, 0, wxALIGN_CENTER | wxALL, 10);
+	body->Add(gradeSizer, 0, wxALIGN_CENTER | wxALL, 10);
 
 	this->startAgainButton = new wxButton(this, wxID_ANY, "Start test again");
 	ApplyButtonPadding(this->startAgainButton);
-	this->rootSizer->Add(this->startAgainButton, 0, wxALIGN_CENTER | wxALL, 4);
-
-	this->backButton = new wxButton(this, wxID_ANY, "Back");
-	ApplyButtonPadding(this->backButton);
-	this->rootSizer->Add(this->backButton, 0, wxALIGN_CENTER | wxALL, 16);
+	body->Add(this->startAgainButton, 0, wxALIGN_CENTER | wxALL, 4);
+	wxBoxSizer* inset = new wxBoxSizer(wxHORIZONTAL);
+	inset->AddSpacer(leftPad);
+	inset->Add(body, 1, wxEXPAND);
+	inset->AddSpacer(rightPad);
+	this->rootSizer->Add(inset, 1, wxEXPAND);
 
 	this->SetSizer(this->rootSizer);
 

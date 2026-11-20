@@ -603,7 +603,9 @@ void MainFrame::ApplyPanelWidths() {
 
 	const int edge = this->FromDIP(Theme::Get().size.panelPad);
 	const int gap = this->FromDIP(Theme::Get().space.md);
-	const bool showDecks = dynamic_cast<CalendarPanel*>(this->currentPanel) == nullptr;
+	const bool showDecks = dynamic_cast<CalendarPanel*>(this->currentPanel) == nullptr
+		&& dynamic_cast<StudyPanel*>(this->currentPanel) == nullptr
+		&& dynamic_cast<AiStudyPanel*>(this->currentPanel) == nullptr;
 	if (this->rootSizer != nullptr) {
 		this->rootSizer->Show(this->sidebarPanel, showDecks);
 		if (this->paneSplit != nullptr) {

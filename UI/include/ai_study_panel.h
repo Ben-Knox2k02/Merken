@@ -23,7 +23,7 @@ class AiStudyPanel : public wxPanel {
 		wxButton* gotItButton;
 		wxButton* missedItButton;
 		wxButton* startAgainButton;
-		wxButton* backButton;
+		wxWindow* backButton;
 
 		void StartTest();
 		void OnLoaded(const AiStudyResponse& response);
