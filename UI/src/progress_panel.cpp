@@ -1,7 +1,9 @@
 #include "progress_panel.h"
+#include "chevron_button.h"
 #include "mainframe.h"
 #include "theme.h"
 #include "app.h"
+#include <wx/statline.h>
 #include "../../Application/UseCases/Progress/GetTodaysProgress/get_todays_progress_usecase.h"
 #include "../../Application/UseCases/Progress/GetProgressHistory/get_progress_history_usecase.h"
 #include <wx/datetime.h>
@@ -10,11 +12,6 @@
 wxDECLARE_APP(App);
 
 namespace {
-const int kCellSize = 14;
-const int kCellGap = 3;
-const int kLeftGutter = 28;
-const int kTopGutter = 8;
-
 wxColour HeatColor(int reviewed, int maxReviewed) {
 	if (reviewed <= 0 || maxReviewed <= 0) {
 		return wxColour(235, 237, 240);
@@ -39,9 +36,18 @@ int WeekdayIndex(const std::string& iso) {
 }
 }
 
-HeatmapPanel::HeatmapPanel(wxWindow* parent) : wxPanel(parent), maxReviewed(0) {
+HeatmapPanel::HeatmapPanel(wxWindow* parent)
+	: wxPanel(parent),
+	  maxReviewed(0),
+	  cellSize(this->FromDIP(28)),
+	  cellGap(this->FromDIP(6)),
+	  leftGutter(this->FromDIP(36)),
+	  topGutter(this->FromDIP(12)) {
 	this->SetBackgroundColour(this->GetParent()->GetBackgroundColour());
-	this->SetMinSize(wxSize(kLeftGutter + 12 * (kCellSize + kCellGap) + 8, kTopGutter + 7 * (kCellSize + kCellGap) + 8));
+	this->SetMinSize(wxSize(
+		this->leftGutter + 12 * (this->cellSize + this->cellGap) + this->FromDIP(12),
+		this->topGutter + 7 * (this->cellSize + this->cellGap) + this->FromDIP(12)
+	));
 	this->Bind(wxEVT_PAINT, &HeatmapPanel::OnPaint, this);
 	this->Bind(wxEVT_MOTION, &HeatmapPanel::OnMotion, this);
 }
@@ -56,29 +62,34 @@ void HeatmapPanel::SetDays(const std::vector<DailyProgressResponse>& days) {
 	const int cells = pad + static_cast<int>(this->days.size());
 	const int weeks = cells <= 0 ? 12 : (cells + 6) / 7;
 	this->SetMinSize(wxSize(
-		kLeftGutter + weeks * (kCellSize + kCellGap) + 8,
-		kTopGutter + 7 * (kCellSize + kCellGap) + 8
+		this->leftGutter + weeks * (this->cellSize + this->cellGap) + this->FromDIP(12),
+		this->topGutter + 7 * (this->cellSize + this->cellGap) + this->FromDIP(12)
 	));
 	this->Refresh();
 }
 
 wxRect HeatmapPanel::CellRect(int week, int weekday) const {
 	return wxRect(
-		kLeftGutter + week * (kCellSize + kCellGap),
-		kTopGutter + weekday * (kCellSize + kCellGap),
-		kCellSize,
-		kCellSize
+		this->leftGutter + week * (this->cellSize + this->cellGap),
+		this->topGutter + weekday * (this->cellSize + this->cellGap),
+		this->cellSize,
+		this->cellSize
 	);
 }
 
 void HeatmapPanel::OnPaint(wxPaintEvent&) {
 	wxPaintDC dc(this);
 	dc.SetTextForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT));
-	dc.SetFont(this->GetFont().Smaller());
+	dc.SetFont(this->GetFont());
 
 	const char* labels[] = {"S", "M", "T", "W", "T", "F", "S"};
 	for (int weekday = 0; weekday < 7; ++weekday) {
-		dc.DrawText(labels[weekday], 8, kTopGutter + weekday * (kCellSize + kCellGap));
+		const wxString label(labels[weekday]);
+		const wxSize text = dc.GetTextExtent(label);
+		const int x = (this->leftGutter - text.GetWidth()) / 2;
+		const int y = this->topGutter + weekday * (this->cellSize + this->cellGap)
+			+ (this->cellSize - text.GetHeight()) / 2;
+		dc.DrawText(label, x, y);
 	}
 
 	const int pad = this->days.empty() ? 0 : WeekdayIndex(this->days.front().date);
@@ -95,7 +106,7 @@ void HeatmapPanel::OnPaint(wxPaintEvent&) {
 				color = wxColour(245, 245, 247);
 			}
 			dc.SetBrush(wxBrush(color));
-			dc.DrawRoundedRectangle(this->CellRect(week, weekday), 2);
+			dc.DrawRoundedRectangle(this->CellRect(week, weekday), this->FromDIP(4));
 		}
 	}
 }
@@ -125,23 +136,49 @@ void HeatmapPanel::OnMotion(wxMouseEvent& event) {
 ProgressPanel::ProgressPanel(wxWindow* parent) : wxPanel(parent) {
 	this->rootSizer = new wxBoxSizer(wxVERTICAL);
 
-	this->header = new wxStaticText(this, wxID_ANY, "Today's Progress");
-	this->header->SetFont(this->header->GetFont().Bold());
-	this->rootSizer->Add(this->header, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 10);
+	const Theme& theme = Theme::Get();
+	this->header = new wxStaticText(
+		this,
+		wxID_ANY,
+		"Today's Progress",
+		wxDefaultPosition,
+		wxDefaultSize,
+		wxALIGN_CENTRE_HORIZONTAL
+	);
+	wxFont titleFont = this->header->GetFont();
+	titleFont.SetPointSize(titleFont.GetPointSize() + 3);
+	this->header->SetFont(titleFont);
+	this->header->SetForegroundColour(theme.color.label);
+	const wxSize backSize = ChevronButtonSize(this, wxString(L"\u2039"));
+	this->backButton = new ChevronButton(this, wxString(L"\u2039"), backSize);
+	const int leftPad = this->FromDIP(theme.size.cardPad);
+	const int rightPad = this->FromDIP(theme.size.panelPad);
+	wxBoxSizer* titleRow = new wxBoxSizer(wxHORIZONTAL);
+	titleRow->Add(this->backButton, 0, wxALIGN_CENTER_VERTICAL | wxLEFT, leftPad);
+	titleRow->Add(this->header, 1, wxALIGN_CENTER);
+	titleRow->AddSpacer(leftPad + backSize.GetWidth());
+	this->rootSizer->AddSpacer(this->FromDIP(theme.size.panelPad));
+	this->rootSizer->Add(titleRow, 0, wxEXPAND);
+	this->rootSizer->AddSpacer(this->FromDIP(theme.space.sm));
+
+	wxBoxSizer* body = new wxBoxSizer(wxVERTICAL);
+	body->Add(new wxStaticLine(this, wxID_ANY), 0, wxEXPAND);
 
 	this->todayLabel = new wxStaticText(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE_HORIZONTAL);
-	this->rootSizer->Add(this->todayLabel, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 10);
+	body->Add(this->todayLabel, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 10);
 
 	wxStaticText* heatmapHeader = new wxStaticText(this, wxID_ANY, "Previous days");
 	heatmapHeader->SetFont(heatmapHeader->GetFont().Bold());
-	this->rootSizer->Add(heatmapHeader, 0, wxALIGN_CENTER_HORIZONTAL | wxTOP, 16);
+	body->Add(heatmapHeader, 0, wxALIGN_CENTER_HORIZONTAL | wxTOP, 16);
 
 	this->heatmap = new HeatmapPanel(this);
-	this->rootSizer->Add(this->heatmap, 0, wxALIGN_CENTER | wxALL, 12);
+	body->Add(this->heatmap, 0, wxALIGN_CENTER | wxALL, 12);
 
-	this->backButton = new wxButton(this, wxID_ANY, "Back");
-	ApplyButtonPadding(this->backButton);
-	this->rootSizer->Add(this->backButton, 0, wxALIGN_CENTER | wxALL, 16);
+	wxBoxSizer* inset = new wxBoxSizer(wxHORIZONTAL);
+	inset->AddSpacer(leftPad);
+	inset->Add(body, 1, wxEXPAND);
+	inset->AddSpacer(rightPad);
+	this->rootSizer->Add(inset, 1, wxEXPAND);
 
 	this->SetSizer(this->rootSizer);
 	this->backButton->Bind(wxEVT_BUTTON, &ProgressPanel::OnBack, this);

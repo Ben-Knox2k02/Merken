@@ -13,6 +13,10 @@ class HeatmapPanel : public wxPanel {
 	private:
 		std::vector<DailyProgressResponse> days;
 		int maxReviewed;
+		int cellSize;
+		int cellGap;
+		int leftGutter;
+		int topGutter;
 
 		void OnPaint(wxPaintEvent& event);
 		void OnMotion(wxMouseEvent& event);
@@ -27,7 +31,7 @@ class ProgressPanel : public wxPanel {
 		wxStaticText* header;
 		wxStaticText* todayLabel;
 		HeatmapPanel* heatmap;
-		wxButton* backButton;
+		wxWindow* backButton;
 
 		void LoadProgress();
 		void OnBack(wxCommandEvent& event);

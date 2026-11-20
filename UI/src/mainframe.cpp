@@ -605,7 +605,8 @@ void MainFrame::ApplyPanelWidths() {
 	const int gap = this->FromDIP(Theme::Get().space.md);
 	const bool showDecks = dynamic_cast<CalendarPanel*>(this->currentPanel) == nullptr
 		&& dynamic_cast<StudyPanel*>(this->currentPanel) == nullptr
-		&& dynamic_cast<AiStudyPanel*>(this->currentPanel) == nullptr;
+		&& dynamic_cast<AiStudyPanel*>(this->currentPanel) == nullptr
+		&& dynamic_cast<ProgressPanel*>(this->currentPanel) == nullptr;
 	if (this->rootSizer != nullptr) {
 		this->rootSizer->Show(this->sidebarPanel, showDecks);
 		if (this->paneSplit != nullptr) {
