@@ -8,6 +8,7 @@ echo Cleaning previous test artifacts...
 if exist %OUT% del /q %OUT%
 
 if not exist obj mkdir obj
+if exist obj\*.o del /q obj\*.o
 
 echo Building %OUT%
 
@@ -26,8 +27,12 @@ for /R Application %%F in (*.cpp) do (
     if errorlevel 1 exit /b 1
 )
 
+echo Infrastructure\GeminiApi\gemini_api_service.cpp
+g++ -std=c++17 -c Infrastructure\GeminiApi\gemini_api_service.cpp -I ThirdParty\doctest -o obj\gemini_api_service.o
+if errorlevel 1 exit /b 1
+
 echo Linking...
-g++ obj\main.o obj\*_tests.o obj\*_usecase.o -o %OUT%
+g++ obj\main.o obj\gemini_api_service.o obj\*_tests.o obj\*_usecase.o -o %OUT%
 if errorlevel 1 exit /b 1
 
 echo Running %OUT%
