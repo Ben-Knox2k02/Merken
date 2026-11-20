@@ -9,6 +9,7 @@
 #include "../../Application/UseCases/Calendar/CreateEvent/create_event_usecase.h"
 #include "../../Application/UseCases/Calendar/UpdateEvent/update_event_usecase.h"
 #include "../../Application/UseCases/Calendar/DeleteEvent/delete_event_usecase.h"
+#include "../../Application/UseCases/Calendar/ImportGoogleEvents/import_google_events_usecase.h"
 #include <wx/dcbuffer.h>
 #include <wx/statline.h>
 #include <optional>
@@ -423,6 +424,7 @@ CalendarPanel::CalendarPanel(wxWindow* parent) : wxPanel(parent) {
 	this->eventList->Bind(wxEVT_LIST_ITEM_DESELECTED, &CalendarPanel::OnSelectionChanged, this);
 
 	this->SyncMonthLabel();
+	wxGetApp().GetInjector().create<ImportGoogleEventsUseCase>().Execute();
 	this->LoadEvents();
 }
 
