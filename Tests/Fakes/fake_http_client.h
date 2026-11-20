@@ -9,9 +9,15 @@
 class FakeHttpClient : public IHttpClient {
 	public:
 		std::deque<HttpResponse> responses;
+		std::vector<std::string> requestedUrls;
 		std::vector<std::string> requestedMethods;
 		std::string lastUrl;
+		std::string lastBody;
 		std::vector<HttpHeader> lastHeaders;
+		int getCallCount = 0;
+		int postCallCount = 0;
+		int patchCallCount = 0;
+		int postFormCallCount = 0;
 		int deleteCallCount = 0;
 
 		void QueueResponse(int statusCode, const std::string& body, const std::string& error = "") {
@@ -32,7 +38,8 @@ class FakeHttpClient : public IHttpClient {
 		}
 
 		HttpResponse Get(const std::string& url, const std::vector<HttpHeader>& headers) override {
-			return this->Record("GET", url, headers);
+			this->getCallCount += 1;
+			return this->Record("GET", url, "", headers);
 		}
 
 		HttpResponse PostJson(
@@ -40,8 +47,8 @@ class FakeHttpClient : public IHttpClient {
 			const std::string& jsonBody,
 			const std::vector<HttpHeader>& headers
 		) override {
-			(void)jsonBody;
-			return this->Record("POST", url, headers);
+			this->postCallCount += 1;
+			return this->Record("POST", url, jsonBody, headers);
 		}
 
 		HttpResponse PatchJson(
@@ -49,8 +56,8 @@ class FakeHttpClient : public IHttpClient {
 			const std::string& jsonBody,
 			const std::vector<HttpHeader>& headers
 		) override {
-			(void)jsonBody;
-			return this->Record("PATCH", url, headers);
+			this->patchCallCount += 1;
+			return this->Record("PATCH", url, jsonBody, headers);
 		}
 
 		HttpResponse PostForm(
@@ -58,23 +65,26 @@ class FakeHttpClient : public IHttpClient {
 			const std::string& formBody,
 			const std::vector<HttpHeader>& headers
 		) override {
-			(void)formBody;
-			return this->Record("POST_FORM", url, headers);
+			this->postFormCallCount += 1;
+			return this->Record("POST_FORM", url, formBody, headers);
 		}
 
 		HttpResponse Delete(const std::string& url, const std::vector<HttpHeader>& headers) override {
 			this->deleteCallCount += 1;
-			return this->Record("DELETE", url, headers);
+			return this->Record("DELETE", url, "", headers);
 		}
 
 	private:
 		HttpResponse Record(
 			const std::string& method,
 			const std::string& url,
+			const std::string& body,
 			const std::vector<HttpHeader>& headers
 		) {
 			this->lastUrl = url;
+			this->lastBody = body;
 			this->lastHeaders = headers;
+			this->requestedUrls.push_back(url);
 			this->requestedMethods.push_back(method);
 			return this->NextResponse();
 		}
