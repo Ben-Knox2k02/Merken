@@ -104,6 +104,16 @@ jobs:
             g++ -std=c++17 -c "$file" $INC -o "obj/$(basename "${file%.cpp}").o"
           done
 
+          # The macOS push-button face is Objective-C++. The .cpp stub is empty there.
+          if [ "$RUNNER_OS" = "macOS" ]; then
+            shopt -s nullglob
+            for file in UI/src/*.mm; do
+              echo "Compiling $file"
+              g++ -std=c++17 -x objective-c++ -c "$file" $INC -o "obj/$(basename "${file%.mm}").o"
+            done
+            shopt -u nullglob
+          fi
+
           echo "Compiling ThirdParty/wxSQLite3/src/wxsqlite3.cpp"
           g++ -std=c++17 -c ThirdParty/wxSQLite3/src/wxsqlite3.cpp $INC -o obj/wxsqlite3.o
 
@@ -146,7 +156,8 @@ jobs:
           echo "Compiling ThirdParty/wxSQLite3/src/sqlite3mc_amalgamation.c"
           cc -c ThirdParty/wxSQLite3/src/sqlite3mc_amalgamation.c -IThirdParty/wxSQLite3/src -o obj/sqlite3mc_amalgamation.o
 
-          g++ obj/*.o $(wx-config --libs) -lcrypt32 -o Merken.exe
+          # Sign-in opens the browser through COM and listens on a Winsock socket.
+          g++ obj/*.o $(wx-config --libs) -lole32 -lws2_32 -lcrypt32 -o Merken.exe
 
   test:
     strategy:
