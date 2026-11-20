@@ -13,8 +13,8 @@ TEST_CASE("AiStudyUseCase generates the question list in one call and caches it"
 	deckRepository.SeedCard(deckId, "Adios", "Goodbye");
 	FakeAiApiService aiApi;
 	aiApi.reply =
-		"1. fill-in | ___ means hello.\n"
-		"2. sentence | What Spanish word means goodbye?\n";
+		"1. fill-in | ___ means hello. | hola\n"
+		"2. sentence | What Spanish word means goodbye? | adios\n";
 	FakeAppSettingsService appSettings;
 	appSettings.settings.aiApiKey = "ai-key";
 	appSettings.settings.calendarApiKey = "cal-key";
@@ -31,10 +31,10 @@ TEST_CASE("AiStudyUseCase generates the question list in one call and caches it"
 	REQUIRE(response.questions.size() == 2);
 	CHECK(response.questions[0].type == AiQuestionTypeResponse::FillIn);
 	CHECK(response.questions[0].text == "___ means hello.");
-	CHECK(response.questions[0].back == "Hola");
+	CHECK(response.questions[0].back == "hola");
 	CHECK(response.questions[1].type == AiQuestionTypeResponse::Sentence);
 	CHECK(response.questions[1].text == "What Spanish word means goodbye?");
-	CHECK(response.questions[1].back == "Adios");
+	CHECK(response.questions[1].back == "adios");
 	CHECK(aiApi.generateCount == 1);
 	CHECK(aiApi.lastApiKey == "ai-key");
 	CHECK(aiApi.lastPrompt == AiPrompt::Build(*deckRepository.GetDeck(deckId)).GetText());
