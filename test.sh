@@ -23,9 +23,10 @@ compile_cpp Tests/main.cpp
 while IFS= read -r file; do
 	compile_cpp "$file"
 done < <(find Tests Application -name '*.cpp' ! -name 'main.cpp')
+compile_cpp Infrastructure/GoogleCalendar/google_calendar_service.cpp
 
 echo "Linking..."
-g++ obj/main.o $(find obj \( -name '*_tests.o' -o -name '*_usecase.o' \) | sort) -o "$OUT"
+g++ obj/main.o obj/google_calendar_service.o $(find obj \( -name '*_tests.o' -o -name '*_usecase.o' \) | sort) -o "$OUT"
 
 echo "Running $OUT"
 "./$OUT"

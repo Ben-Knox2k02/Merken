@@ -678,7 +678,7 @@ void CalendarPanel::OnDelete(wxCommandEvent&) {
 	const int eventId = selected->calendarEventId;
 	const bool onGoogle = !selected->googleEventId.empty();
 	const wxString message = onGoogle
-		? "Delete this event from Merken? It stays on Google Calendar."
+		? "Delete this event from Merken and from Google Calendar?"
 		: "Delete this event?";
 	if (ShowCenteredMessage(this, message, "Delete Event", wxYES_NO | wxICON_WARNING) != wxID_YES) {
 		return;
@@ -687,9 +687,18 @@ void CalendarPanel::OnDelete(wxCommandEvent&) {
 	DeleteEventRequest request;
 	request.calendarEventId = eventId;
 	auto useCase = wxGetApp().GetInjector().create<DeleteEventUseCase>();
-	if (!useCase.Execute(request)) {
+	const DeleteEventResponse response = useCase.Execute(request);
+	if (!response.deleted) {
 		ShowCenteredMessage(this, "Could not delete the event.", "Calendar", wxOK | wxICON_ERROR);
 		return;
+	}
+	if (response.googleFailed) {
+		ShowCenteredMessage(
+			this,
+			"Removed from Merken. It could not be removed from Google Calendar.",
+			"Calendar",
+			wxOK | wxICON_WARNING
+		);
 	}
 	this->LoadEvents();
 }

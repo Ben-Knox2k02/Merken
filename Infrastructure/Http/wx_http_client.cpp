@@ -32,6 +32,13 @@ HttpResponse WxHttpClient::PostForm(
 	return this->Execute("POST", url, &formBody, headers, "application/x-www-form-urlencoded");
 }
 
+HttpResponse WxHttpClient::Delete(
+	const std::string& url,
+	const std::vector<HttpHeader>& headers
+) {
+	return this->Execute("DELETE", url, nullptr, headers);
+}
+
 void WxHttpClient::StartRequest(
 	const wxString& method,
 	const std::string& url,
