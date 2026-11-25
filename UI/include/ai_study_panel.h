@@ -2,6 +2,7 @@
 #define AI_STUDY_PANEL_H
 
 #include <wx/wx.h>
+#include <wx/dcbuffer.h>
 #include <memory>
 #include <vector>
 #include "../../Application/UseCases/AI/AiStudy/ai_study_response.h"
@@ -32,6 +33,7 @@ class AiStudyPanel : public wxPanel {
 		void ShowError(const wxString& message);
 		void Grade(bool gotIt);
 
+		void OnPaint(wxPaintEvent& event);
 		void OnShowAnswer(wxCommandEvent& event);
 		void OnGotIt(wxCommandEvent& event);
 		void OnMissedIt(wxCommandEvent& event);
