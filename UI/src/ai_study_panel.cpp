@@ -26,6 +26,7 @@ AiStudyPanel::AiStudyPanel(wxWindow* parent, int deckId)
 	  deckId(deckId),
 	  currentIndex(0),
 	  alive(std::make_shared<bool>(true)) {
+	this->SetBackgroundStyle(wxBG_STYLE_PAINT);
 	this->rootSizer = new wxBoxSizer(wxVERTICAL);
 
 	const Theme& theme = Theme::Get();
@@ -97,6 +98,7 @@ AiStudyPanel::AiStudyPanel(wxWindow* parent, int deckId)
 
 	this->SetSizer(this->rootSizer);
 
+	this->Bind(wxEVT_PAINT, &AiStudyPanel::OnPaint, this);
 	this->showAnswerButton->Bind(wxEVT_BUTTON, &AiStudyPanel::OnShowAnswer, this);
 	this->gotItButton->Bind(wxEVT_BUTTON, &AiStudyPanel::OnGotIt, this);
 	this->missedItButton->Bind(wxEVT_BUTTON, &AiStudyPanel::OnMissedIt, this);
@@ -108,6 +110,12 @@ AiStudyPanel::AiStudyPanel(wxWindow* parent, int deckId)
 
 AiStudyPanel::~AiStudyPanel() {
 	*this->alive = false;
+}
+
+void AiStudyPanel::OnPaint(wxPaintEvent& event) {	
+	wxAutoBufferedPaintDC dc(this);
+	dc.SetBrush(wxBrush(this->GetBackgroundColour()));
+	dc.Clear();
 }
 
 void AiStudyPanel::StartTest() {
