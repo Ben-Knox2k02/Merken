@@ -54,7 +54,33 @@ TEST_CASE("ImportGoogleEventsUseCase inserts a Google event that is not stored")
 	CHECK(stored.GetReminderMinutes() == 15);
 }
 
-TEST_CASE("ImportGoogleEventsUseCase does not duplicate or overwrite a stored Google event") {
+TEST_CASE("ImportGoogleEventsUseCase does not change a stored Google event that is identical") {
+	FakeEventRepository events;
+	FakeCalendarApiService calendarApi;
+	FakeCalendarAuthService auth;
+	auth.token = "token-1";
+	events.Seed(
+		Date::Parse("2026-09-12").value(),
+		"Quiz",
+		"18:00",
+		"19:00",
+		"Library",
+		"Review vocab",
+		15,
+		"gcal-1"
+	);
+	calendarApi.events.push_back(RemoteEvent("gcal-1", "Quiz"));
+	ImportGoogleEventsUseCase useCase(events, calendarApi, auth);
+
+	const ImportGoogleEventsResponse response = useCase.Execute();
+
+	CHECK(response.imported == 0);
+	CHECK(response.updated == 0);
+	CHECK_FALSE(response.googleFailed);
+	CHECK(events.GetEvents().size() == 1);
+}
+
+TEST_CASE("ImportGoogleEventsUseCase updates a stored Google event that was edited on Google") {
 	FakeEventRepository events;
 	FakeCalendarApiService calendarApi;
 	FakeCalendarAuthService auth;
@@ -75,16 +101,18 @@ TEST_CASE("ImportGoogleEventsUseCase does not duplicate or overwrite a stored Go
 	const ImportGoogleEventsResponse response = useCase.Execute();
 
 	CHECK(response.imported == 0);
+	CHECK(response.updated == 1);
 	CHECK_FALSE(response.googleFailed);
 	REQUIRE(events.GetEvents().size() == 1);
 	const std::optional<CalendarEvent> stored = events.GetEvent(eventId);
 	REQUIRE(stored.has_value());
-	CHECK(stored->GetTitle() == "Local title");
-	CHECK(stored->GetStartTime() == "09:00");
-	CHECK(stored->GetLocation() == "Home");
-	CHECK(stored->GetDescription() == "Keep this");
-	CHECK(stored->GetReminderMinutes() == 30);
-	CHECK(stored->GetDate() == Date::Parse("2026-09-12").value());
+	CHECK(stored->GetGoogleEventId() == "gcal-1");
+	CHECK(stored->GetTitle() == "Google title");
+	CHECK(stored->GetStartTime() == "18:00");
+	CHECK(stored->GetLocation() == "Library");
+	CHECK(stored->GetDescription() == "Review vocab");
+	CHECK(stored->GetReminderMinutes() == 15);
+	CHECK(stored->GetDate() == Date::Parse("2026-10-01").value());
 }
 
 TEST_CASE("ImportGoogleEventsUseCase keeps local events that are not on Google") {

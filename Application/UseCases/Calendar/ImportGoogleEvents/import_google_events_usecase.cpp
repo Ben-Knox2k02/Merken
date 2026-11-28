@@ -2,6 +2,7 @@
 #include <exception>
 #include <string>
 #include <vector>
+#include <set>
 
 namespace {
 
@@ -43,11 +44,13 @@ ImportGoogleEventsResponse ImportGoogleEventsUseCase::Execute() {
 		}
 		const std::vector<CalendarEvent> remoteEvents = this->calendarAPIService.GetEvents(accessToken);
 		const std::vector<CalendarEvent> storedEvents = this->eventRepository.GetEvents();
+		std::set<std::string> handledIds;
 		for (const CalendarEvent& remoteEvent : remoteEvents) {
 			const std::string googleEventId = remoteEvent.GetGoogleEventId();
 			if (googleEventId.empty()) {
 				continue;
 			}
+			if (!handledIds.insert(googleEventId).second) { continue;}
 
 			const CalendarEvent* stored = FindByGoogleEventId(storedEvents, googleEventId);
 			if (stored == nullptr) {
