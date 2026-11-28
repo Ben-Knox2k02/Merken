@@ -4,6 +4,7 @@ obj/
 Merken
 Merken.app/
 app_settings.json
+google_client.json
 settings.bin
 merken_tests
 merken_tests.exe
