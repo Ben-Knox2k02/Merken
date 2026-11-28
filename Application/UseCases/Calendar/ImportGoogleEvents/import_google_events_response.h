@@ -3,6 +3,7 @@
 
 struct ImportGoogleEventsResponse {
 	int imported = 0;
+	int updated = 0;
 	bool googleFailed = false;
 };
 

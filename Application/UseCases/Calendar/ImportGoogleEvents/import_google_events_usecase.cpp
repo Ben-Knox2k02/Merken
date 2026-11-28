@@ -5,13 +5,31 @@
 
 namespace {
 
-bool ContainsGoogleEventId(const std::vector<std::string>& googleEventIds, const std::string& googleEventId) {
-	for (const std::string& storedId : googleEventIds) {
-		if (storedId == googleEventId) {
-			return true;
+const CalendarEvent* FindByGoogleEventId(const std::vector<CalendarEvent>& events, const std::string& googleEventId) {
+	for (const CalendarEvent& event : events) {
+		if (event.GetGoogleEventId() == googleEventId) {
+			return &event;
 		}
 	}
-	return false;
+	return nullptr;
+}
+
+bool SameContent(const CalendarEvent& a, const CalendarEvent& b) {
+	return a.GetTitle() == b.GetTitle()
+		&& a.GetDate().ToIso() == b.GetDate().ToIso()
+		&& a.GetStartTime() == b.GetStartTime()
+		&& a.GetEndTime() == b.GetEndTime()
+		&& a.GetLocation() == b.GetLocation()
+		&& a.GetDescription() == b.GetDescription()
+		&& a.GetReminderMinutes() == b.GetReminderMinutes();
+}
+
+CalendarEvent WithLocalId(const CalendarEvent& remote, int localId) {
+	CalendarEvent merged(localId, remote.GetTitle(), remote.GetDate(), remote.GetStartTime(),
+		remote.GetEndTime(), remote.GetLocation(), remote.GetDescription());
+	merged.UpdateReminderMinutes(remote.GetReminderMinutes());
+	merged.SetGoogleEventId(remote.GetGoogleEventId());
+	return merged;
 }
 
 }
@@ -23,25 +41,26 @@ ImportGoogleEventsResponse ImportGoogleEventsUseCase::Execute() {
 		if (accessToken.empty()) {
 			return response;
 		}
-
 		const std::vector<CalendarEvent> remoteEvents = this->calendarAPIService.GetEvents(accessToken);
-		std::vector<std::string> knownIds;
-		for (const CalendarEvent& stored : this->eventRepository.GetEvents()) {
-			if (!stored.GetGoogleEventId().empty()) {
-				knownIds.push_back(stored.GetGoogleEventId());
-			}
-		}
-
+		const std::vector<CalendarEvent> storedEvents = this->eventRepository.GetEvents();
 		for (const CalendarEvent& remoteEvent : remoteEvents) {
 			const std::string googleEventId = remoteEvent.GetGoogleEventId();
-			if (googleEventId.empty() || ContainsGoogleEventId(knownIds, googleEventId)) {
+			if (googleEventId.empty()) {
 				continue;
 			}
-			if (this->eventRepository.AddEvent(remoteEvent) <= 0) {
-				continue;
+
+			const CalendarEvent* stored = FindByGoogleEventId(storedEvents, googleEventId);
+			if (stored == nullptr) {
+				//new on Google
+				if (this->eventRepository.AddEvent(remoteEvent) > 0) {
+					response.imported += 1;
+				}
+			} else if (!SameContent(*stored, remoteEvent)) {
+				//edited on Google
+				if (this->eventRepository.UpdateEvent(WithLocalId(remoteEvent, stored->GetCalendarEventId()))) {
+					response.updated += 1;
+				}
 			}
-			knownIds.push_back(googleEventId);
-			response.imported += 1;
 		}
 	} catch (const std::exception&) {
 		response.googleFailed = true;
